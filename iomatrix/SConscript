@@ -1,0 +1,80 @@
+# -*- coding: utf-8 -*-
+#-------------------------------------------------------------------------#
+#   Copyright (C) 2014 by Christoph Thelen                                #
+#   doc_bacardi@users.sourceforge.net                                     #
+#                                                                         #
+#   This program is free software; you can redistribute it and/or modify  #
+#   it under the terms of the GNU General Public License as published by  #
+#   the Free Software Foundation; either version 2 of the License, or     #
+#   (at your option) any later version.                                   #
+#                                                                         #
+#   This program is distributed in the hope that it will be useful,       #
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+#   GNU General Public License for more details.                          #
+#                                                                         #
+#   You should have received a copy of the GNU General Public License     #
+#   along with this program; if not, write to the                         #
+#   Free Software Foundation, Inc.,                                       #
+#   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
+#-------------------------------------------------------------------------#
+
+
+#----------------------------------------------------------------------------
+#
+# Import all required objects.
+#
+Import('env_default')
+Import('env_netx500_default', 'env_netx56_default', 'env_netx50_default', 'env_netx10_default')
+Import('platform_lib_netx500', 'platform_lib_netx56', 'platform_lib_netx50', 'platform_lib_netx10')
+
+
+#----------------------------------------------------------------------------
+# This is the list of sources. The elements must be separated with whitespace
+# (i.e. spaces, tabs, newlines). The amount of whitespace does not matter.
+sources_common = """
+	src/header.c
+	src/init_netx_test.S
+	src/main_test.c
+	src/netx_test.c
+"""
+
+
+#----------------------------------------------------------------------------
+#
+# Build the crc test.
+#
+aCppPath = ['src', '#platform/src', '#platform/src/lib', '#targets/version']
+
+#env_netx500_t = env_netx500_default.Clone()
+#env_netx500_t.Replace(LDFILE = 'src/netx500/netx500.ld')
+#env_netx500_t.Append(CPPPATH = aCppPath)
+#src_netx500_t = env_netx500_t.SetBuildPath('targets/netx500', 'src', sources_common)
+#elf_netx500_t = env_netx500_t.Elf('targets/netx500/crctest.elf', src_netx500_t + platform_lib_netx500)
+#crctest_netx500 = env_netx500_t.ObjCopy('targets/netx500/crctest.bin', elf_netx500_t)
+
+env_netx56_t = env_netx56_default.Clone()
+env_netx56_t.Replace(LDFILE = 'src/netx56/netx56.ld')
+env_netx56_t.Append(CPPPATH = aCppPath)
+src_netx56_t = env_netx56_t.SetBuildPath('targets/netx56', 'src', sources_common)
+elf_netx56_t = env_netx56_t.Elf('targets/netx56/iomatrix.elf', src_netx56_t + platform_lib_netx56)
+iomatrix_netx56 = env_netx56_t.ObjCopy('targets/netx56/iomatrix.bin', elf_netx56_t)
+
+#env_netx50_t = env_netx50_default.Clone()
+#env_netx50_t.Replace(LDFILE = 'src/netx50/netx50.ld')
+#env_netx50_t.Append(CPPPATH = aCppPath)
+#src_netx50_t = env_netx50_t.SetBuildPath('targets/netx50', 'src', sources_common)
+#elf_netx50_t = env_netx50_t.Elf('targets/netx50/crctest.elf', src_netx50_t + platform_lib_netx50)
+#crctest_netx50 = env_netx50_t.ObjCopy('targets/netx50/crctest.bin', elf_netx50_t)
+
+#env_netx10_t = env_netx10_default.Clone()
+#env_netx10_t.Replace(LDFILE = 'src/netx10/netx10.ld')
+#env_netx10_t.Append(CPPPATH = aCppPath)
+#src_netx10_t = env_netx10_t.SetBuildPath('targets/netx10', 'src', sources_common)
+#elf_netx10_t = env_netx10_t.Elf('targets/netx10/crctest.elf', src_netx10_t + platform_lib_netx10)
+#crctest_netx10 = env_netx10_t.ObjCopy('targets/netx10/crctest.bin', elf_netx10_t)
+
+#Export('crctest_netx500', 'crctest_netx56', 'crctest_netx50', 'crctest_netx10')
+Export('iomatrix_netx56')
+
+
