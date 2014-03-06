@@ -17,16 +17,28 @@
 #define MAX_NET_COUNT 64
 
 
+typedef enum MATRIXERR_ENUM
+{
+	MATRIXERR_Loopback_but_drive0_does_not_follow           = 0x0001,
+	MATRIXERR_Loopback_but_drive1_does_not_follow           = 0x0002,
+	MATRIXERR_No_Loopback_but_shortcut_for_drive0           = 0x0004,
+	MATRIXERR_No_Loopback_but_shortcut_for_drive1           = 0x0008,
+	MATRIXERR_Not_at_default_state_0_at_pin_test_start      = 0x0010,
+	MATRIXERR_Not_at_default_state_0_after_pin_test_drive0  = 0x0020,
+	MATRIXERR_Not_at_default_state_0_after_pin_test_drive1  = 0x0040
+} MATRIXERR_T;
+
+
 static const PINDESCRIPTION_T atPinsUnderTest[MAX_PINS_UNDER_TEST] =
 {
 	{ "HIF_D00",    PINTYPE_HIFPIO,  0, 1, 0 },
-	{ "HIF_D01",    PINTYPE_HIFPIO,  1, 1, 0 },
 	{ "HIF_D02",    PINTYPE_HIFPIO,  2, 1, 0 },
-	{ "HIF_D03",    PINTYPE_HIFPIO,  3, 1, 0 },
+	{ "HIF_D04",    PINTYPE_HIFPIO,  4, 1, 0 },
+	{ "HIF_D06",    PINTYPE_HIFPIO,  6, 1, 0 },
 	{ "HIF_D08",    PINTYPE_HIFPIO,  8, 1, 0 },
-	{ "HIF_D09",    PINTYPE_HIFPIO,  9, 1, 0 },
 	{ "HIF_D10",    PINTYPE_HIFPIO, 10, 1, 0 },
-	{ "HIF_D11",    PINTYPE_HIFPIO, 11, 1, 0 },
+	{ "HIF_D12",    PINTYPE_HIFPIO, 12, 1, 0 },
+	{ "HIF_D14",    PINTYPE_HIFPIO, 14, 1, 0 },
 
 
 #if 0
@@ -100,9 +112,9 @@ static const PINDESCRIPTION_T atPinsUnderTest[MAX_PINS_UNDER_TEST] =
 static const char * const apcNetListNames[MAX_NET_COUNT][MAX_NET_SIZE] =
 {
 	{ "HIF_D00", "HIF_D08" },
-	{ "HIF_D01", "HIF_D09" },
 	{ "HIF_D02", "HIF_D10" },
-	{ "HIF_D03", "HIF_D11" }
+	{ "HIF_D04", "HIF_D12" },
+	{ "HIF_D06", "HIF_D14" }
 };
 
 
@@ -114,6 +126,10 @@ static const PINDESCRIPTION_T *aptNetList[MAX_NET_COUNT][MAX_NET_SIZE];
  * NULL means that the pin is not a member of any net yet.
  */
 static const PINDESCRIPTION_T **apptNetOfPin[MAX_PINS_UNDER_TEST];
+
+
+
+static unsigned short ausPinToPinErrors[MAX_PINS_UNDER_TEST][MAX_PINS_UNDER_TEST];
 
 /*-------------------------------------------------------------------------*/
 
@@ -340,6 +356,101 @@ static int build_net_list(const PINDESCRIPTION_T *ptPinsUnderTest, const char * 
 /*-------------------------------------------------------------------------*/
 
 
+static void record_error(const PINDESCRIPTION_T *ptDrivingPin, const PINDESCRIPTION_T *ptReceivingPin, MATRIXERR_T tError)
+{
+	size_t sizDriverIdx;
+	size_t sizReceiverIdx;
+	unsigned short usError;
+
+
+	/* The receiver must not be NULL. */
+	if( ptReceivingPin==NULL )
+	{
+		uprintf("ERROR: calling record_error with ptReceivingPin=NULL!\n");
+	}
+	else
+	{
+		/* If no pin is driving, this is an 'at defaults' test. */
+		if( ptDrivingPin==NULL )
+		{
+			ptDrivingPin = ptReceivingPin;
+		}
+
+		/* Get the index of both pins. */
+		sizDriverIdx = (size_t)(ptDrivingPin - atPinsUnderTest);
+		sizReceiverIdx = (size_t)(ptReceivingPin - atPinsUnderTest);
+		if( sizDriverIdx>=MAX_PINS_UNDER_TEST )
+		{
+			uprintf("ERROR: calling record_error with invalid ptDrivingPin: 0x%08x\n", ptDrivingPin);
+		}
+		else if( sizReceiverIdx>=MAX_PINS_UNDER_TEST )
+		{
+			uprintf("ERROR: calling record_error with invalid ptReceivingPin: 0x%08x\n", ptReceivingPin);
+		}
+		else
+		{
+			usError = (unsigned short)tError;
+			ausPinToPinErrors[sizDriverIdx][sizReceiverIdx] |= usError;
+		}
+	}
+}
+
+
+void dump_errors(void)
+{
+	size_t sizDriverIdx;
+	size_t sizReceiverIdx;
+	const PINDESCRIPTION_T *ptDrivingPin;
+	const PINDESCRIPTION_T *ptReceivingPin;
+	unsigned short usError;
+
+
+	for(sizDriverIdx=0; sizDriverIdx<MAX_PINS_UNDER_TEST; ++sizDriverIdx)
+	{
+		for(sizReceiverIdx=0; sizReceiverIdx<MAX_PINS_UNDER_TEST; ++sizReceiverIdx)
+		{
+			usError = ausPinToPinErrors[sizDriverIdx][sizReceiverIdx];
+			if( usError!=0 )
+			{
+				ptDrivingPin = atPinsUnderTest + sizDriverIdx;
+				ptReceivingPin = atPinsUnderTest + sizReceiverIdx;
+				uprintf("%s - %s:\n", ptDrivingPin->pcName, ptReceivingPin->pcName);
+				if( (usError&((unsigned short)MATRIXERR_Loopback_but_drive0_does_not_follow))!=0 )
+				{
+					uprintf("\tLoopback_but_drive0_does_not_follow\n");
+				}
+				if( (usError&((unsigned short)MATRIXERR_Loopback_but_drive1_does_not_follow))!=0 )
+				{
+					uprintf("\tLoopback_but_drive1_does_not_follow\n");
+				}
+				if( (usError&((unsigned short)MATRIXERR_No_Loopback_but_shortcut_for_drive0))!=0 )
+				{
+					uprintf("\tNo_Loopback_but_shortcut_for_drive0\n");
+				}
+				if( (usError&((unsigned short)MATRIXERR_No_Loopback_but_shortcut_for_drive1))!=0 )
+				{
+					uprintf("\tNo_Loopback_but_shortcut_for_drive1\n");
+				}
+				if( (usError&((unsigned short)MATRIXERR_Not_at_default_state_0_at_pin_test_start))!=0 )
+				{
+					uprintf("\tNot_at_default_state_0_at_pin_test_start\n");
+				}
+				if( (usError&((unsigned short)MATRIXERR_Not_at_default_state_0_after_pin_test_drive0))!=0 )
+				{
+					uprintf("\tNot_at_default_state_0_after_pin_test_drive0\n");
+				}
+				if( (usError&((unsigned short)MATRIXERR_Not_at_default_state_0_after_pin_test_drive1))!=0 )
+				{
+					uprintf("\tNot_at_default_state_0_after_pin_test_drive1\n");
+				}
+			}
+		}
+	}
+}
+
+/*-------------------------------------------------------------------------*/
+
+
 static int set_all_pins_to_input(const PINDESCRIPTION_T **pptNetList)
 {
 	int iResult;
@@ -397,7 +508,7 @@ static int set_all_pins_to_input(const PINDESCRIPTION_T **pptNetList)
 
 
 
-static int check_all_pins_for_default(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPTION_T **pptNetDoNotTest)
+static int check_all_pins_for_default(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPTION_T **pptNetDoNotTest, const PINDESCRIPTION_T *ptDrivingPin, MATRIXERR_T tError)
 {
 	int iResult;
 	int iErrors;
@@ -470,6 +581,7 @@ static int check_all_pins_for_default(const PINDESCRIPTION_T **pptNetList, const
 						{
 							if( uiValue!=uiDefaultValue )
 							{
+								record_error(ptDrivingPin, ptPin, tError);
 								uprintf("Pin '%s' is not at its default value of %d, but %d!\n", ptPin->pcName, uiDefaultValue, uiValue);
 								iErrors = -1;
 							}
@@ -510,28 +622,31 @@ static int test_pin_state(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPT
 {
 	int iResult;
 	int iResult2;
-	int iErrors;
 	const PINDESCRIPTION_T **pptCnt;
 	const PINDESCRIPTION_T **pptEnd;
 	const PINDESCRIPTION_T *ptPin;
 	unsigned int uiExpectedValue;
 	unsigned int uiValue;
+	MATRIXERR_T tError0;
+	MATRIXERR_T tError1;
 
 
 	if( tStatus==PINSTATUS_OUTPUT0 )
 	{
 		uiExpectedValue = 0;
+		tError0 = MATRIXERR_No_Loopback_but_shortcut_for_drive0;
+		tError1 = MATRIXERR_Loopback_but_drive0_does_not_follow;
 	}
 	else if( tStatus==PINSTATUS_OUTPUT1 )
 	{
 		uiExpectedValue = 1;
+		tError0 = MATRIXERR_No_Loopback_but_shortcut_for_drive1;
+		tError1 = MATRIXERR_Loopback_but_drive1_does_not_follow;
 	}
 	else
 	{
 		return -1;
 	}
-
-	iErrors = 0;
 
 	/* Set the pin to output. */
 	uprintf("Driving pin '%s' to %d.\n", ptDrivingPin->pcName, uiExpectedValue);
@@ -542,7 +657,7 @@ static int test_pin_state(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPT
 		delay_to_stabilize_pins();
 
 		/* Check all pins for their default value except the network under test. */
-		check_all_pins_for_default(pptNetList, pptNetwork);
+		check_all_pins_for_default(pptNetList, pptNetwork, ptDrivingPin, tError0);
 
 		/* Check the other pins in the network for connection. */
 		pptCnt = pptNetwork;
@@ -562,8 +677,7 @@ static int test_pin_state(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPT
 				{
 					if( uiValue!=uiExpectedValue )
 					{
-						uprintf("Pin '%s' has not the expected value of %d, but %d!\n", ptPin->pcName, uiExpectedValue, uiValue);
-						iErrors = -1;
+						record_error(ptDrivingPin, ptPin, tError1);
 					}
 				}
 			}
@@ -588,11 +702,6 @@ static int test_pin_state(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPT
 		}
 	}
 
-	if( iErrors!=0 )
-	{
-		iResult = -1;
-	}
-
 	return iResult;
 }
 
@@ -603,19 +712,19 @@ static int test_pin(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPTION_T 
 	int iResult;
 
 
-	iResult = check_all_pins_for_default(pptNetList, NULL);
+	iResult = check_all_pins_for_default(pptNetList, NULL, ptDrivingPin, MATRIXERR_Not_at_default_state_0_at_pin_test_start);
 	if( iResult==0 )
 	{
 		iResult = test_pin_state(pptNetList, pptNetwork, ptDrivingPin, PINSTATUS_OUTPUT0);
 		if( iResult==0 )
 		{
-			iResult = check_all_pins_for_default(pptNetList, NULL);
+			iResult = check_all_pins_for_default(pptNetList, NULL, ptDrivingPin, MATRIXERR_Not_at_default_state_0_after_pin_test_drive0);
 			if( iResult==0 )
 			{
 				iResult = test_pin_state(pptNetList, pptNetwork, ptDrivingPin, PINSTATUS_OUTPUT1);
 				if( iResult==0 )
 				{
-					iResult = check_all_pins_for_default(pptNetList, NULL);
+					iResult = check_all_pins_for_default(pptNetList, NULL, ptDrivingPin, MATRIXERR_Not_at_default_state_0_after_pin_test_drive1);
 				}
 			}
 		}
@@ -623,6 +732,7 @@ static int test_pin(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPTION_T 
 
 	return iResult;
 }
+
 
 
 static int test_network(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPTION_T **pptNetwork, size_t sizNetIndex)
@@ -637,40 +747,28 @@ static int test_network(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPTIO
 	print_netlist(pptNetwork);
 	uprintf("]\n");
 
-	iResult = set_all_pins_to_input(pptNetList);
-	if( iResult==0 )
+	/* Loop over all pins in the network. */
+	pptCnt = pptNetwork;
+	pptEnd = pptNetwork + MAX_NET_SIZE;
+	while( pptCnt<pptEnd )
 	{
-		/* Loop over all pins in the network. */
-		pptCnt = pptNetwork;
-		pptEnd = pptNetwork + MAX_NET_SIZE;
-		while( pptCnt<pptEnd )
+		ptPin = *pptCnt;
+		if( ptPin==NULL )
 		{
-			ptPin = *pptCnt;
-			if( ptPin==NULL )
-			{
-				/* End of list. */
-				break;
-			}
-			else
-			{
-				iResult = test_pin(pptNetList, pptNetwork, ptPin);
-				if( iResult!=0 )
-				{
-					break;
-				}
-			}
-
-			++pptCnt;
-		}
-
-		if( iResult==0 )
-		{
-			uprintf("Net OK!\n");
+			/* End of list. */
+			break;
 		}
 		else
 		{
-			uprintf("Net ERROR!\n");
+			iResult = test_pin(pptNetList, pptNetwork, ptPin);
+			if( iResult!=0 )
+			{
+				/* Stop at fatal errors. */
+				break;
+			}
 		}
+
+		++pptCnt;
 	}
 
 	return iResult;
@@ -684,31 +782,38 @@ static int run_matrix_test(const PINDESCRIPTION_T **pptNetList)
 	int iResult;
 
 
-	/* Loop over all net list entries. */
-	sizNetListCnt = 0;
-	pptNetListCnt = pptNetList;
-	do
+	iResult = set_all_pins_to_input(pptNetList);
+	if( iResult==0 )
 	{
-		if( *pptNetListCnt==NULL )
-		{
-			/* End of list. */
-			break;
-		}
-		else
-		{
-			iResult = test_network(pptNetList, pptNetListCnt, sizNetListCnt);
-		}
+		/* Delay a while to settle the pins. */
+		delay_to_stabilize_pins();
 
-		if( iResult!=0 )
+		/* Loop over all net list entries. */
+		sizNetListCnt = 0;
+		pptNetListCnt = pptNetList;
+		do
 		{
-			break;
-		}
+			if( *pptNetListCnt==NULL )
+			{
+				/* End of list. */
+				break;
+			}
+			else
+			{
+				iResult = test_network(pptNetList, pptNetListCnt, sizNetListCnt);
+				if( iResult!=0 )
+				{
+					/* Stop at fatal errors. */
+					break;
+				}
+			}
 
-		pptNetListCnt += MAX_NET_SIZE;
-		++sizNetListCnt;
-	} while( sizNetListCnt<MAX_NET_COUNT );
+			pptNetListCnt += MAX_NET_SIZE;
+			++sizNetListCnt;
+		} while( sizNetListCnt<MAX_NET_COUNT );
+	}
 
-	return -1;
+	return iResult;
 }
 
 
@@ -731,6 +836,9 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 	/* Get the test parameter. */
 	//ptTestParams = (CRCTEST_PARAMETER_T*)(ptTestParam->pvInitParams);
 
+	/* Initialize the error array. */
+	memset(ausPinToPinErrors, 0, sizeof(ausPinToPinErrors));
+
 	iResult = build_net_list(atPinsUnderTest, apcNetListNames, aptNetList);
 	if( iResult==0 )
 	{
@@ -740,6 +848,10 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 		if( iResult==0 )
 		{
 			iResult = run_matrix_test(aptNetList);
+			if( iResult==0 )
+			{
+				dump_errors();
+			}
 		}
 	}
 
