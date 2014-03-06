@@ -37,6 +37,7 @@ sources_common = """
 	src/init_netx_test.S
 	src/main_test.c
 	src/netx_test.c
+	src/netx56/io_pins.c
 """
 
 
