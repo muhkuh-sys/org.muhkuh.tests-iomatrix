@@ -895,8 +895,8 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 
 	systime_init();
 
-//	uprintf("\f. *** I/O matrix test by doc_bacardi@users.sourceforge.net ***\n");
-//	uprintf("V" VERSION_ALL "\n\n");
+	uprintf("\f. *** I/O matrix test by doc_bacardi@users.sourceforge.net ***\n");
+	uprintf("V" VERSION_ALL "\n\n");
 
 	/* NOTE:
 	 * Do not use the SYS led in this test. The RDY and RUN pins might be
