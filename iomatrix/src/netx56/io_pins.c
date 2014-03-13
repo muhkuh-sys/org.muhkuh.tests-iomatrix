@@ -333,6 +333,7 @@ static int set_rstout(unsigned int uiIndex, PINSTATUS_T tValue)
 
 		case PINSTATUS_INPUT:
 			/* The RSTOUT pin can not be used as input. */
+			uprintf("The RSTOUT pin can not be configured to input!\n");
 			break;
 
 		case PINSTATUS_OUTPUT0:
@@ -370,6 +371,7 @@ static int set_rstout(unsigned int uiIndex, PINSTATUS_T tValue)
 static int get_rstout(unsigned int uiIndex __attribute__ ((unused)), unsigned int *puiValue __attribute__ ((unused)))
 {
 	/* The RstOut pin is output only. */
+	uprintf("The RSTOUT pin can not be used as an input!\n");
 	return -1;
 }
 
