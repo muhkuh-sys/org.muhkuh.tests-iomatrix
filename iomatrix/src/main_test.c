@@ -31,90 +31,106 @@ typedef enum MATRIXERR_ENUM
 
 static const PINDESCRIPTION_T atPinsUnderTest[MAX_PINS_UNDER_TEST] =
 {
-	{ "HIF_D00",    PINTYPE_HIFPIO,  0, 1, 0 },
-	{ "HIF_D02",    PINTYPE_HIFPIO,  2, 1, 0 },
-	{ "HIF_D04",    PINTYPE_HIFPIO,  4, 1, 0 },
-	{ "HIF_D06",    PINTYPE_HIFPIO,  6, 1, 0 },
-	{ "HIF_D08",    PINTYPE_HIFPIO,  8, 1, 0 },
-	{ "HIF_D10",    PINTYPE_HIFPIO, 10, 1, 0 },
-	{ "HIF_D12",    PINTYPE_HIFPIO, 12, 1, 0 },
-	{ "HIF_D14",    PINTYPE_HIFPIO, 14, 1, 0 },
+	{ "HIF_D00",    PINTYPE_HIFPIO,  0, 1, PINFLAG_IOZ },
+	{ "HIF_D01",    PINTYPE_HIFPIO,  1, 1, PINFLAG_IOZ },
+	{ "HIF_D02",    PINTYPE_HIFPIO,  2, 1, PINFLAG_IOZ },
+	{ "HIF_D03",    PINTYPE_HIFPIO,  3, 1, PINFLAG_IOZ },
+	{ "HIF_D04",    PINTYPE_HIFPIO,  4, 1, PINFLAG_IOZ },
+	{ "HIF_D05",    PINTYPE_HIFPIO,  5, 1, PINFLAG_IOZ },
+	{ "HIF_D06",    PINTYPE_HIFPIO,  6, 1, PINFLAG_IOZ },
+	{ "HIF_D07",    PINTYPE_HIFPIO,  7, 1, PINFLAG_IOZ },
+	{ "HIF_D08",    PINTYPE_HIFPIO,  8, 1, PINFLAG_IOZ },
+	{ "HIF_D09",    PINTYPE_HIFPIO,  9, 1, PINFLAG_IOZ },
+	{ "HIF_D10",    PINTYPE_HIFPIO, 10, 1, PINFLAG_IOZ },
+	{ "HIF_D11",    PINTYPE_HIFPIO, 11, 1, PINFLAG_IOZ },
+	{ "HIF_D12",    PINTYPE_HIFPIO, 12, 1, PINFLAG_IOZ },
+	{ "HIF_D13",    PINTYPE_HIFPIO, 13, 1, PINFLAG_IOZ },
+	{ "HIF_D14",    PINTYPE_HIFPIO, 14, 1, PINFLAG_IOZ },
+	{ "HIF_D15",    PINTYPE_HIFPIO, 15, 1, PINFLAG_IOZ },
+	{ "HIF_D16",    PINTYPE_HIFPIO, 16, 1, PINFLAG_IOZ },
+	{ "HIF_D17",    PINTYPE_HIFPIO, 17, 1, PINFLAG_IOZ },
+	{ "HIF_D18",    PINTYPE_HIFPIO, 18, 1, PINFLAG_IOZ },
+	{ "HIF_D19",    PINTYPE_HIFPIO, 19, 1, PINFLAG_IOZ },
+	{ "HIF_D20",    PINTYPE_HIFPIO, 20, 1, PINFLAG_IOZ },
+	{ "HIF_D21",    PINTYPE_HIFPIO, 21, 1, PINFLAG_IOZ },
+	{ "HIF_D22",    PINTYPE_HIFPIO, 22, 1, PINFLAG_IOZ },
+	{ "HIF_D23",    PINTYPE_HIFPIO, 23, 1, PINFLAG_IOZ },
+	{ "HIF_D24",    PINTYPE_HIFPIO, 24, 1, PINFLAG_IOZ },
+	{ "HIF_D25",    PINTYPE_HIFPIO, 25, 1, PINFLAG_IOZ },
+	{ "HIF_D26",    PINTYPE_HIFPIO, 26, 1, PINFLAG_IOZ },
+	{ "HIF_D27",    PINTYPE_HIFPIO, 27, 1, PINFLAG_IOZ },
+	{ "HIF_D28",    PINTYPE_HIFPIO, 28, 1, PINFLAG_IOZ },
+	{ "HIF_D29",    PINTYPE_HIFPIO, 29, 1, PINFLAG_IOZ },
+	{ "HIF_D30",    PINTYPE_HIFPIO, 30, 1, PINFLAG_IOZ },
+	{ "HIF_D31",    PINTYPE_HIFPIO, 31, 1, PINFLAG_IOZ },
 
+	{ "HIF_A00",    PINTYPE_HIFPIO, 32, 1, PINFLAG_IOZ },
+	{ "HIF_A01",    PINTYPE_HIFPIO, 33, 1, PINFLAG_IOZ },
+	{ "HIF_A02",    PINTYPE_HIFPIO, 34, 1, PINFLAG_IOZ },
+	{ "HIF_A03",    PINTYPE_HIFPIO, 35, 1, PINFLAG_IOZ },
+	{ "HIF_A04",    PINTYPE_HIFPIO, 36, 1, PINFLAG_IOZ },
+	{ "HIF_A05",    PINTYPE_HIFPIO, 37, 1, PINFLAG_IOZ },
+	{ "HIF_A06",    PINTYPE_HIFPIO, 38, 1, PINFLAG_IOZ },
+	{ "HIF_A07",    PINTYPE_HIFPIO, 39, 1, PINFLAG_IOZ },
+	{ "HIF_A08",    PINTYPE_HIFPIO, 40, 1, PINFLAG_IOZ },
+	{ "HIF_A09",    PINTYPE_HIFPIO, 41, 1, PINFLAG_IOZ },
+	{ "HIF_A10",    PINTYPE_HIFPIO, 42, 1, PINFLAG_IOZ },
+	{ "HIF_A11",    PINTYPE_HIFPIO, 43, 1, PINFLAG_IOZ },
+	{ "HIF_A12",    PINTYPE_HIFPIO, 44, 1, PINFLAG_IOZ },
+	{ "HIF_A13",    PINTYPE_HIFPIO, 45, 1, PINFLAG_IOZ },
+	{ "HIF_A14",    PINTYPE_HIFPIO, 46, 1, PINFLAG_IOZ },
+	{ "HIF_A15",    PINTYPE_HIFPIO, 47, 1, PINFLAG_IOZ },
 
-#if 0
-	{ "HIF_D00",    PINTYPE_HIFPIO,  0, 1, 0 },
-	{ "HIF_D01",    PINTYPE_HIFPIO,  1, 1, 0 },
-	{ "HIF_D02",    PINTYPE_HIFPIO,  2, 1, 0 },
-	{ "HIF_D03",    PINTYPE_HIFPIO,  3, 1, 0 },
-	{ "HIF_D04",    PINTYPE_HIFPIO,  4, 1, 0 },
-	{ "HIF_D05",    PINTYPE_HIFPIO,  5, 1, 0 },
-	{ "HIF_D06",    PINTYPE_HIFPIO,  6, 1, 0 },
-	{ "HIF_D07",    PINTYPE_HIFPIO,  7, 1, 0 },
-	{ "HIF_D08",    PINTYPE_HIFPIO,  8, 1, 0 },
-	{ "HIF_D09",    PINTYPE_HIFPIO,  9, 1, 0 },
-	{ "HIF_D10",    PINTYPE_HIFPIO, 10, 1, 0 },
-	{ "HIF_D11",    PINTYPE_HIFPIO, 11, 1, 0 },
-	{ "HIF_D12",    PINTYPE_HIFPIO, 12, 1, 0 },
-	{ "HIF_D13",    PINTYPE_HIFPIO, 13, 1, 0 },
-	{ "HIF_D14",    PINTYPE_HIFPIO, 14, 1, 0 },
-	{ "HIF_D15",    PINTYPE_HIFPIO, 15, 1, 0 },
-	{ "HIF_D16",    PINTYPE_HIFPIO, 16, 1, 0 },
-	{ "HIF_D17",    PINTYPE_HIFPIO, 17, 1, 0 },
-	{ "HIF_D18",    PINTYPE_HIFPIO, 18, 1, 0 },
-	{ "HIF_D19",    PINTYPE_HIFPIO, 19, 1, 0 },
-	{ "HIF_D20",    PINTYPE_HIFPIO, 20, 1, 0 },
-	{ "HIF_D21",    PINTYPE_HIFPIO, 21, 1, 0 },
-	{ "HIF_D22",    PINTYPE_HIFPIO, 22, 1, 0 },
-	{ "HIF_D23",    PINTYPE_HIFPIO, 23, 1, 0 },
-	{ "HIF_D24",    PINTYPE_HIFPIO, 24, 1, 0 },
-	{ "HIF_D25",    PINTYPE_HIFPIO, 25, 1, 0 },
-	{ "HIF_D26",    PINTYPE_HIFPIO, 26, 1, 0 },
-	{ "HIF_D27",    PINTYPE_HIFPIO, 27, 1, 0 },
-	{ "HIF_D28",    PINTYPE_HIFPIO, 28, 1, 0 },
-	{ "HIF_D29",    PINTYPE_HIFPIO, 29, 1, 0 },
-	{ "HIF_D30",    PINTYPE_HIFPIO, 30, 1, 0 },
-	{ "HIF_D31",    PINTYPE_HIFPIO, 31, 1, 0 },
+	{ "HIF_AHI0",   PINTYPE_HIFPIO, 48, 1, PINFLAG_IOZ },
+	{ "HIF_AHI1",   PINTYPE_HIFPIO, 49, 1, PINFLAG_IOZ },
 
-	{ "HIF_A00",    PINTYPE_HIFPIO, 32, 1, 0 },
-	{ "HIF_A01",    PINTYPE_HIFPIO, 33, 1, 0 },
-	{ "HIF_A02",    PINTYPE_HIFPIO, 34, 1, 0 },
-	{ "HIF_A03",    PINTYPE_HIFPIO, 35, 1, 0 },
-	{ "HIF_A04",    PINTYPE_HIFPIO, 36, 1, 0 },
-	{ "HIF_A05",    PINTYPE_HIFPIO, 37, 1, 0 },
-	{ "HIF_A06",    PINTYPE_HIFPIO, 38, 1, 0 },
-	{ "HIF_A07",    PINTYPE_HIFPIO, 39, 1, 0 },
-	{ "HIF_A08",    PINTYPE_HIFPIO, 40, 1, 0 },
-	{ "HIF_A09",    PINTYPE_HIFPIO, 41, 1, 0 },
-	{ "HIF_A10",    PINTYPE_HIFPIO, 42, 1, 0 },
-	{ "HIF_A11",    PINTYPE_HIFPIO, 43, 1, 0 },
-	{ "HIF_A12",    PINTYPE_HIFPIO, 44, 1, 0 },
-	{ "HIF_A13",    PINTYPE_HIFPIO, 45, 1, 0 },
-	{ "HIF_A14",    PINTYPE_HIFPIO, 46, 1, 0 },
-	{ "HIF_A15",    PINTYPE_HIFPIO, 47, 1, 0 },
+	{ "HIF_BHE3",   PINTYPE_HIFPIO, 50, 1, PINFLAG_IOZ },
+	{ "HIF_BHE1",   PINTYPE_HIFPIO, 51, 1, PINFLAG_IOZ },
 
-	{ "HIF_AHI0",   PINTYPE_HIFPIO, 48, 1, 0 },
-	{ "HIF_AHI1",   PINTYPE_HIFPIO, 49, 1, 0 },
+	{ "HIF_RDn",    PINTYPE_HIFPIO, 52, 1, PINFLAG_IOZ },
+	{ "HIF_WRn",    PINTYPE_HIFPIO, 53, 1, PINFLAG_IOZ },
+	{ "HIF_CSn",    PINTYPE_HIFPIO, 54, 1, PINFLAG_IOZ },
+	{ "HIF_RDY",    PINTYPE_HIFPIO, 55, 1, PINFLAG_I | PINFLAG_Z },
+	{ "HIF_DIRQ",   PINTYPE_HIFPIO, 56, 1, PINFLAG_IOZ },
+	{ "HIF_SDCLK",  PINTYPE_HIFPIO, 57, 1, PINFLAG_IOZ },
 
-	{ "HIF_BHE3",   PINTYPE_HIFPIO, 50, 1, 0 },
-	{ "HIF_BHE1",   PINTYPE_HIFPIO, 51, 1, 0 },
-
-	{ "HIF_RDn",    PINTYPE_HIFPIO, 52, 1, 0 },
-	{ "HIF_WRn",    PINTYPE_HIFPIO, 53, 1, 0 },
-	{ "HIF_CSn",    PINTYPE_HIFPIO, 54, 1, 0 },
-	{ "HIF_RDY",    PINTYPE_HIFPIO, 55, 1, 0 },
-	{ "HIF_DIRQ",   PINTYPE_HIFPIO, 56, 1, 0 },
-	{ "HIF_SDCLK",  PINTYPE_HIFPIO, 57, 1, 0 }
-#endif
+	{ "RSTOUT",     PINTYPE_RSTOUT,  0, 0, PINFLAG_O | PINFLAG_Z }
 };
 
 
 
 static const char * const apcNetListNames[MAX_NET_COUNT][MAX_NET_SIZE] =
 {
-	{ "HIF_D00", "HIF_D08" },
-	{ "HIF_D02", "HIF_D10" },
-	{ "HIF_D04", "HIF_D12" },
-	{ "HIF_D06", "HIF_D14" }
+	{ "HIF_A00",    "HIF_A08" },
+	{ "HIF_A01",    "HIF_A09" },
+	{ "HIF_A02",    "HIF_A10" },
+	{ "HIF_A03",    "HIF_A11" },
+	{ "HIF_A04",    "HIF_A12" },
+	{ "HIF_A05",    "HIF_A13" },
+	{ "HIF_A06",    "HIF_A14" },
+	{ "HIF_A07",    "HIF_A15" },
+	{ "HIF_D00",    "HIF_D08" },
+	{ "HIF_D01",    "HIF_D09" },
+	{ "HIF_D02",    "HIF_D10" },
+	{ "HIF_D03",    "HIF_D11" },
+	{ "HIF_D04",    "HIF_D12" },
+	{ "HIF_D05",    "HIF_D13" },
+	{ "HIF_D06",    "HIF_D14" },
+	{ "HIF_D07",    "HIF_D15" },
+
+	{ "HIF_D16",    "HIF_CSn" },
+	{ "HIF_D17",    "HIF_D25" },
+	{ "HIF_D18",    "HIF_BHE3" },
+	{ "HIF_D19",    "HIF_D21" },
+	{ "HIF_D20",    "HIF_D27",      "HIF_AHI0" },
+	{ "HIF_D22",    "HIF_D29" },
+	{ "HIF_D23",    "HIF_D28" },
+	{ "HIF_D24",    "HIF_D30" },
+	{ "HIF_D26",    "HIF_BHE1" },
+	{ "HIF_SDCLK",  "HIF_WRn" },
+	{ "HIF_AHI1",   "HIF_DIRQ" },
+
+//	{ "RSTOUT",     "HIF_RDY" }
 };
 
 
@@ -290,10 +306,6 @@ static int build_net_list(const PINDESCRIPTION_T *ptPinsUnderTest, const char * 
 		}
 		else
 		{
-			uprintf("Processing net ");
-			print_net_desc(ppcNetListNames);
-			uprintf("\n");
-
 			/* Loop over all pins in this net. */
 			sizNetPinCnt = 0;
 			do
@@ -308,7 +320,9 @@ static int build_net_list(const PINDESCRIPTION_T *ptPinsUnderTest, const char * 
 					ptPinHit = find_pin_by_name(ptPinsUnderTest, pcPinName);
 					if( ptPinHit==NULL )
 					{
-						uprintf("The pin name '%s' is not a member of the pins under test!\n", pcPinName);
+						uprintf("Error in net ");
+						print_net_desc(ppcNetListNames);
+						uprintf(": the pin name '%s' is not a member of the pins under test!\n", pcPinName);
 						iResult = -1;
 						break;
 					}
@@ -319,7 +333,9 @@ static int build_net_list(const PINDESCRIPTION_T *ptPinsUnderTest, const char * 
 						if( apptNetOfPin[sizPinIdx]!=NULL )
 						{
 							/* The pin is already a member of another net. */
-							uprintf("The pin '%s' is already a member of another network!\n", pcPinName);
+							uprintf("Error in net ");
+							print_net_desc(ppcNetListNames);
+							uprintf(": the pin '%s' is already a member of another network!\n", pcPinName);
 							iResult = -1;
 							break;
 						}
@@ -356,12 +372,16 @@ static int build_net_list(const PINDESCRIPTION_T *ptPinsUnderTest, const char * 
 /*-------------------------------------------------------------------------*/
 
 
-static void record_error(const PINDESCRIPTION_T *ptDrivingPin, const PINDESCRIPTION_T *ptReceivingPin, MATRIXERR_T tError)
+static int record_error(const PINDESCRIPTION_T *ptDrivingPin, const PINDESCRIPTION_T *ptReceivingPin, MATRIXERR_T tError)
 {
+	int iResult;
 	size_t sizDriverIdx;
 	size_t sizReceiverIdx;
 	unsigned short usError;
 
+
+	/* Be pessimistic. */
+	iResult = -1;
 
 	/* The receiver must not be NULL. */
 	if( ptReceivingPin==NULL )
@@ -391,13 +411,17 @@ static void record_error(const PINDESCRIPTION_T *ptDrivingPin, const PINDESCRIPT
 		{
 			usError = (unsigned short)tError;
 			ausPinToPinErrors[sizDriverIdx][sizReceiverIdx] |= usError;
+			iResult = 0;
 		}
 	}
+
+	return iResult;
 }
 
 
-void dump_errors(void)
+static unsigned int dump_errors(void)
 {
+	unsigned int uiErrorCount;
 	size_t sizDriverIdx;
 	size_t sizReceiverIdx;
 	const PINDESCRIPTION_T *ptDrivingPin;
@@ -405,6 +429,9 @@ void dump_errors(void)
 	unsigned short usError;
 
 
+	uiErrorCount = 0;
+
+	uprintf("\n\nMatrix errors:\n");
 	for(sizDriverIdx=0; sizDriverIdx<MAX_PINS_UNDER_TEST; ++sizDriverIdx)
 	{
 		for(sizReceiverIdx=0; sizReceiverIdx<MAX_PINS_UNDER_TEST; ++sizReceiverIdx)
@@ -418,45 +445,95 @@ void dump_errors(void)
 				if( (usError&((unsigned short)MATRIXERR_Loopback_but_drive0_does_not_follow))!=0 )
 				{
 					uprintf("\tLoopback_but_drive0_does_not_follow\n");
+					++uiErrorCount;
 				}
 				if( (usError&((unsigned short)MATRIXERR_Loopback_but_drive1_does_not_follow))!=0 )
 				{
 					uprintf("\tLoopback_but_drive1_does_not_follow\n");
+					++uiErrorCount;
 				}
 				if( (usError&((unsigned short)MATRIXERR_No_Loopback_but_shortcut_for_drive0))!=0 )
 				{
 					uprintf("\tNo_Loopback_but_shortcut_for_drive0\n");
+					++uiErrorCount;
 				}
 				if( (usError&((unsigned short)MATRIXERR_No_Loopback_but_shortcut_for_drive1))!=0 )
 				{
 					uprintf("\tNo_Loopback_but_shortcut_for_drive1\n");
+					++uiErrorCount;
 				}
 				if( (usError&((unsigned short)MATRIXERR_Not_at_default_state_0_at_pin_test_start))!=0 )
 				{
 					uprintf("\tNot_at_default_state_0_at_pin_test_start\n");
+					++uiErrorCount;
 				}
 				if( (usError&((unsigned short)MATRIXERR_Not_at_default_state_0_after_pin_test_drive0))!=0 )
 				{
 					uprintf("\tNot_at_default_state_0_after_pin_test_drive0\n");
+					++uiErrorCount;
 				}
 				if( (usError&((unsigned short)MATRIXERR_Not_at_default_state_0_after_pin_test_drive1))!=0 )
 				{
 					uprintf("\tNot_at_default_state_0_after_pin_test_drive1\n");
+					++uiErrorCount;
 				}
 			}
 		}
 	}
+
+	if( uiErrorCount==0 )
+	{
+		uprintf("  No errors, all connections OK!\n");
+	}
+	else
+	{
+		uprintf("\n  There were %d errors.\n", uiErrorCount);
+	}
+
+	return uiErrorCount;
 }
 
 /*-------------------------------------------------------------------------*/
+
+
+static int set_net_to_default(const PINDESCRIPTION_T **pptNet)
+{
+	int iResult;
+	size_t sizNetPinCnt;
+	const PINDESCRIPTION_T *ptPin;
+
+
+	/* Be optimistic. */
+	iResult = 0;
+
+	sizNetPinCnt = 0;
+	do
+	{
+		ptPin = pptNet[sizNetPinCnt];
+		if( ptPin==NULL )
+		{
+			/* End of list. */
+			break;
+		}
+		else
+		{
+			iResult = iopins_set(ptPin, PINSTATUS_INPUT);
+			if( iResult!=0 )
+			{
+				break;
+			}
+		}
+		++sizNetPinCnt;
+	} while( sizNetPinCnt<MAX_NET_SIZE);
+
+	return iResult;
+}
 
 
 static int set_all_pins_to_input(const PINDESCRIPTION_T **pptNetList)
 {
 	int iResult;
 	size_t sizNetListCnt;
-	size_t sizNetPinCnt;
-	const PINDESCRIPTION_T *ptPin;
 
 
 	/* Be optimistic. */
@@ -473,30 +550,11 @@ static int set_all_pins_to_input(const PINDESCRIPTION_T **pptNetList)
 		}
 		else
 		{
-			sizNetPinCnt = 0;
-			do
+			iResult = set_net_to_default(pptNetList);
+			if( iResult!=0 )
 			{
-				ptPin = pptNetList[sizNetPinCnt];
-				if( ptPin==NULL )
-				{
-					/* End of list. */
-					break;
-				}
-				else
-				{
-					iResult = iopins_set(ptPin, PINSTATUS_INPUT);
-					if( iResult!=0 )
-					{
-						break;
-					}
-				}
-				++sizNetPinCnt;
-			} while( sizNetPinCnt<MAX_NET_SIZE);
-		}
-
-		if( iResult!=0 )
-		{
-			break;
+				break;
+			}
 		}
 
 		pptNetList += MAX_NET_SIZE;
@@ -511,7 +569,6 @@ static int set_all_pins_to_input(const PINDESCRIPTION_T **pptNetList)
 static int check_all_pins_for_default(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPTION_T **pptNetDoNotTest, const PINDESCRIPTION_T *ptDrivingPin, MATRIXERR_T tError)
 {
 	int iResult;
-	int iErrors;
 	size_t sizNetListCnt;
 	size_t sizNetPinCnt;
 	const PINDESCRIPTION_T *ptPin;
@@ -523,7 +580,6 @@ static int check_all_pins_for_default(const PINDESCRIPTION_T **pptNetList, const
 
 	/* Be optimistic. */
 	iResult = 0;
-	iErrors = 0;
 
 	/* Loop over all net list entries. */
 	sizNetListCnt = 0;
@@ -573,18 +629,17 @@ static int check_all_pins_for_default(const PINDESCRIPTION_T **pptNetList, const
 						uiDefaultValue = ptPin->uiDefaultValue;
 
 						iResult = iopins_get(ptPin, &uiValue);
-						if( iResult!=0 )
-						{
-							break;
-						}
-						else
+						if( iResult==0 )
 						{
 							if( uiValue!=uiDefaultValue )
 							{
-								record_error(ptDrivingPin, ptPin, tError);
+								iResult = record_error(ptDrivingPin, ptPin, tError);
 								uprintf("Pin '%s' is not at its default value of %d, but %d!\n", ptPin->pcName, uiDefaultValue, uiValue);
-								iErrors = -1;
 							}
+						}
+						if( iResult!=0 )
+						{
+							break;
 						}
 					}
 				}
@@ -601,11 +656,6 @@ static int check_all_pins_for_default(const PINDESCRIPTION_T **pptNetList, const
 		++sizNetListCnt;
 	} while( sizNetListCnt<MAX_NET_COUNT );
 
-	if( iErrors!=0 )
-	{
-		iResult = -1;
-	}
-
 	return iResult;
 }
 
@@ -614,7 +664,15 @@ static int check_all_pins_for_default(const PINDESCRIPTION_T **pptNetList, const
 
 static void delay_to_stabilize_pins(void)
 {
-	uprintf("Deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeelay!\n");
+	unsigned long ulHandle;
+	int iElapsed;
+
+
+	ulHandle = systime_get_ms();
+	do
+	{
+		iElapsed = systime_elapsed(ulHandle, 2);
+	} while( iElapsed==0 );
 }
 
 
@@ -649,7 +707,8 @@ static int test_pin_state(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPT
 	}
 
 	/* Set the pin to output. */
-	uprintf("Driving pin '%s' to %d.\n", ptDrivingPin->pcName, uiExpectedValue);
+	/* TODO: print this only in verbode mode. */
+//	uprintf("Driving pin '%s' to %d.\n", ptDrivingPin->pcName, uiExpectedValue);
 	iResult = iopins_set(ptDrivingPin, tStatus);
 	if( iResult==0 )
 	{
@@ -677,7 +736,14 @@ static int test_pin_state(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPT
 				{
 					if( uiValue!=uiExpectedValue )
 					{
-						record_error(ptDrivingPin, ptPin, tError1);
+						/* TODO: print this only in verbode mode. */
+//						uprintf("  Pin '%s' does not follow.\n", ptPin->pcName);
+						iResult = record_error(ptDrivingPin, ptPin, tError1);
+					}
+					else
+					{
+						/* TODO: print this only in verbode mode. */
+//						uprintf("  Pin '%s' follows.\n", ptPin->pcName);
 					}
 				}
 			}
@@ -743,9 +809,10 @@ static int test_network(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPTIO
 	const PINDESCRIPTION_T *ptPin;
 
 
-	uprintf("Testing net %03d: [ ", sizNetIndex);
-	print_netlist(pptNetwork);
-	uprintf("]\n");
+	/* TODO: print this only in verbose mode. */
+//	uprintf("Testing net %03d: [ ", sizNetIndex);
+//	print_netlist(pptNetwork);
+//	uprintf("]\n");
 
 	/* Loop over all pins in the network. */
 	pptCnt = pptNetwork;
@@ -823,6 +890,7 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 {
 	TEST_RESULT_T tTestResult;
 	int iResult;
+	unsigned int uiErrorCount;
 
 
 	systime_init();
@@ -830,8 +898,10 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 //	uprintf("\f. *** I/O matrix test by doc_bacardi@users.sourceforge.net ***\n");
 //	uprintf("V" VERSION_ALL "\n\n");
 
-	/* Switch off SYS led. */
-	rdy_run_setLEDs(RDYRUN_OFF);
+	/* NOTE:
+	 * Do not use the SYS led in this test. The RDY and RUN pins might be
+	 * part of the test matrix.
+	 */
 
 	/* Get the test parameter. */
 	//ptTestParams = (CRCTEST_PARAMETER_T*)(ptTestParam->pvInitParams);
@@ -842,7 +912,8 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 	iResult = build_net_list(atPinsUnderTest, apcNetListNames, aptNetList);
 	if( iResult==0 )
 	{
-		print_all_netlists(aptNetList);
+		/* TODO: print this only in verbose mode. */
+//		print_all_netlists(aptNetList);
 
 		iResult = iopins_configure(atPinsUnderTest, MAX_PINS_UNDER_TEST);
 		if( iResult==0 )
@@ -850,13 +921,23 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 			iResult = run_matrix_test(aptNetList);
 			if( iResult==0 )
 			{
-				dump_errors();
+				uiErrorCount = dump_errors();
+				if( uiErrorCount!=0 )
+				{
+					iResult = -1;
+				}
 			}
 		}
 	}
 
-	rdy_run_setLEDs(RDYRUN_GREEN);
-	tTestResult = TEST_RESULT_OK;
+	if( iResult==0 )
+	{
+		tTestResult = TEST_RESULT_OK;
+	}
+	else
+	{
+		tTestResult = TEST_RESULT_ERROR;
+	}
 
 	return tTestResult;
 }
