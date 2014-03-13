@@ -147,6 +147,8 @@ static const PINDESCRIPTION_T **apptNetOfPin[MAX_PINS_UNDER_TEST];
 
 static unsigned short ausPinToPinErrors[MAX_PINS_UNDER_TEST][MAX_PINS_UNDER_TEST];
 
+static unsigned long s_ulVerbosity;
+
 /*-------------------------------------------------------------------------*/
 
 static void print_net_desc(const char * const *ppcNetDesc)
@@ -745,8 +747,10 @@ static int test_pin_state(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPT
 	}
 
 	/* Set the pin to output. */
-	/* TODO: print this only in verbose mode. */
-//	uprintf("Driving pin '%s' to %d.\n", ptDrivingPin->pcName, uiExpectedValue);
+	if( s_ulVerbosity!=0 )
+	{
+		uprintf("Driving pin '%s' to %d.\n", ptDrivingPin->pcName, uiExpectedValue);
+	}
 	iResult = iopins_set(ptDrivingPin, tStatus);
 	if( iResult==0 )
 	{
@@ -774,14 +778,18 @@ static int test_pin_state(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPT
 				{
 					if( uiValue!=uiExpectedValue )
 					{
-						/* TODO: print this only in verbose mode. */
-//						uprintf("  Pin '%s' does not follow.\n", ptPin->pcName);
+						if( s_ulVerbosity!=0 )
+						{
+							uprintf("  Pin '%s' does not follow.\n", ptPin->pcName);
+						}
 						iResult = record_error(ptDrivingPin, ptPin, tError1);
 					}
 					else
 					{
-						/* TODO: print this only in verbose mode. */
-//						uprintf("  Pin '%s' follows.\n", ptPin->pcName);
+						if( s_ulVerbosity!=0 )
+						{
+							uprintf("  Pin '%s' follows.\n", ptPin->pcName);
+						}
 					}
 				}
 			}
@@ -909,10 +917,12 @@ static int test_network(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPTIO
 	const PINDESCRIPTION_T *ptPin;
 
 
-	/* TODO: print this only in verbose mode. */
-//	uprintf("Testing net %03d: [ ", sizNetIndex);
-//	print_netlist(pptNetwork);
-//	uprintf("]\n");
+	if( s_ulVerbosity!=0 )
+	{
+		uprintf("Testing net %03d: [ ", sizNetIndex);
+		print_netlist(pptNetwork);
+		uprintf("]\n");
+	}
 
 	/* Loop over all pins in the network. */
 	pptCnt = pptNetwork;
@@ -989,6 +999,7 @@ static int run_matrix_test(const PINDESCRIPTION_T **pptNetList)
 TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 {
 	TEST_RESULT_T tTestResult;
+	IOMATRIX_PARAMETER_T *ptTestParams;
 	int iResult;
 	unsigned int uiErrorCount;
 
@@ -1004,7 +1015,11 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 	 */
 
 	/* Get the test parameter. */
-	//ptTestParams = (CRCTEST_PARAMETER_T*)(ptTestParam->pvInitParams);
+	ptTestParams = (IOMATRIX_PARAMETER_T*)(ptTestParam->pvInitParams);
+	uprintf(". Parameters: 0x%08x\n", (unsigned long)ptTestParams);
+	uprintf(".   Verbosity: 0x%08x\n", ptTestParams->ulVerbosity);
+
+	s_ulVerbosity = ptTestParams->ulVerbosity;
 
 	/* Initialize the error array. */
 	memset(ausPinToPinErrors, 0, sizeof(ausPinToPinErrors));
@@ -1018,8 +1033,10 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 		 */
 
 
-		/* TODO: print this only in verbose mode. */
-//		print_all_netlists(aptNetList);
+		if( s_ulVerbosity!=0 )
+		{
+			print_all_netlists(aptNetList);
+		}
 
 		iResult = iopins_configure(atPinsUnderTest, MAX_PINS_UNDER_TEST);
 		if( iResult==0 )
