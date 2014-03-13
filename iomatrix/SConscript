@@ -59,7 +59,7 @@ env_netx56_t.Replace(LDFILE = 'src/netx56/netx56.ld')
 env_netx56_t.Append(CPPPATH = aCppPath)
 src_netx56_t = env_netx56_t.SetBuildPath('targets/netx56', 'src', sources_common)
 elf_netx56_t = env_netx56_t.Elf('targets/netx56/iomatrix.elf', src_netx56_t + platform_lib_netx56)
-iomatrix_netx56 = env_netx56_t.ObjCopy('targets/netx56/iomatrix.bin', elf_netx56_t)
+IOMATRIX_NETX56 = env_netx56_t.ObjCopy('targets/netx56/iomatrix.bin', elf_netx56_t)
 
 #env_netx50_t = env_netx50_default.Clone()
 #env_netx50_t.Replace(LDFILE = 'src/netx50/netx50.ld')
@@ -76,6 +76,16 @@ iomatrix_netx56 = env_netx56_t.ObjCopy('targets/netx56/iomatrix.bin', elf_netx56
 #crctest_netx10 = env_netx10_t.ObjCopy('targets/netx10/crctest.bin', elf_netx10_t)
 
 #Export('crctest_netx500', 'crctest_netx56', 'crctest_netx50', 'crctest_netx10')
-Export('iomatrix_netx56')
+Export('IOMATRIX_NETX56')
+
+
+#----------------------------------------------------------------------------
+#
+# Generate the LUA scripts from the template.
+# This extracts symbols and enumeration values from the ELF file and inserts
+# them into the LUA script.
+#
+LUA_IOMATRIX = env_netx56_t.GccSymbolTemplate('targets/lua/io_matrix.lua', elf_netx56_t, GCCSYMBOLTEMPLATE_TEMPLATE=File('templates/io_matrix.lua'))
+Export('LUA_IOMATRIX')
 
 

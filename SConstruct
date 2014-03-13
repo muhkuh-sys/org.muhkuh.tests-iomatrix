@@ -68,7 +68,8 @@ env_default.Version('targets/version/version.h', 'templates/version.h')
 #
 SConscript('iomatrix/SConscript')
 #Import('iomatrix_netx500', 'iomatrix_netx56', 'iomatrix_netx50', 'iomatrix_netx10')
-Import('iomatrix_netx56')
+Import('IOMATRIX_NETX56')
+Import('LUA_IOMATRIX')
 
 
 #----------------------------------------------------------------------------
@@ -111,10 +112,10 @@ doc = env_default.Asciidoc('targets/doc/io_matrix.html', 'doc/io_matrix.txt', AS
 # Copy all binary binaries.
 #Command('targets/testbench/netx/iomatrix_netx10.bin',  iomatrix_netx10,  Copy("$TARGET", "$SOURCE"))
 #Command('targets/testbench/netx/iomatrix_netx50.bin',  iomatrix_netx50,  Copy("$TARGET", "$SOURCE"))
-Command('targets/testbench/netx/iomatrix_netx56.bin',  iomatrix_netx56,  Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/iomatrix_netx56.bin',  IOMATRIX_NETX56,  Copy("$TARGET", "$SOURCE"))
 #Command('targets/testbench/netx/iomatrix_netx500.bin', iomatrix_netx500, Copy("$TARGET", "$SOURCE"))
 
 # Copy all LUA scripts.
-#Command('targets/testbench/lua/ramtest.lua',  'lua/ramtest.lua', Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/lua/io_matrix.lua',  LUA_IOMATRIX, Copy("$TARGET", "$SOURCE"))
 #Command('targets/testbench/ramtest_MEM_IS42S32800B.lua',  'lua/ramtest_MEM_IS42S32800B.lua', Copy("$TARGET", "$SOURCE"))
 #Command('targets/testbench/ramtest_MEM_MT48LC2M32.lua',   'lua/ramtest_MEM_MT48LC2M32.lua',  Copy("$TARGET", "$SOURCE"))
