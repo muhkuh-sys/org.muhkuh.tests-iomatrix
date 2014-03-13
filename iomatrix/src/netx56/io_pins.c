@@ -209,7 +209,6 @@ static int set_hifpio(unsigned int uiIndex, PINSTATUS_T tValue)
 		switch( tValue )
 		{
 		case PINSTATUS_HIGHZ:
-		case PINSTATUS_INPUT:
 			/* Clear the output enable bit. */
 			aulOen[0] &= ~(aulMsk[0]);
 			aulOen[1] &= ~(aulMsk[1]);
@@ -331,17 +330,12 @@ static int set_rstout(unsigned int uiIndex, PINSTATUS_T tValue)
 			iResult = 0;
 			break;
 
-		case PINSTATUS_INPUT:
-			/* The RSTOUT pin can not be used as input. */
-			uprintf("The RSTOUT pin can not be configured to input!\n");
-			break;
-
 		case PINSTATUS_OUTPUT0:
 			/* Set the output enable bit. */
 			ulValue |= HOSTMSK(reset_ctrl_EN_RES_REQ_OUT);
 
-			/* Clear the output bit. */
-			ulValue &= ~(HOSTMSK(reset_ctrl_EN_RES_REQ_OUT));
+			/* The output bit is inverted: set the output bit to get a 0. */
+			ulValue |= HOSTMSK(reset_ctrl_RES_REQ_OUT);
 
 			iResult = 0;
 			break;
@@ -350,8 +344,8 @@ static int set_rstout(unsigned int uiIndex, PINSTATUS_T tValue)
 			/* Set the output enable bit. */
 			ulValue |= HOSTMSK(reset_ctrl_EN_RES_REQ_OUT);
 
-			/* Set the output bit. */
-			ulValue |= HOSTMSK(reset_ctrl_EN_RES_REQ_OUT);
+			/* The output bit is inverted: clear the output bit to get a 1. */
+			ulValue &= ~(HOSTMSK(reset_ctrl_RES_REQ_OUT));
 
 			iResult = 0;
 			break;

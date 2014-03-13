@@ -130,7 +130,7 @@ static const char * const apcNetListNames[MAX_NET_COUNT][MAX_NET_SIZE] =
 	{ "HIF_SDCLK",  "HIF_WRn" },
 	{ "HIF_AHI1",   "HIF_DIRQ" },
 
-//	{ "RSTOUT",     "HIF_RDY" }
+	{ "RSTOUT",     "HIF_RDY" }
 };
 
 
@@ -501,11 +501,14 @@ static int set_net_to_default(const PINDESCRIPTION_T **pptNet)
 	int iResult;
 	size_t sizNetPinCnt;
 	const PINDESCRIPTION_T *ptPin;
+	unsigned long ulFlags;
+	PINSTATUS_T tPinStatus;
 
 
 	/* Be optimistic. */
 	iResult = 0;
 
+	/* Do all pins in the network support INPUT or HIGHZ mode? */
 	sizNetPinCnt = 0;
 	do
 	{
@@ -517,10 +520,38 @@ static int set_net_to_default(const PINDESCRIPTION_T **pptNet)
 		}
 		else
 		{
-			iResult = iopins_set(ptPin, PINSTATUS_INPUT);
-			if( iResult!=0 )
+			ulFlags  = ptPin->ulFlags;
+			ulFlags &= ((unsigned long)PINFLAG_I) | ((unsigned long)PINFLAG_Z);
+			if( ulFlags!=0 )
 			{
-				break;
+				tPinStatus = PINSTATUS_HIGHZ;
+			}
+			else
+			{
+				ulFlags  = ptPin->ulFlags;
+				ulFlags &= ((unsigned long)PINFLAG_O);
+				if( ulFlags!=0 )
+				{
+					/* Drive the default value. */
+					if( ptPin->uiDefaultValue==0 )
+					{
+						tPinStatus = PINSTATUS_OUTPUT0;
+					}
+					else
+					{
+						tPinStatus = PINSTATUS_OUTPUT1;
+					}
+				}
+				else
+				{
+					uprintf("The pin '%s' is neither I, O, nor HIGHZ!", ptPin->pcName);
+					iResult = -1;
+				}
+			}
+
+			if( iResult==0 )
+			{
+				iResult = iopins_set(ptPin, tPinStatus);
 			}
 		}
 		++sizNetPinCnt;
@@ -576,6 +607,7 @@ static int check_all_pins_for_default(const PINDESCRIPTION_T **pptNetList, const
 	const PINDESCRIPTION_T **pptEnd;
 	unsigned int uiValue;
 	unsigned int uiDefaultValue;
+	unsigned long ulFlags;
 
 
 	/* Be optimistic. */
@@ -626,20 +658,26 @@ static int check_all_pins_for_default(const PINDESCRIPTION_T **pptNetList, const
 
 					if( ptPin!=NULL )
 					{
-						uiDefaultValue = ptPin->uiDefaultValue;
+						/* Can this pin be used as an input? */
+						ulFlags  = ptPin->ulFlags;
+						ulFlags &= ((unsigned long)PINFLAG_I);
+						if( ulFlags!=0 )
+						{
+							uiDefaultValue = ptPin->uiDefaultValue;
 
-						iResult = iopins_get(ptPin, &uiValue);
-						if( iResult==0 )
-						{
-							if( uiValue!=uiDefaultValue )
+							iResult = iopins_get(ptPin, &uiValue);
+							if( iResult==0 )
 							{
-								iResult = record_error(ptDrivingPin, ptPin, tError);
-								uprintf("Pin '%s' is not at its default value of %d, but %d!\n", ptPin->pcName, uiDefaultValue, uiValue);
+								if( uiValue!=uiDefaultValue )
+								{
+									iResult = record_error(ptDrivingPin, ptPin, tError);
+									uprintf("Pin '%s' is not at its default value of %d, but %d!\n", ptPin->pcName, uiDefaultValue, uiValue);
+								}
 							}
-						}
-						if( iResult!=0 )
-						{
-							break;
+							if( iResult!=0 )
+							{
+								break;
+							}
 						}
 					}
 				}
@@ -707,7 +745,7 @@ static int test_pin_state(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPT
 	}
 
 	/* Set the pin to output. */
-	/* TODO: print this only in verbode mode. */
+	/* TODO: print this only in verbose mode. */
 //	uprintf("Driving pin '%s' to %d.\n", ptDrivingPin->pcName, uiExpectedValue);
 	iResult = iopins_set(ptDrivingPin, tStatus);
 	if( iResult==0 )
@@ -736,13 +774,13 @@ static int test_pin_state(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPT
 				{
 					if( uiValue!=uiExpectedValue )
 					{
-						/* TODO: print this only in verbode mode. */
+						/* TODO: print this only in verbose mode. */
 //						uprintf("  Pin '%s' does not follow.\n", ptPin->pcName);
 						iResult = record_error(ptDrivingPin, ptPin, tError1);
 					}
 					else
 					{
-						/* TODO: print this only in verbode mode. */
+						/* TODO: print this only in verbose mode. */
 //						uprintf("  Pin '%s' follows.\n", ptPin->pcName);
 					}
 				}
@@ -756,7 +794,7 @@ static int test_pin_state(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPT
 			++pptCnt;
 		}
 
-		iResult2 = iopins_set(ptDrivingPin, PINSTATUS_INPUT);
+		iResult2 = iopins_set(ptDrivingPin, PINSTATUS_HIGHZ);
 		if( iResult2==0 )
 		{
 			/* Delay a while to settle the pins. */
@@ -776,21 +814,83 @@ static int test_pin_state(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPT
 static int test_pin(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPTION_T **pptNetwork, const PINDESCRIPTION_T *ptDrivingPin)
 {
 	int iResult;
+	unsigned long ulFlags;
+	size_t sizNetPinCnt;
+	const PINDESCRIPTION_T *ptPin;
+	int iAtLeastOneInput;
+	const PINDESCRIPTION_T *ptOutputOnlyPin;
 
 
-	iResult = check_all_pins_for_default(pptNetList, NULL, ptDrivingPin, MATRIXERR_Not_at_default_state_0_at_pin_test_start);
-	if( iResult==0 )
+	/* Can this pin be used as an output? */
+	ulFlags  = ptDrivingPin->ulFlags;
+	ulFlags &= ((unsigned long)PINFLAG_O);
+	if( ulFlags==0 )
 	{
-		iResult = test_pin_state(pptNetList, pptNetwork, ptDrivingPin, PINSTATUS_OUTPUT0);
-		if( iResult==0 )
+		iResult = 0;
+	}
+	else
+	{
+		/* Among the other pins must be at least one INPUT pin.
+		 * All other pins must have INPUT or HIGHZ capabilities.
+		 */
+		iAtLeastOneInput = 0;
+		ptOutputOnlyPin = NULL;
+		sizNetPinCnt = 0;
+		do
 		{
-			iResult = check_all_pins_for_default(pptNetList, NULL, ptDrivingPin, MATRIXERR_Not_at_default_state_0_after_pin_test_drive0);
+			ptPin = pptNetwork[sizNetPinCnt];
+			if( ptPin==NULL )
+			{
+				/* End of list. */
+				break;
+			}
+			/* Ignore the driving pin. */
+			else if( ptPin!=ptDrivingPin )
+			{
+				ulFlags  = ptPin->ulFlags;
+				ulFlags &= ((unsigned long)PINFLAG_I);
+				if( ulFlags!=0 )
+				{
+					iAtLeastOneInput = 1;
+				}
+
+				ulFlags  = ptPin->ulFlags;
+				ulFlags &= ((unsigned long)PINFLAG_IOZ);
+				if( ulFlags==((unsigned long)PINFLAG_O) )
+				{
+					ptOutputOnlyPin = ptPin;
+				}
+			}
+			++sizNetPinCnt;
+		} while( sizNetPinCnt<MAX_NET_SIZE);
+
+		if( ptOutputOnlyPin!=NULL )
+		{
+			uprintf("Not driving pin '%s'. The network contains an output only pin: %s\n", ptDrivingPin->pcName, ptOutputOnlyPin->pcName);
+			iResult = 0;
+		}
+		else if( iAtLeastOneInput==0 )
+		{
+			uprintf("Not driving pin '%s'. The network contains no other input pins.\n", ptDrivingPin->pcName);
+			iResult = 0;
+		}
+		else
+		{
+			iResult = check_all_pins_for_default(pptNetList, NULL, ptDrivingPin, MATRIXERR_Not_at_default_state_0_at_pin_test_start);
 			if( iResult==0 )
 			{
-				iResult = test_pin_state(pptNetList, pptNetwork, ptDrivingPin, PINSTATUS_OUTPUT1);
+				iResult = test_pin_state(pptNetList, pptNetwork, ptDrivingPin, PINSTATUS_OUTPUT0);
 				if( iResult==0 )
 				{
-					iResult = check_all_pins_for_default(pptNetList, NULL, ptDrivingPin, MATRIXERR_Not_at_default_state_0_after_pin_test_drive1);
+					iResult = check_all_pins_for_default(pptNetList, NULL, ptDrivingPin, MATRIXERR_Not_at_default_state_0_after_pin_test_drive0);
+					if( iResult==0 )
+					{
+						iResult = test_pin_state(pptNetList, pptNetwork, ptDrivingPin, PINSTATUS_OUTPUT1);
+						if( iResult==0 )
+						{
+							iResult = check_all_pins_for_default(pptNetList, NULL, ptDrivingPin, MATRIXERR_Not_at_default_state_0_after_pin_test_drive1);
+						}
+					}
 				}
 			}
 		}
@@ -912,6 +1012,12 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 	iResult = build_net_list(atPinsUnderTest, apcNetListNames, aptNetList);
 	if( iResult==0 )
 	{
+		/* TODO: check if all nets contain no more than 1 pins which
+		 * are OUT only. These pins can only drive and should not be
+		 * connected in one net.
+		 */
+
+
 		/* TODO: print this only in verbose mode. */
 //		print_all_netlists(aptNetList);
 
