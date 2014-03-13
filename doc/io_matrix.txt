@@ -1,0 +1,793 @@
+Test case "I/O Matrix"
+======================
+Christoph Thelen <cthelen@hilscher.com>
+:Author Initials: CT
+
+
+[[About, About]]
+== About
+
+This document describes the "I/O Matrix" test for the Muhkuh test framework.
+It checks a range of I/O pins with the help of a loopback adaptor.
+
+The adaptor must take several test specific details into account, like the wiring of the signals on the board under test. The chapter <<Matrix_design>> discusses the design of the adaptor in detail.
+
+
+[[Test_description,Test description]]
+== Test description
+
+The test "I/O Matrix" checks a set of netX I/O pins.
+The pins are connected by a loopback adaptor. The connections realized by the adaptor have the intention to detect open pins, shortcuts between two or more pins, stuck at 1 or stuck at 0 errors. All connections between the pins are called the "I/O matrix". The chapter <<Matrix_design>> disusses the composition of the connections in detail.
+
+The I/O matrix is described by 2 tables. One table lists all pins which should be tested. These are the "pins under test". A second table groups the pins which are connected to each other. A group of connected pins is called a "network".
+
+The "pins under test" and the "networks" must be described in the LUA script of the test. The chapter <<Matrix_definition>> has more information on this topic.
+
+The test itself loops over all networks. For each network, it runs the following check:
+
+* Set all pins under test to input.
+* All pins under test must be at their default value.
+* Loop over all pins in the network
+** Skip the pin if it can not be used as an output.
+** Set the pin to output and drive a +0+.
+** All other pins in the network must receive the +0+.
+** The rest of the pins under test must be at their default value.
+** Set the pin to output and drive a +1+.
+** All other pins in the network must receive the +1+.
+** The rest of the pins under test must be at their default value.
+** Set the pin to input.
+** All pins under test must be at their default value.
+
+
+[[Matrix_design, Matrix design]]
+=== Matrix design
+
+The quality of the test depends heavily on the design of the I/O matrix. An ideal I/O matrix allows to check the complete functionality of each pin with only one connected stimulating pin. No other pins of the matrix are affected by the test. Furthermore it takes the complete wiring on the board under test into account so that a loopback connection will not hide a possible shortcut on the board. The following example shows a badly designed loopback adaptor. The pins IO4 and IO5 are connected by the adaptor even hough they are next to each other on the board. A shortcut on the board between these pins will be hidden by the loopback adaptor. It can not be detected by the test.
+
+.Example of a bad loopback connection.
+-----------------------------------------------------------------------------
+
+                   external connector        badly designed loopback adaptor
+  -----------+                       \      /
+             |
+         IO0 |-------------------------o  >--+
+             |                               |
+         IO1 |-------------------------o  >--+
+             |
+         IO2 |-------------------------o  >--+
+    netX     |                               |
+         IO3 |-------------------------o  >--+
+             |
+         IO4 |-----------X-------------o  >--+
+             |           X                   |
+         IO5 |-----------X-------------o  >--+
+             |
+  -----------+              \
+                             Shortcut on the board hidden by the loopback adaptor
+
+-----------------------------------------------------------------------------
+
+A good loopback adaptor will only connect pins which are very unlikely to hav a shortcut on the board. The next diagram shown an example of a good loopback adaptor.
+
+.Example of a good loopback connection.
+-----------------------------------------------------------------------------
+
+                   external connector        good loopback adaptor
+  -----------+                       \      /
+             |
+         IO0 |-------------------------o  >----+
+             |                                 |
+         IO1 |-------------------------o  >-------+
+             |                                 |  |
+         IO2 |-------------------------o  >----------+
+    netX     |                                 |  |  |
+         IO3 |-------------------------o  >----+  |  |
+             |                                    |  |
+         IO4 |-------------------------o  >-------+  |
+             |                                       |
+         IO5 |-------------------------o  >----------+
+             |
+  -----------+
+
+-----------------------------------------------------------------------------
+
+An ideal I/O matrix does not connect more than 2 pins with each other. This way the possible location of a reported error on the board is reduced to a minimum - only 2 wires have to be checked. Unfortunately it is not always possible to design an ideal I/O matrix. This is the case when the number of pins to test can not be divided by 2, or the functionality of some pins are limited. while these solutions are not ideal it is still possible for the I/O matrix test to deal with them. The following example shows a situation with 7 pins to test.
+
+.Example of a loopback connection for 7 pins.
+-----------------------------------------------------------------------------
+
+                   external connector        loopback adaptor
+  -----------+                       \      /
+             |
+         IO0 |-------------------------o  >----------+
+             |                                       |
+         IO1 |-------------------------o  >----+     |
+             |                                 |     |
+         IO2 |-------------------------o  >-------+  |
+             |                                 |  |  |
+         IO3 |-------------------------o  >----|--|--+
+    netX     |                                 |  |  |
+         IO4 |-------------------------o  >----+  |  |
+             |                                    |  |
+         IO5 |-------------------------o  >-------+  |
+             |                                       |
+         IO6 |--------X----------------o  >----------+
+             |        X
+         GND |--------X-------+
+             |                |
+  -----------+                |
+
+-----------------------------------------------------------------------------
+
+The example above connects the pins IO0, IO3 and IO7 with each other. IO6 has a shortcut with a GND line, which makes the whole set of IO0, IO3 and IO6 stuck at 0. The test can not identify the exact location of the shortcut. It can only tell that the 3 pins are involved.
+
+The next example includes a pin with limited functionality: O0 can only work as an output and can not be switched to input. Pins connected to O0 must only work as input, regardless of their functionality. In the example the connected pin IO2 could work as input and output, but the connection with O0 limits it to an input. The test can still check the wiring from the netX pins IO2 and O0 to the external connector by toggeling O0.
+
+.Example of a matrix including pins with limited functionality.
+-----------------------------------------------------------------------------
+
+                   external connector        loopback adaptor
+  -----------+                       \      /
+             |
+         IO0 |-------------------------o  >----+
+             |                                 |
+         IO1 |-------------------------o  >-------+
+             |                                 |  |
+         IO2 |-------------------------o  >----------+
+    netX     |                                 |  |  |
+         IO3 |-------------------------o  >----+  |  |
+             |                                    |  |
+         IO4 |-------------------------o  >-------+  |
+             |                                       |
+          O0 |-------------------------o  >----------+
+             |
+  -----------+
+
+-----------------------------------------------------------------------------
+
+
+
+[[Matrix_definition, Matrix definition]]
+=== Matrix definition
+
+The I/O matrix is described by 2 tables in the tests script code. The first table defines all "pins under test" with a name and their attributes. The second table describes which pins are connected to each other. This is the "networks" table.
+
+The "pins under test" table defines all pins with a name and a set of attibutes for each pin. The name can be choosen freely. It is used as an identifier in the "networks" table and is part of the error report if a problem occured for a connection. A good choice is the signal name in the schematics. The attributes of a pin describe how to access it and show its default state. The access part consists of the netX unit controlling the pin (e.g. GPIO, HIF...), the index of the signal in the unit and a set of flags.
+
+.All pin attributes.
+* The netX unit controlling the pin.
+* The index of the pin in the unit.
+* Flags for the pin.
+
+The following example checks 7 pins: +GPIO0+, +GPIO1+, +GPIO2+, +GPIO3+, +PIO6+, +XMIO0+ and +XMIO4+.
+All of these pins can be switched to input and output and drive a +0+ and +1+. This means there are no special flags for the pins.
+Furthermore all pins have a built-in pulldown resistor in the netX chip. There are no external pulldown or pullup resistors. This makes a default state of +0+ for all pins.
+The chapter <<netX_pins>> shows all available I/O pins for the different netX controllers and their attributes.
+
+The following table shows the unit, index, default value and flags for the pins under test in this example:
+
+[cols=">,>,>,>,>",options="header"]
+|=======================================
+|     Pin|   unit| index| default| flags
+| +GPIO0+| +GPIO+|     0|       0|     0
+| +GPIO1+| +GPIO+|     1|       0|     0
+| +GPIO2+| +GPIO+|     2|       0|     0
+| +GPIO3+| +GPIO+|     3|       0|     0
+|  +PIO6+|  +PIO+|     6|       0|     0
+| +XMIO0+| +XMIO+|     0|       0|     0
+| +XMIO4+| +XMIO+|     4|       0|     0
+|=======================================
+
+Now we define a loopback adaptor for the pins.
+The GPIO lines are next to each other on the PCB. This means the adaptor should not make one of the following connections:
+
+* not +GPIO0+ - +GPIO1+ because they are next to each other
+* not +GPIO1+ - +GPIO2+ because they are next to each other
+* not +GPIO2+ - +GPIO3+ because they are next to each other
+
+The PIO and XMIO pins are separate from all other pins under test. No special restrictions apply here.
+
+One possible solution for the loopback adaptor would be the following connection matrix:
+
+* +GPIO0+ - +GPIO2+
+* +GPIO1+ - +GPIO3+
+* +PIO6+ - +XMIO0+ - +XMIO4+
+
+.A loopback adaptor for the example testcase.
+-----------------------------------------------------------------------------
+
+                   external connector        loopback adaptor
+  -----------+                       \      /
+             |
+       GPIO0 |-------------------------o  >----------+
+             |                                       |
+       GPIO1 |-------------------------o  >----+     |
+             |                                 |     |
+       GPIO2 |-------------------------o  >----------+
+             |                                 |
+       GPIO3 |-------------------------o  >----+
+             |
+       ...   |
+             |
+        PIO6 |-------------------------o  >----+
+             |                                 |
+       ...   |                                 |
+             |                                 |
+       XMIO0 |-------------------------o  >----+
+             |                                 |
+       ...   |                                 |
+             |                                 |
+       XMIO4 |-------------------------o  >----+
+             |
+  -----------+
+
+-----------------------------------------------------------------------------
+
+All of the collected information will now be written to the 2 tables "pins unnder test" and "networks".
+
+The "pins under test" table has the following syntax:
+
+.Syntax of the "pins under test" table.
+==============================================================================
++PINS_UNDER_TEST+ = { +
+{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}["'name'"] =   { iomatrix.IOTYP_$$'unit', 'index', 'default value', 'flags' }, +
+{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}... +
+}
+==============================================================================
+
+The current example has the following table:
+
+[source,lua]
+.Example for the "pins under test" table.
+------------------------------------------------------------------------------
+PINS_UNDER_TEST = {
+	["GPIO0"] =   { iomatrix.IOTYP_GPIO, 0, 0, 0 },
+	["GPIO1"] =   { iomatrix.IOTYP_GPIO, 1, 0, 0 },
+	["GPIO2"] =   { iomatrix.IOTYP_GPIO, 2, 0, 0 },
+	["GPIO3"] =   { iomatrix.IOTYP_GPIO, 3, 0, 0 },
+	["PIO6"]  =   { iomatrix.IOTYP_PIO,  6, 0, 0 },
+	["XMIO0"] =   { iomatrix.IOTYP_XMIO, 0, 0, 0 },
+	["XMIO4"] =   { iomatrix.IOTYP_XMIO, 4, 0, 0 }
+}
+------------------------------------------------------------------------------
+
+The networks table simply combines the connected pins:
+
+.Syntax of the "networks" table.
+==============================================================================
++NETWORKS+ = { +
+{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{ "'name'", "'name'" [, "'name'"] }, +
+{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}... +
+}
+==============================================================================
+
+The current example has the following table:
+
+[source,lua]
+.Example for the "networks" table.
+------------------------------------------------------------------------------
+NETWORKS = {
+	{ "GPIO0", "GPIO2" },
+	{ "GPIO1", "GPIO3" },
+	{ "PIO6",  "XMIO0", "XMIO4" }
+}
+------------------------------------------------------------------------------
+
+
+[[netX_pins, netX pins]]
+== netX_pins
+
+=== netX500/netX100
+
+[cols="<m,<,<m,>m,>m,>,>",options="header"]
+|============================================================================================
+|       unit| index|     pin name| ball pos| I/O| built-in resistor| standalone default value
+.16+|   GPIO|     0|        GPIO0|     AA19| I/O| 50k Ohm pull-down|                        0
+            |     1|        GPIO1|      Y19| I/O| 50k Ohm pull-down|                        0
+            |     2|        GPIO2|     AA18| I/O| 50k Ohm pull-down|                        0
+            |     3|        GPIO3|      Y18| I/O| 50k Ohm pull-down|                        0
+            |     4|        GPIO4|     AA17| I/O| 50k Ohm pull-down|                        0
+            |     5|        GPIO5|      Y17| I/O| 50k Ohm pull-down|                        0
+            |     6|        GPIO6|     AA16| I/O| 50k Ohm pull-down|                        0
+            |     7|        GPIO7|      Y16| I/O| 50k Ohm pull-down|                        0
+            |     8|        GPIO8|     AA15| I/O| 50k Ohm pull-down|                        0
+            |     9|        GPIO9|      Y15| I/O| 50k Ohm pull-down|                        0
+            |    10|       GPIO10|     AA14| I/O| 50k Ohm pull-down|                        0
+            |    11|       GPIO11|      Y14| I/O| 50k Ohm pull-down|                        0
+            |    12|       GPIO12|     AA13| I/O| 50k Ohm pull-down|                        0
+            |    13|       GPIO13|      Y13| I/O| 50k Ohm pull-down|                        0
+            |    14|       GPIO14|      W13| I/O| 50k Ohm pull-down|                        0
+            |    15|       GPIO15|      V13| I/O| 50k Ohm pull-down|                        0
+.52+|    HIF|     0|      EXT_A00|       A7| I/O|              n.a.|                        -
+            |     1|      EXT_A01|       C8| I/O|              n.a.|                        -
+            |     2|      EXT_A02|       B8| I/O|              n.a.|                        -
+            |     3|      EXT_A03|       C9| I/O|              n.a.|                        -
+            |     4|      EXT_A04|       B9| I/O|              n.a.|                        -
+            |     5|      EXT_A05|       A9| I/O|              n.a.|                        -
+            |     6|      EXT_A06|      C10| I/O|              n.a.|                        -
+            |     7|      EXT_A07|      B10| I/O|              n.a.|                        -
+            |     8|      EXT_A08|      C11| I/O|              n.a.|                        -
+            |     9|      EXT_A09|      B11| I/O|              n.a.|                        -
+            |    10|      EXT_A10|      C12| I/O|              n.a.|                        -
+            |    11|      EXT_A11|      C13| I/O|              n.a.|                        -
+            |    12|      EXT_A12|      B13| I/O|              n.a.|                        -
+            |    13|      EXT_A13|      A13| I/O|              n.a.|                        -
+            |    14|      EXT_A14|      D12| I/O|              n.a.|                        -
+            |    15|      EXT_A15|      E12| I/O|              n.a.|                        -
+            |    39|      EXT_A16|      D11| I/O|              n.a.|                        -
+            |    40|      EXT_A17|      E11| I/O|              n.a.|                        -
+            |    41|      EXT_A18|      D10| I/O|              n.a.|                        -
+            |    42|      EXT_A19|      E10| I/O|              n.a.|                        -
+            |    43|      EXT_A20|       D9| I/O|              n.a.|                        -
+            |    44|      EXT_A21|       E9| I/O|              n.a.|                        -
+            |    45|      EXT_A22|       D8| I/O|              n.a.|                        -
+            |    46|      EXT_A23|       E8| I/O|              n.a.|                        -
+            |    47|      EXT_A24|      E16| I/O|              n.a.|                        -
+            |    48|      EXT_ALE|      C17| I/O|              n.a.|                        -
+            |    16|     EXT_BHEn|      A14| I/O|              n.a.|                        -
+            |    17|     EXT_CS0n|      D13| I/O|              n.a.|                        -
+            |    49|     EXT_CS1n|       E6| I/O|              n.a.|                        -
+            |    50|     EXT_CS2n|       D6| I/O|              n.a.|                        -
+            |    51|     EXT_CS3n|       D5| I/O|              n.a.|                        -
+            |    18|      EXT_D00|       C5| I/O|              n.a.|                        -
+            |    19|      EXT_D01|       B5| I/O|              n.a.|                        -
+            |    20|      EXT_D02|       A5| I/O|              n.a.|                        -
+            |    21|      EXT_D03|       C6| I/O|              n.a.|                        -
+            |    22|      EXT_D04|       B6| I/O|              n.a.|                        -
+            |    23|      EXT_D05|       A6| I/O|              n.a.|                        -
+            |    24|      EXT_D06|       C7| I/O|              n.a.|                        -
+            |    25|      EXT_D07|       B7| I/O|              n.a.|                        -
+            |    26|      EXT_D08|      A18| I/O|              n.a.|                        -
+            |    27|      EXT_D09|      B17| I/O|              n.a.|                        -
+            |    28|      EXT_D10|      A17| I/O|              n.a.|                        -
+            |    29|      EXT_D11|      C16| I/O|              n.a.|                        -
+            |    30|      EXT_D12|      B16| I/O|              n.a.|                        -
+            |    31|      EXT_D13|      A16| I/O|              n.a.|                        -
+            |    32|      EXT_D14|      C15| I/O|              n.a.|                        -
+            |    33|      EXT_D15|      B15| I/O|              n.a.|                        -
+            |    34|      EXT_IRQ|      E14| I/O|              n.a.|                        -
+            |    35|      EXT_RDn|      E13| I/O|              n.a.|                        -
+            |    36|      EXT_RDY|      D14| I/O|              n.a.|                        -
+            |    37|     EXT_WRHn|      B14| I/O|              n.a.|                        -
+            |    38|     EXT_WRLn|      C14| I/O|              n.a.|                        -
+.31+|    PIO|     0|         PIO0|      M21| I/O| 50k Ohm pull-down|                        0
+            |     1|         PIO1|      M20| I/O| 50k Ohm pull-down|                        0
+            |     2|         PIO2|      M19| I/O| 50k Ohm pull-down|                        0
+            |     3|         PIO3|      M18| I/O| 50k Ohm pull-down|                        0
+            |     4|         PIO4|      M17| I/O| 50k Ohm pull-down|                        0
+            |     5|         PIO5|      N17| I/O| 50k Ohm pull-down|                        0
+            |     6|         PIO6|      P17| I/O| 50k Ohm pull-down|                        0
+            |     7|         PIO7|      R17| I/O| 50k Ohm pull-down|                        0
+            |     8|         PIO8|      W12| I/O| 50k Ohm pull-down|                        0
+            |     9|         PIO9|      V12| I/O| 50k Ohm pull-down|                        0
+            |    10|        PIO10|      U12| I/O| 50k Ohm pull-down|                        0
+            |    11|        PIO11|     AA11| I/O| 50k Ohm pull-down|                        0
+            |    12|        PIO12|      Y11| I/O| 50k Ohm pull-down|                        0
+            |    13|        PIO13|      W11| I/O| 50k Ohm pull-down|                        0
+            |    14|        PIO14|      V11| I/O| 50k Ohm pull-down|                        0
+            |    15|        PIO15|      U11| I/O| 50k Ohm pull-down|                        0
+            |    16|        PIO16|     AA10| I/O| 50k Ohm pull-down|                        0
+            |    17|        PIO17|      Y10| I/O| 50k Ohm pull-down|                        0
+            |    18|        PIO18|      W10| I/O| 50k Ohm pull-down|                        0
+            |    19|        PIO19|      V10| I/O| 50k Ohm pull-down|                        0
+            |    20|        PIO20|      U10| I/O| 50k Ohm pull-down|                        0
+            |    21|        PIO21|      AA9| I/O| 50k Ohm pull-down|                        0
+            |    22|        PIO22|       Y9| I/O| 50k Ohm pull-down|                        0
+            |    23|        PIO23|       W9| I/O| 50k Ohm pull-down|                        0
+            |    24|        PIO24|       V9| I/O| 50k Ohm pull-down|                        0
+            |    25|        PIO25|       U9| I/O| 50k Ohm pull-down|                        0
+            |    26|        PIO26|      AA8| I/O| 50k Ohm pull-down|                        0
+            |    27|        PIO27|       Y8| I/O| 50k Ohm pull-down|                        0
+            |    28|        PIO28|       W8| I/O| 50k Ohm pull-down|                        0
+            |    29|        PIO29|       V8| I/O| 50k Ohm pull-down|                        0
+            |    30|        PIO30|       U8| I/O| 50k Ohm pull-down|                        0
+    | RSTOUT|     0|       RSTOUT|      V19|   O|              n.a.|                        -
+ .2+| RDYRUN|     0|          RDY|      W20| I/O|   50k Ohm pull-up|                        1
+            |     1|          RUN|      W21| I/O|   50k Ohm pull-up|                        1
+ .2+|  XM0IO|     0|       XM0IO0|      N19| I/O| 50k Ohm pull-down|                        0
+            |     1|       XM0IO1|      N18| I/O| 50k Ohm pull-down|                        0
+ .2+|  XM1IO|     0|       XM1IO0|      P19| I/O| 50k Ohm pull-down|                        0
+            |     1|       XM1IO1|      P18| I/O| 50k Ohm pull-down|                        0
+ .2+|  XM2IO|     0|       XM2IO0|      R19| I/O| 50k Ohm pull-down|                        0
+            |     1|       XM2IO1|      R18| I/O| 50k Ohm pull-down|                        0
+ .2+|  XM3IO|     0|       XM3IO0|      U19| I/O| 50k Ohm pull-down|                        0
+            |     1|       XM3IO1|      U18| I/O| 50k Ohm pull-down|                        0
+|============================================================================================
+
+
+=== netX50
+
+[cols="<m,<,<m,>m,>,>",options="header"]
+|==========================
+|       unit| index|     pin name| I/O| built-in resistor| standalone default value
+.55+|    HIF|     0|      HIFPIO0| I/O|              n.a.|                        -
+            |     1|      HIFPIO1| I/O|              n.a.|                        -
+            |     2|      HIFPIO2| I/O|              n.a.|                        -
+            |     3|      HIFPIO3| I/O|              n.a.|                        -
+            |     4|      HIFPIO4| I/O|              n.a.|                        -
+            |     5|      HIFPIO5| I/O|              n.a.|                        -
+            |     6|      HIFPIO6| I/O|              n.a.|                        -
+            |     7|      HIFPIO7| I/O|              n.a.|                        -
+            |     8|      HIFPIO8| I/O|              n.a.|                        -
+            |     9|      HIFPIO9| I/O|              n.a.|                        -
+            |    10|     HIFPIO10| I/O|              n.a.|                        -
+            |    11|     HIFPIO11| I/O|              n.a.|                        -
+            |    12|     HIFPIO12| I/O|              n.a.|                        -
+            |    13|     HIFPIO13| I/O|              n.a.|                        -
+            |    14|     HIFPIO14| I/O|              n.a.|                        -
+            |    15|     HIFPIO15| I/O|              n.a.|                        -
+            |    16|     HIFPIO16| I/O|              n.a.|                        -
+            |    17|     HIFPIO17| I/O|              n.a.|                        -
+            |    18|     HIFPIO18| I/O|              n.a.|                        -
+            |    19|     HIFPIO19| I/O|              n.a.|                        -
+            |    20|     HIFPIO20| I/O|              n.a.|                        -
+            |    21|     HIFPIO21| I/O|              n.a.|                        -
+            |    22|     HIFPIO22| I/O|              n.a.|                        -
+            |    23|     HIFPIO23| I/O|              n.a.|                        -
+            |    24|     HIFPIO24| I/O|              n.a.|                        -
+            |    25|     HIFPIO25| I/O|              n.a.|                        -
+            |    26|     HIFPIO26| I/O|              n.a.|                        -
+            |    27|     HIFPIO27| I/O|              n.a.|                        -
+            |    28|     HIFPIO28| I/O|              n.a.|                        -
+            |    29|     HIFPIO29| I/O|              n.a.|                        -
+            |    30|     HIFPIO30| I/O|              n.a.|                        -
+            |    31|     HIFPIO31| I/O|              n.a.|                        -
+            |    32|     HIFPIO32| I/O|              n.a.|                        -
+            |    33|     HIFPIO33| I/O|              n.a.|                        -
+            |    34|     HIFPIO34| I/O|              n.a.|                        -
+            |    35|     HIFPIO35| I/O|              n.a.|                        -
+            |    36|     HIFPIO36| I/O|              n.a.|                        -
+            |    37|     HIFPIO37| I/O|              n.a.|                        -
+            |    38|     HIFPIO38| I/O|              n.a.|                        -
+            |    39|     HIFPIO39| I/O|              n.a.|                        -
+            |    40|     HIFPIO40| I/O|              n.a.|                        -
+            |    41|     HIFPIO41| I/O|              n.a.|                        -
+            |    42|     HIFPIO42| I/O|              n.a.|                        -
+            |    43|     HIFPIO43| I/O|              n.a.|                        -
+            |    44|     HIFPIO44| I/O|              n.a.|                        -
+            |    45|     HIFPIO45| I/O|              n.a.|                        -
+            |    46|     HIFPIO46| I/O|              n.a.|                        -
+            |    47|     HIFPIO47| I/O|              n.a.|                        -
+            |    48|     HIFPIO48| I/O|              n.a.|                        -
+            |    49|     HIFPIO49| I/O|              n.a.|                        -
+            |    50|     HIFPIO50| I/O|              n.a.|                        -
+            |    51|     HIFPIO51| I/O|              n.a.|                        -
+            |    52|     HIFPIO52| I/O|              n.a.|                        -
+            |    53|     HIFPIO53| I/O|              n.a.|                        -
+            |    54|     HIFPIO54| I/O|              n.a.|                        -
+.40+|   MMIO|     0|        MMIO0| I/O| 50k Ohm pull-down|                        0
+            |     1|        MMIO1| I/O| 50k Ohm pull-down|                        0
+            |     2|        MMIO2| I/O| 50k Ohm pull-down|                        0
+            |     3|        MMIO3| I/O| 50k Ohm pull-down|                        0
+            |     4|        MMIO4| I/O| 50k Ohm pull-down|                        0
+            |     5|        MMIO5| I/O| 50k Ohm pull-down|                        0
+            |     6|        MMIO6| I/O| 50k Ohm pull-down|                        0
+            |     7|        MMIO7| I/O| 50k Ohm pull-down|                        0
+            |     8|        MMIO8| I/O| 50k Ohm pull-down|                        0
+            |     9|        MMIO9| I/O| 50k Ohm pull-down|                        0
+            |    10|       MMIO10| I/O| 50k Ohm pull-down|                        0
+            |    11|       MMIO11| I/O| 50k Ohm pull-down|                        0
+            |    12|       MMIO12| I/O| 50k Ohm pull-down|                        0
+            |    13|       MMIO13| I/O| 50k Ohm pull-down|                        0
+            |    14|       MMIO14| I/O| 50k Ohm pull-down|                        0
+            |    15|       MMIO15| I/O| 50k Ohm pull-down|                        0
+            |    16|       MMIO16| I/O| 50k Ohm pull-down|                        0
+            |    17|       MMIO17| I/O| 50k Ohm pull-down|                        0
+            |    18|       MMIO18| I/O| 50k Ohm pull-down|                        0
+            |    19|       MMIO19| I/O| 50k Ohm pull-down|                        0
+            |    20|       MMIO20| I/O| 50k Ohm pull-down|                        0
+            |    21|       MMIO21| I/O| 50k Ohm pull-down|                        0
+            |    22|       MMIO22| I/O| 50k Ohm pull-down|                        0
+            |    23|       MMIO23| I/O| 50k Ohm pull-down|                        0
+            |    24|       MMIO24| I/O| 50k Ohm pull-down|                        0
+            |    25|       MMIO25| I/O| 50k Ohm pull-down|                        0
+            |    26|       MMIO26| I/O| 50k Ohm pull-down|                        0
+            |    27|       MMIO27| I/O| 50k Ohm pull-down|                        0
+            |    28|       MMIO28| I/O| 50k Ohm pull-down|                        0
+            |    29|       MMIO29| I/O| 50k Ohm pull-down|                        0
+            |    30|       MMIO30| I/O| 50k Ohm pull-down|                        0
+            |    31|       MMIO31| I/O| 50k Ohm pull-down|                        0
+            |    32|       MMIO32| I/O| 50k Ohm pull-down|                        0
+            |    33|       MMIO33| I/O| 50k Ohm pull-down|                        0
+            |    34|       MMIO34| I/O| 50k Ohm pull-down|                        0
+            |    35|       MMIO35| I/O| 50k Ohm pull-down|                        0
+            |    36|       MMIO36| I/O| 50k Ohm pull-down|                        0
+            |    37|       MMIO37| I/O| 50k Ohm pull-down|                        0
+            |    38|       MMIO38| I/O| 50k Ohm pull-down|                        0
+            |    39|       MMIO39| I/O| 50k Ohm pull-down|                        0
+ .2+| RDYRUN|     0|      RDYRUN0| I/O| 50k Ohm pull-down|                        0
+            |     1|      RDYRUN1| I/O| 50k Ohm pull-down|                        0
+    | RSTOUT|     0|       RSTOUT|   O|              n.a.|                        -
+|==========================
+
+
+=== netX10
+
+[cols="<m,<,<m,>m,>,>",options="header"]
+|==========================
+|       unit| index|     pin name| I/O| built-in resistor| standalone default value
+.48+|    HIF|     0|      HIFPIO0| I/O| 50k Ohm pull-down|                        0
+            |     1|      HIFPIO1| I/O| 50k Ohm pull-down|                        0
+            |     2|      HIFPIO2| I/O| 50k Ohm pull-down|                        0
+            |     3|      HIFPIO3| I/O| 50k Ohm pull-down|                        0
+            |     4|      HIFPIO4| I/O| 50k Ohm pull-down|                        0
+            |     5|      HIFPIO5| I/O| 50k Ohm pull-down|                        0
+            |     6|      HIFPIO6| I/O| 50k Ohm pull-down|                        0
+            |     7|      HIFPIO7| I/O| 50k Ohm pull-down|                        0
+            |     8|      HIFPIO8| I/O| 50k Ohm pull-down|                        0
+            |     9|      HIFPIO9| I/O| 50k Ohm pull-down|                        0
+            |    10|     HIFPIO10| I/O| 50k Ohm pull-down|                        0
+            |    11|     HIFPIO11| I/O| 50k Ohm pull-down|                        0
+            |    12|     HIFPIO12| I/O| 50k Ohm pull-down|                        0
+            |    13|     HIFPIO13| I/O| 50k Ohm pull-down|                        0
+            |    14|     HIFPIO14| I/O| 50k Ohm pull-down|                        0
+            |    15|     HIFPIO15| I/O| 50k Ohm pull-down|                        0
+            |    16|     HIFPIO16| I/O| 50k Ohm pull-down|                        0
+            |    17|     HIFPIO17| I/O| 50k Ohm pull-down|                        0
+            |    18|     HIFPIO18| I/O| 50k Ohm pull-down|                        0
+            |    19|     HIFPIO19| I/O| 50k Ohm pull-down|                        0
+            |    20|     HIFPIO20| I/O| 50k Ohm pull-down|                        0
+            |    21|     HIFPIO21| I/O| 50k Ohm pull-down|                        0
+            |    22|     HIFPIO22| I/O| 50k Ohm pull-down|                        0
+            |    23|     HIFPIO23| I/O| 50k Ohm pull-down|                        0
+            |    24|     HIFPIO24| I/O| 50k Ohm pull-down|                        0
+            |    25|     HIFPIO25| I/O| 50k Ohm pull-down|                        0
+            |    26|     HIFPIO26| I/O| 50k Ohm pull-down|                        0
+            |    27|     HIFPIO27| I/O| 50k Ohm pull-down|                        0
+            |    28|     HIFPIO28| I/O| 50k Ohm pull-down|                        0
+            |    29|     HIFPIO29| I/O| 50k Ohm pull-down|                        0
+            |    30|     HIFPIO30| I/O| 50k Ohm pull-down|                        0
+            |    31|     HIFPIO31| I/O| 50k Ohm pull-down|                        0
+            |    32|     HIFPIO32| I/O| 50k Ohm pull-down|                        0
+            |    33|     HIFPIO33| I/O| 50k Ohm pull-down|                        0
+            |    34|     HIFPIO34| I/O| 50k Ohm pull-down|                        0
+            |    35|     HIFPIO35| I/O| 50k Ohm pull-down|                        0
+            |    36|     HIFPIO36| I/O| 50k Ohm pull-down|                        0
+            |    37|     HIFPIO37| I/O| 50k Ohm pull-down|                        0
+            |    38|     HIFPIO38| I/O| 50k Ohm pull-down|                        0
+            |    39|     HIFPIO39| I/O| 50k Ohm pull-down|                        0
+            |    40|     HIFPIO40| I/O| 50k Ohm pull-down|                        0
+            |    41|     HIFPIO41| I/O|   50k Ohm pull-up|                        1
+            |    42|     HIFPIO42| I/O|   50k Ohm pull-up|                        1
+            |    43|     HIFPIO43| I/O|   50k Ohm pull-up|                        1
+            |    44|     HIFPIO44| I/O|   50k Ohm pull-up|                        1
+            |    45|     HIFPIO45| I/O| 50k Ohm pull-down|                        0
+            |    46|     HIFPIO46| I/O|   50k Ohm pull-up|                        1
+            |    47|     HIFPIO47| I/O|   50k Ohm pull-up|                        1
+.24+|   MMIO|     0|        MMIO0| I/O| 50k Ohm pull-down|                        0
+            |     1|        MMIO1| I/O| 50k Ohm pull-down|                        0
+            |     2|        MMIO2| I/O| 50k Ohm pull-down|                        0
+            |     3|        MMIO3| I/O| 50k Ohm pull-down|                        0
+            |     4|        MMIO4| I/O| 50k Ohm pull-down|                        0
+            |     5|        MMIO5| I/O| 50k Ohm pull-down|                        0
+            |     6|        MMIO6| I/O| 50k Ohm pull-down|                        0
+            |     7|        MMIO7| I/O| 50k Ohm pull-down|                        0
+            |     8|        MMIO8| I/O| 50k Ohm pull-down|                        0
+            |     9|        MMIO9| I/O| 50k Ohm pull-down|                        0
+            |    10|       MMIO10| I/O|   50k Ohm pull-up|                        1
+            |    11|       MMIO11| I/O|   50k Ohm pull-up|                        1
+            |    12|       MMIO12| I/O|   50k Ohm pull-up|                        1
+            |    13|       MMIO13| I/O|   50k Ohm pull-up|                        1
+            |    14|       MMIO14| I/O|   50k Ohm pull-up|                        1
+            |    15|       MMIO15| I/O|   50k Ohm pull-up|                        1
+            |    16|       MMIO16| I/O|   50k Ohm pull-up|                        1
+            |    17|       MMIO17| I/O|   50k Ohm pull-up|                        1
+            |    18|       MMIO18| I/O|   50k Ohm pull-up|                        1
+            |    19|       MMIO19| I/O|   50k Ohm pull-up|                        1
+            |    20|       MMIO20| I/O|    5k Ohm pull-up|                        1
+            |    21|       MMIO21| I/O|    5k Ohm pull-up|                        0
+            |    22|       MMIO22| I/O|    5k Ohm pull-up|                        1
+            |    23|       MMIO23| I/O|    5k Ohm pull-up|                        1
+ .2+| RDYRUN|     0|      RDYRUN0| I/O|   50k Ohm pull-up|                        1
+            |     1|      RDYRUN1| I/O|   50k Ohm pull-up|                        1
+|==========================
+
+
+=== netX51
+
+[cols="<m,<,<m,>m,>m,>,>",options="header"]
+|============================================================================================
+|       unit| index|     pin name| ball pos| I/O| built-in resistor| standalone default value
+.58+|    HIF|     0|      HIF_D00|       A1| I/O|   50k Ohm pull-up|                        1
+            |     1|      HIF_D01|       B2| I/O|   50k Ohm pull-up|                        1
+            |     2|      HIF_D02|       C2| I/O|   50k Ohm pull-up|                        1
+            |     3|      HIF_D03|       C6| I/O|   50k Ohm pull-up|                        1
+            |     4|      HIF_D04|       A6| I/O|   50k Ohm pull-up|                        1
+            |     5|      HIF_D05|       A3| I/O|   50k Ohm pull-up|                        1
+            |     6|      HIF_D06|       A8| I/O|   50k Ohm pull-up|                        1
+            |     7|      HIF_D07|       B7| I/O|   50k Ohm pull-up|                        1
+            |     8|      HIF_D08|      J16| I/O|   50k Ohm pull-up|                        1
+            |     9|      HIF_D09|      H15| I/O|   50k Ohm pull-up|                        1
+            |    10|      HIF_D10|      H16| I/O|   50k Ohm pull-up|                        1
+            |    11|      HIF_D11|      G16| I/O|   50k Ohm pull-up|                        1
+            |    12|      HIF_D12|      G18| I/O|   50k Ohm pull-up|                        1
+            |    13|      HIF_D13|      G15| I/O|   50k Ohm pull-up|                        1
+            |    14|      HIF_D14|      D18| I/O|   50k Ohm pull-up|                        1
+            |    15|      HIF_D15|      C18| I/O|   50k Ohm pull-up|                        1
+            |    16|      HIF_D16|      J18| I/O|   50k Ohm pull-up|                        1
+            |    17|      HIF_D17|      H17| I/O|   50k Ohm pull-up|                        1
+            |    18|      HIF_D18|      H18| I/O|   50k Ohm pull-up|                        1
+            |    19|      HIF_D19|      G17| I/O|   50k Ohm pull-up|                        1
+            |    20|      HIF_D20|      B13| I/O|   50k Ohm pull-up|                        1
+            |    21|      HIF_D21|      A14| I/O|   50k Ohm pull-up|                        1
+            |    22|      HIF_D22|      A13| I/O|   50k Ohm pull-up|                        1
+            |    23|      HIF_D23|      C12| I/O|   50k Ohm pull-up|                        1
+            |    24|      HIF_D24|      B10| I/O|   50k Ohm pull-up|                        1
+            |    25|      HIF_D25|      A11| I/O|   50k Ohm pull-up|                        1
+            |    26|      HIF_D26|       A9| I/O|   50k Ohm pull-up|                        1
+            |    27|      HIF_D27|       C9| I/O|   50k Ohm pull-up|                        1
+            |    28|      HIF_D28|       B6| I/O|   50k Ohm pull-up|                        1
+            |    29|      HIF_D29|       A7| I/O|   50k Ohm pull-up|                        1
+            |    30|      HIF_D30|       A2| I/O|   50k Ohm pull-up|                        1
+            |    31|      HIF_D31|      J17| I/O|   50k Ohm pull-up|                        1
+            |    32|      HIF_A00|       C7| I/O|   50k Ohm pull-up|                        1
+            |    33|      HIF_A01|       B8| I/O|   50k Ohm pull-up|                        1
+            |    34|      HIF_A02|       C8| I/O|   50k Ohm pull-up|                        1
+            |    35|      HIF_A03|      C10| I/O|   50k Ohm pull-up|                        1
+            |    36|      HIF_A04|      A10| I/O|   50k Ohm pull-up|                        1
+            |    37|      HIF_A05|       B9| I/O|   50k Ohm pull-up|                        1
+            |    38|      HIF_A06|      C11| I/O|   50k Ohm pull-up|                        1
+            |    39|      HIF_A07|      D11| I/O|   50k Ohm pull-up|                        1
+            |    40|      HIF_A08|      C13| I/O|   50k Ohm pull-up|                        1
+            |    41|      HIF_A09|      B12| I/O|   50k Ohm pull-up|                        1
+            |    42|      HIF_A10|      C14| I/O|   50k Ohm pull-up|                        1
+            |    43|      HIF_A11|      A17| I/O|   50k Ohm pull-up|                        1
+            |    44|      HIF_A12|      B15| I/O|   50k Ohm pull-up|                        1
+            |    45|      HIF_A13|      A16| I/O|   50k Ohm pull-up|                        1
+            |    46|      HIF_A14|      B14| I/O|   50k Ohm pull-up|                        1
+            |    47|      HIF_A15|      A15| I/O|   50k Ohm pull-up|                        1
+            |    48|     HIF_AHI0|      E14| I/O|   50k Ohm pull-up|                        1
+            |    49|     HIF_AHI1|      D14| I/O|   50k Ohm pull-up|                        1
+            |    50|     HIF_BHE3|      C15| I/O|   50k Ohm pull-up|                        1
+            |    51|     HIF_BHE1|      A18| I/O|   50k Ohm pull-up|                        1
+            |    52|      HIF_RDn|      B17| I/O|   50k Ohm pull-up|                        1
+            |    53|      HIF_WRn|      C16| I/O|   50k Ohm pull-up|                        1
+            |    54|      HIF_CSn|      B16| I/O|   50k Ohm pull-up|                        1
+            |    55|      HIF_RDY|      B18| I/O|   50k Ohm pull-up|                        1
+            |    56|     HIF_DIRQ|      C17| I/O|   50k Ohm pull-up|                        1
+            |    57|    HIF_SDCLK|      B11| I/O|   50k Ohm pull-up|                        1
+.40+|   MMIO|     0|        MMIO0|       H1| I/O| 50k Ohm pull-down|                        0
+            |     1|        MMIO1|       J1| I/O| 50k Ohm pull-down|                        0
+            |     2|        MMIO2|       J2| I/O| 50k Ohm pull-down|                        0
+            |     3|        MMIO3|       L2| I/O| 50k Ohm pull-down|                        0
+            |     4|        MMIO4|       K2| I/O| 50k Ohm pull-down|                        0
+            |     5|        MMIO5|       K1| I/O| 50k Ohm pull-down|                        0
+            |     6|        MMIO6|       L1| I/O| 50k Ohm pull-down|                        0
+            |     7|        MMIO7|       M2| I/O| 50k Ohm pull-down|                        0
+            |     8|        MMIO8|       M1| I/O| 50k Ohm pull-down|                        0
+            |     9|        MMIO9|       N1| I/O| 50k Ohm pull-down|                        0
+            |    10|       MMIO10|       N2| I/O| 50k Ohm pull-down|                        0
+            |    11|       MMIO11|       P1| I/O| 50k Ohm pull-down|                        0
+            |    12|       MMIO12|       R1| I/O| 50k Ohm pull-down|                        0
+            |    13|       MMIO13|       U1| I/O| 50k Ohm pull-down|                        0
+            |    14|       MMIO14|       T1| I/O| 50k Ohm pull-down|                        0
+            |    15|       MMIO15|       V1| I/O| 50k Ohm pull-down|                        0
+            |    16|       MMIO16|       U2| I/O| 50k Ohm pull-down|                        0
+            |    17|       MMIO17|       V2| I/O| 50k Ohm pull-down|                        0
+            |    18|       MMIO18|       V3| I/O| 50k Ohm pull-down|                        0
+            |    19|       MMIO19|       T6| I/O| 50k Ohm pull-down|                        0
+            |    20|       MMIO20|       V6| I/O| 50k Ohm pull-down|                        0
+            |    21|       MMIO21|       U6| I/O| 50k Ohm pull-down|                        0
+            |    22|       MMIO22|       T7| I/O| 50k Ohm pull-down|                        0
+            |    23|       MMIO23|       V7| I/O| 50k Ohm pull-down|                        0
+            |    24|       MMIO24|       U7| I/O| 50k Ohm pull-down|                        0
+            |    25|       MMIO25|       R8| I/O| 50k Ohm pull-down|                        0
+            |    26|       MMIO26|       V9| I/O| 50k Ohm pull-down|                        0
+            |    27|       MMIO27|       U9| I/O| 50k Ohm pull-down|                        0
+            |    28|       MMIO28|       T9| I/O| 50k Ohm pull-down|                        0
+            |    29|       MMIO29|      U10| I/O| 50k Ohm pull-down|                        0
+            |    30|       MMIO30|      T10| I/O| 50k Ohm pull-down|                        0
+            |    31|       MMIO31|      U11| I/O| 50k Ohm pull-down|                        0
+            |    32|       MMIO32|      V12| I/O| 50k Ohm pull-down|                        0
+            |    33|       MMIO33|      T11| I/O| 50k Ohm pull-down|                        0
+            |    34|       MMIO34|      U12| I/O| 50k Ohm pull-down|                        0
+            |    35|       MMIO35|      T12| I/O| 50k Ohm pull-down|                        0
+            |    36|       MMIO36|      V13| I/O| 50k Ohm pull-down|                        0
+            |    37|       MMIO37|      U13| I/O| 50k Ohm pull-down|                        0
+            |    38|       MMIO38|      T13| I/O| 50k Ohm pull-down|                        0
+            |    39|       MMIO39|      V14| I/O| 50k Ohm pull-down|                        0
+ .2+| RDYRUN|     0|          RDY|       E1| I/O| 50k Ohm pull-down|                        1
+            |     1|          RUN|       E2| I/O| 50k Ohm pull-down|                        1
+    | RSTOUT|     0|       RSTOUT|       C1|   O|              n.a.|                        -
+|============================================================================================
+
+
+=== netX52
+
+[cols="<m,<,<m,>m,>m,>,>",options="header"]
+|============================================================================================
+|       unit| index|     pin name| ball pos| I/O| built-in resistor| standalone default value
+.58+|    HIF|     0|      HIF_D00|       A1| I/O|   50k Ohm pull-up|                        1
+            |     1|      HIF_D01|       C2| I/O|   50k Ohm pull-up|                        1
+            |     2|      HIF_D02|       D2| I/O|   50k Ohm pull-up|                        1
+            |     3|      HIF_D03|       B3| I/O|   50k Ohm pull-up|                        1
+            |     4|      HIF_D04|       B4| I/O|   50k Ohm pull-up|                        1
+            |     5|      HIF_D05|       B2| I/O|   50k Ohm pull-up|                        1
+            |     6|      HIF_D06|       A5| I/O|   50k Ohm pull-up|                        1
+            |     7|      HIF_D07|       B5| I/O|   50k Ohm pull-up|                        1
+            |     8|      HIF_D08|      G18| I/O|   50k Ohm pull-up|                        1
+            |     9|      HIF_D09|      G16| I/O|   50k Ohm pull-up|                        1
+            |    10|      HIF_D10|      F17| I/O|   50k Ohm pull-up|                        1
+            |    11|      HIF_D11|      D18| I/O|   50k Ohm pull-up|                        1
+            |    12|      HIF_D12|      C18| I/O|   50k Ohm pull-up|                        1
+            |    13|      HIF_D13|      B18| I/O|   50k Ohm pull-up|                        1
+            |    14|      HIF_D14|      C17| I/O|   50k Ohm pull-up|                        1
+            |    15|      HIF_D15|      B17| I/O|   50k Ohm pull-up|                        1
+            |    16|      HIF_D16|      G17| I/O|   50k Ohm pull-up|                        1
+            |    17|      HIF_D17|      F18| I/O|   50k Ohm pull-up|                        1
+            |    18|      HIF_D18|      E18| I/O|   50k Ohm pull-up|                        1
+            |    19|      HIF_D19|      E17| I/O|   50k Ohm pull-up|                        1
+            |    20|      HIF_D20|      C12| I/O|   50k Ohm pull-up|                        1
+            |    21|      HIF_D21|      C11| I/O|   50k Ohm pull-up|                        1
+            |    22|      HIF_D22|      A11| I/O|   50k Ohm pull-up|                        1
+            |    23|      HIF_D23|      C10| I/O|   50k Ohm pull-up|                        1
+            |    24|      HIF_D24|       A9| I/O|   50k Ohm pull-up|                        1
+            |    25|      HIF_D25|       A8| I/O|   50k Ohm pull-up|                        1
+            |    26|      HIF_D26|       A6| I/O|   50k Ohm pull-up|                        1
+            |    27|      HIF_D27|       B7| I/O|   50k Ohm pull-up|                        1
+            |    28|      HIF_D28|       A2| I/O|   50k Ohm pull-up|                        1
+            |    29|      HIF_D29|       A4| I/O|   50k Ohm pull-up|                        1
+            |    30|      HIF_D30|       D3| I/O|   50k Ohm pull-up|                        1
+            |    31|      HIF_D31|      H17| I/O|   50k Ohm pull-up|                        1
+            |    32|      HIF_A00|       A3| I/O|   50k Ohm pull-up|                        1
+            |    33|      HIF_A01|       B6| I/O|   50k Ohm pull-up|                        1
+            |    34|      HIF_A02|       C6| I/O|   50k Ohm pull-up|                        1
+            |    35|      HIF_A03|       C7| I/O|   50k Ohm pull-up|                        1
+            |    36|      HIF_A04|       B8| I/O|   50k Ohm pull-up|                        1
+            |    37|      HIF_A05|       A7| I/O|   50k Ohm pull-up|                        1
+            |    38|      HIF_A06|       B9| I/O|   50k Ohm pull-up|                        1
+            |    39|      HIF_A07|       C9| I/O|   50k Ohm pull-up|                        1
+            |    40|      HIF_A08|      C13| I/O|   50k Ohm pull-up|                        1
+            |    41|      HIF_A09|      A10| I/O|   50k Ohm pull-up|                        1
+            |    42|      HIF_A10|      B12| I/O|   50k Ohm pull-up|                        1
+            |    43|      HIF_A11|      A14| I/O|   50k Ohm pull-up|                        1
+            |    44|      HIF_A12|      B13| I/O|   50k Ohm pull-up|                        1
+            |    45|      HIF_A13|      A13| I/O|   50k Ohm pull-up|                        1
+            |    46|      HIF_A14|      A12| I/O|   50k Ohm pull-up|                        1
+            |    47|      HIF_A15|      B11| I/O|   50k Ohm pull-up|                        1
+            |    48|     HIF_AHI0|      A17| I/O|   50k Ohm pull-up|                        1
+            |    49|     HIF_AHI1|      A18| I/O|   50k Ohm pull-up|                        1
+            |    50|     HIF_BHE3|      B16| I/O|   50k Ohm pull-up|                        1
+            |    51|     HIF_BHE1|      A16| I/O|   50k Ohm pull-up|                        1
+            |    52|      HIF_RDn|      B15| I/O|   50k Ohm pull-up|                        1
+            |    53|      HIF_WRn|      B14| I/O|   50k Ohm pull-up|                        1
+            |    54|      HIF_CSn|      A15| I/O|   50k Ohm pull-up|                        1
+            |    55|      HIF_RDY|      B15| I/O|   50k Ohm pull-up|                        1
+            |    56|     HIF_DIRQ|      D16| I/O|   50k Ohm pull-up|                        1
+            |    57|    HIF_SDCLK|       C8| I/O|   50k Ohm pull-up|                        1
+.24+|   MMIO|     0|        MMIO0|       H2| I/O| 50k Ohm pull-down|                        0
+            |     1|        MMIO1|       K2| I/O| 50k Ohm pull-down|                        0
+            |     2|        MMIO2|       J2| I/O| 50k Ohm pull-down|                        0
+            |     3|        MMIO3|       L3| I/O| 50k Ohm pull-down|                        0
+            |     4|        MMIO4|       L1| I/O| 50k Ohm pull-down|                        0
+            |     5|        MMIO5|       M1| I/O| 50k Ohm pull-down|                        0
+            |     6|        MMIO6|       M2| I/O| 50k Ohm pull-down|                        0
+            |     7|        MMIO7|       N1| I/O| 50k Ohm pull-down|                        0
+            |     8|        MMIO8|       N2| I/O| 50k Ohm pull-down|                        0
+            |     9|        MMIO9|       P2| I/O| 50k Ohm pull-down|                        0
+            |    10|       MMIO10|       R1| I/O| 50k Ohm pull-down|                        0
+            |    11|       MMIO11|       T1| I/O| 50k Ohm pull-down|                        0
+            |    12|       MMIO12|       R2| I/O| 50k Ohm pull-down|                        0
+            |    13|       MMIO13|       U2| I/O| 50k Ohm pull-down|                        0
+            |    14|       MMIO14|       T2| I/O| 50k Ohm pull-down|                        0
+            |    15|       MMIO15|       R3| I/O| 50k Ohm pull-down|                        0
+            |    16|       MMIO16|       T4| I/O| 50k Ohm pull-down|                        0
+            |    17|       MMIO17|       V1| I/O| 50k Ohm pull-down|                        0
+            |    18|       MMIO18|       U4| I/O| 50k Ohm pull-down|                        0
+            |    19|       MMIO19|       U3| I/O| 50k Ohm pull-down|                        0
+            |    20|       MMIO20|       T5| I/O| 50k Ohm pull-down|                        0
+            |    21|       MMIO21|       V3| I/O| 50k Ohm pull-down|                        0
+            |    22|       MMIO22|       T6| I/O| 50k Ohm pull-down|                        0
+            |    23|       MMIO23|       U5| I/O| 50k Ohm pull-down|                        0
+ .2+| RDYRUN|     0|          RDY|       F1| I/O| 50k Ohm pull-down|                        1
+            |     1|          RUN|       F2| I/O| 50k Ohm pull-down|                        1
+    | RSTOUT|     0|       RSTOUT|       D1|   O|              n.a.|                        -
+|============================================================================================
+
+
+[[Parameters, Parameters]]
+== Parameters
+
+The "I/O Matrix" test has no parameters. The matrix itself is too complex to be specified with a parameter.
+
+

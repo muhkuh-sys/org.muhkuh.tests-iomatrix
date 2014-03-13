@@ -73,6 +73,39 @@ Import('iomatrix_netx56')
 
 #----------------------------------------------------------------------------
 #
+# Build the documentation.
+#
+
+# Get the default attributes.
+aAttribs = env_default['ASCIIDOC_ATTRIBUTES']
+# Add some custom attributes.
+aAttribs.update(dict({
+	# Use ASCIIMath formulas.
+	'asciimath': True,
+	
+	# Embed images into the HTML file as data URIs.
+	'data-uri': True,
+	
+	# Use icons instead of text for markers and callouts.
+	'icons': True,
+	
+	# Use numbers in the table of contents.
+	'numbered': True,
+	
+	# Generate a scrollable table of contents on the left of the text.
+	'toc2': True,
+	
+	# Use 4 levels in the table of contents.
+	'toclevels': 4
+#	
+#	--attribute="iconsdir=${ASCIIDOC_PATH}/images/icons" --attribute="source-highlighter=pygments" --attribute="pygmentize=${PYGMENTS}"
+}))
+
+doc = env_default.Asciidoc('targets/doc/io_matrix.html', 'doc/io_matrix.txt', ASCIIDOC_BACKEND='html5', ASCIIDOC_ATTRIBUTES=aAttribs)
+
+
+#----------------------------------------------------------------------------
+#
 # Make a local demo installation.
 #
 # Copy all binary binaries.
