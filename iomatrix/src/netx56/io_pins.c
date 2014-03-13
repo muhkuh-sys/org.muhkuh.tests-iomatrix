@@ -8,6 +8,7 @@
 typedef struct UNITCONFIGURATION_STRUCT
 {
 	unsigned long aulHifPio[2];
+	unsigned long  ulRstOut;
 } UNITCONFIGURATION_T;
 
 
@@ -15,6 +16,7 @@ static void initialize_unit_configuration(UNITCONFIGURATION_T *ptUnitCfg)
 {
 	ptUnitCfg->aulHifPio[0] = 0;
 	ptUnitCfg->aulHifPio[1] = 0;
+	ptUnitCfg->ulRstOut     = 0;
 }
 
 
@@ -78,6 +80,19 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, size_t 
 					uprintf("The pin %s has an invalid index of %d!", ptPinDescCnt->pcName, uiIndex);
 				}
 				break;
+
+			case PINTYPE_RSTOUT:
+				uiIndex = ptPinDescCnt->uiIndex;
+				if( uiIndex==0 )
+				{
+					ptUnitCfg->ulRstOut |= 1U<<uiIndex;
+					iResult = 0;
+				}
+				else
+				{
+					uprintf("The pin %s has an invalid index of %d!", ptPinDescCnt->pcName, uiIndex);
+				}
+				break;
 			}
 
 			if( iResult!=0 )
@@ -117,15 +132,28 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc)
 			ptHifIoCtrlArea->aulHif_pio_oe[1] = 0;
 
 			/* Collect the configuration. */
+			/* FIXME: only do this if the RDY pin is really used. */
 			ulValue  = HOSTMSK(hif_io_cfg_en_hif_rdy_pio_mi);
 
-			/* FIXME: only do this if the RDY pin is really used. */
 			ulValue |= 3 << HOSTSRT(hif_io_cfg_hif_mi_cfg);
 			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
 			ptHifIoCtrlArea->ulHif_io_cfg = ulValue;
 
 			ulValue  = 1 << HOSTSRT(hif_pio_cfg_in_ctrl);
 			ptHifIoCtrlArea->ulHif_pio_cfg = ulValue;
+		}
+
+
+		/*
+		 * RstOut
+		 */
+		if( tUnitCfg.ulRstOut!=0 )
+		{
+			/* Disable the reset out driver. */
+			ulValue  = ptAsicCtrlArea->ulReset_ctrl;
+			ulValue &= ~(HOSTMSK(reset_ctrl_EN_RES_REQ_OUT) | HOSTMSK(reset_ctrl_RES_REQ_OUT));
+			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+			ptAsicCtrlArea->ulReset_ctrl = ulValue;
 		}
 	}
 
@@ -180,6 +208,7 @@ static int set_hifpio(unsigned int uiIndex, PINSTATUS_T tValue)
 		iResult = -1;
 		switch( tValue )
 		{
+		case PINSTATUS_HIGHZ:
 		case PINSTATUS_INPUT:
 			/* Clear the output enable bit. */
 			aulOen[0] &= ~(aulMsk[0]);
@@ -278,6 +307,72 @@ static int get_hifpio(unsigned int uiIndex, unsigned int *puiValue)
 }
 
 
+
+
+static int set_rstout(unsigned int uiIndex, PINSTATUS_T tValue)
+{
+	HOSTDEF(ptAsicCtrlArea);
+	unsigned long ulValue;
+	int iResult;
+
+
+	/* Be pessimistic. */
+	iResult = -1;
+
+	if( uiIndex==0U )
+	{
+		ulValue  = ptAsicCtrlArea->ulReset_ctrl;
+
+		switch( tValue )
+		{
+		case PINSTATUS_HIGHZ:
+			/* Disable the reset out driver. */
+			ulValue &= ~(HOSTMSK(reset_ctrl_EN_RES_REQ_OUT));
+			iResult = 0;
+			break;
+
+		case PINSTATUS_INPUT:
+			/* The RSTOUT pin can not be used as input. */
+			break;
+
+		case PINSTATUS_OUTPUT0:
+			/* Set the output enable bit. */
+			ulValue |= HOSTMSK(reset_ctrl_EN_RES_REQ_OUT);
+
+			/* Clear the output bit. */
+			ulValue &= ~(HOSTMSK(reset_ctrl_EN_RES_REQ_OUT));
+
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT1:
+			/* Set the output enable bit. */
+			ulValue |= HOSTMSK(reset_ctrl_EN_RES_REQ_OUT);
+
+			/* Set the output bit. */
+			ulValue |= HOSTMSK(reset_ctrl_EN_RES_REQ_OUT);
+
+			iResult = 0;
+			break;
+		}
+
+		if( iResult==0 )
+		{
+			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+			ptAsicCtrlArea->ulReset_ctrl = ulValue;
+		}
+	}
+
+	return iResult;
+}
+
+
+static int get_rstout(unsigned int uiIndex __attribute__ ((unused)), unsigned int *puiValue __attribute__ ((unused)))
+{
+	/* The RstOut pin is output only. */
+	return -1;
+}
+
 /*---------------------------------------------------------------------------*/
 
 
@@ -305,6 +400,11 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 	case PINTYPE_HIFPIO:
 		uiIndex = ptPinDescription->uiIndex;
 		iResult = set_hifpio(uiIndex, tValue);
+		break;
+
+	case PINTYPE_RSTOUT:
+		uiIndex = ptPinDescription->uiIndex;
+		iResult = set_rstout(uiIndex, tValue);
 		break;
 	}
 
@@ -336,6 +436,11 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned int *puiValue)
 	case PINTYPE_HIFPIO:
 		uiIndex = ptPinDescription->uiIndex;
 		iResult = get_hifpio(uiIndex, puiValue);
+		break;
+
+	case PINTYPE_RSTOUT:
+		uiIndex = ptPinDescription->uiIndex;
+		iResult = get_rstout(uiIndex, puiValue);
 		break;
 	}
 
