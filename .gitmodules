@@ -1,0 +1,6 @@
+[submodule "mbs"]
+	path = mbs
+	url = http://scm.netx01.hilscher.local/git/muhkuh_tests/mbs
+[submodule "platform"]
+	path = platform
+	url = http://scm.netx01.hilscher.local/git/muhkuh_tests/platform
