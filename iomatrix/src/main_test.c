@@ -29,6 +29,7 @@ typedef enum MATRIXERR_ENUM
 } MATRIXERR_T;
 
 
+#if 0
 static const PINDESCRIPTION_T atPinsUnderTest[MAX_PINS_UNDER_TEST] =
 {
 	{ "HIF_D00",    PINTYPE_HIFPIO,  0, 1, PINFLAG_IOZ },
@@ -132,6 +133,10 @@ static const char * const apcNetListNames[MAX_NET_COUNT][MAX_NET_SIZE] =
 
 	{ "RSTOUT",     "HIF_RDY" }
 };
+#else
+static PINDESCRIPTION_T atPinsUnderTest[MAX_PINS_UNDER_TEST];
+static const char * apcNetListNames[MAX_NET_COUNT][MAX_NET_SIZE];
+#endif
 
 
 static const PINDESCRIPTION_T *aptNetList[MAX_NET_COUNT][MAX_NET_SIZE];
@@ -239,6 +244,93 @@ static void print_all_netlists(const PINDESCRIPTION_T **pptNetList)
 	} while( sizNetListCnt<MAX_NET_COUNT );
 }
 
+
+/*-------------------------------------------------------------------------*/
+
+static unsigned long get_dword(const unsigned char *pucData)
+{
+	unsigned long ulValue;
+
+
+	ulValue  =  (unsigned long)(*(pucData++));
+	ulValue |= ((unsigned long)(*(pucData++))) <<  8U;
+	ulValue |= ((unsigned long)(*(pucData++))) << 16U;
+	ulValue |= ((unsigned long)(*(pucData++))) << 24U;
+
+	return ulValue;
+}
+
+
+static int parse_pin_description(const unsigned char *pucDefinition, unsigned long ulDefinitionSize)
+{
+	int iResult;
+	PINDESCRIPTION_T *ptPinDescCnt;
+	PINDESCRIPTION_T *ptPinDescEnd;
+	const unsigned char *pucCnt;
+	const unsigned char *pucEnd;
+	const unsigned char *pucNameStart;
+
+
+	/* Be optimistic. */
+	iResult = 0;
+
+	/* Clear the pins under test. */
+	memset(atPinsUnderTest, 0, sizeof(atPinsUnderTest));
+
+	/* Clear the net list. */
+	memset(apcNetListNames, 0, sizeof(apcNetListNames));
+
+	ptPinDescCnt = atPinsUnderTest;
+	ptPinDescEnd = atPinsUnderTest + (sizeof(atPinsUnderTest)/sizeof(atPinsUnderTest[0]));
+
+	pucCnt = pucDefinition;
+	pucEnd = pucDefinition + ulDefinitionSize;
+
+	/* Parse all pin descriptions. */
+	while( pucCnt<pucEnd )
+	{
+		/* Get the next name. */
+		pucNameStart = pucCnt;
+		while( pucCnt<pucEnd && *pucCnt!='\0')
+		{
+			++pucCnt;
+		}
+
+		/* The end of the list is marked by an empty name. */
+		if( (pucCnt-pucNameStart)==0 )
+		{
+			break;
+		}
+
+		/* Skip over the terminating 0. */
+		++pucCnt;
+
+		/* The entry needs some more bytes. */
+		if( (pucCnt+sizeof(ptPinDescCnt->tType)+sizeof(ptPinDescCnt->uiIndex)+sizeof(ptPinDescCnt->uiDefaultValue)+sizeof(ptPinDescCnt->ulFlags))>=pucEnd )
+		{
+			iResult = -1;
+			break;
+		}
+
+		ptPinDescCnt->pcName = (const char*)pucNameStart;
+		ptPinDescCnt->tType = (PINTYPE_T)get_dword(pucCnt);
+		pucCnt += 4;
+		ptPinDescCnt->uiIndex = (unsigned int)get_dword(pucCnt);
+		pucCnt += 4;
+		ptPinDescCnt->uiDefaultValue = (unsigned int)get_dword(pucCnt);
+		pucCnt += 4;
+		ptPinDescCnt->ulFlags = get_dword(pucCnt);
+		pucCnt += 4;
+	}
+
+	if( iResult==0 && pucCnt<pucEnd )
+	{
+		/* Skip over the terminating 0. */
+		++pucCnt;
+
+		/* Parse the net list. */
+	}
+}
 
 /*-------------------------------------------------------------------------*/
 
@@ -1024,30 +1116,34 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 	/* Initialize the error array. */
 	memset(ausPinToPinErrors, 0, sizeof(ausPinToPinErrors));
 
-	iResult = build_net_list(atPinsUnderTest, apcNetListNames, aptNetList);
+	iResult = parse_pin_description(ptTestParams->pucDefinitionStart, ptTestParams->ulDefinitionSize);
 	if( iResult==0 )
 	{
-		/* TODO: check if all nets contain no more than 1 pins which
-		 * are OUT only. These pins can only drive and should not be
-		 * connected in one net.
-		 */
-
-
-		if( s_ulVerbosity!=0 )
-		{
-			print_all_netlists(aptNetList);
-		}
-
-		iResult = iopins_configure(atPinsUnderTest, MAX_PINS_UNDER_TEST);
+		iResult = build_net_list(atPinsUnderTest, apcNetListNames, aptNetList);
 		if( iResult==0 )
 		{
-			iResult = run_matrix_test(aptNetList);
+			/* TODO: check if all nets contain no more than 1 pins which
+			 * are OUT only. These pins can only drive and should not be
+			 * connected in one net.
+			 */
+
+
+			if( s_ulVerbosity!=0 )
+			{
+				print_all_netlists(aptNetList);
+			}
+
+			iResult = iopins_configure(atPinsUnderTest, MAX_PINS_UNDER_TEST);
 			if( iResult==0 )
 			{
-				uiErrorCount = dump_errors();
-				if( uiErrorCount!=0 )
+				iResult = run_matrix_test(aptNetList);
+				if( iResult==0 )
 				{
-					iResult = -1;
+					uiErrorCount = dump_errors();
+					if( uiErrorCount!=0 )
+					{
+						iResult = -1;
+					}
 				}
 			}
 		}
