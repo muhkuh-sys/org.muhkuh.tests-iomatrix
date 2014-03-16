@@ -1,9 +1,28 @@
+/***************************************************************************
+ *   Copyright (C) 2013-2014 by Christoph Thelen                           *
+ *   doc_bacardi@users.sourceforge.net                                     *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+
 
 #include "main_test.h"
 
 #include <string.h>
 
-#include "io_pins.h"
 #include "netx_test.h"
 #include "rdy_run.h"
 #include "systime.h"
@@ -135,7 +154,6 @@ static const char * const apcNetListNames[MAX_NET_COUNT][MAX_NET_SIZE] =
 };
 #else
 static PINDESCRIPTION_T atPinsUnderTest[MAX_PINS_UNDER_TEST];
-static const char * apcNetListNames[MAX_NET_COUNT][MAX_NET_SIZE];
 #endif
 
 
@@ -155,7 +173,7 @@ static unsigned short ausPinToPinErrors[MAX_PINS_UNDER_TEST][MAX_PINS_UNDER_TEST
 static unsigned long s_ulVerbosity;
 
 /*-------------------------------------------------------------------------*/
-
+#if 0
 static void print_net_desc(const char * const *ppcNetDesc)
 {
 	const char * const *ppcCnt;
@@ -185,7 +203,7 @@ static void print_net_desc(const char * const *ppcNetDesc)
 		} while( ppcCnt<ppcEnd );
 	}
 }
-
+#endif
 
 
 static void print_netlist(const PINDESCRIPTION_T **pptNetList)
@@ -247,15 +265,22 @@ static void print_all_netlists(const PINDESCRIPTION_T **pptNetList)
 
 /*-------------------------------------------------------------------------*/
 
-static unsigned long get_dword(const unsigned char *pucData)
+typedef struct DATAPTR_STRUCT
+{
+	const unsigned char *pucCnt;
+	const unsigned char *pucEnd;
+} DATAPTR_T;
+
+
+static unsigned long get_dword(DATAPTR_T *ptPtr)
 {
 	unsigned long ulValue;
 
 
-	ulValue  =  (unsigned long)(*(pucData++));
-	ulValue |= ((unsigned long)(*(pucData++))) <<  8U;
-	ulValue |= ((unsigned long)(*(pucData++))) << 16U;
-	ulValue |= ((unsigned long)(*(pucData++))) << 24U;
+	ulValue  =  (unsigned long)(*((ptPtr->pucCnt)++));
+	ulValue |= ((unsigned long)(*((ptPtr->pucCnt)++))) <<  8U;
+	ulValue |= ((unsigned long)(*((ptPtr->pucCnt)++))) << 16U;
+	ulValue |= ((unsigned long)(*((ptPtr->pucCnt)++))) << 24U;
 
 	return ulValue;
 }
@@ -264,10 +289,9 @@ static unsigned long get_dword(const unsigned char *pucData)
 static int parse_pin_description(const unsigned char *pucDefinition, unsigned long ulDefinitionSize)
 {
 	int iResult;
+	DATAPTR_T tPtr;
 	PINDESCRIPTION_T *ptPinDescCnt;
 	PINDESCRIPTION_T *ptPinDescEnd;
-	const unsigned char *pucCnt;
-	const unsigned char *pucEnd;
 	const unsigned char *pucNameStart;
 
 
@@ -277,64 +301,189 @@ static int parse_pin_description(const unsigned char *pucDefinition, unsigned lo
 	/* Clear the pins under test. */
 	memset(atPinsUnderTest, 0, sizeof(atPinsUnderTest));
 
-	/* Clear the net list. */
-	memset(apcNetListNames, 0, sizeof(apcNetListNames));
+	/* An old net list does not make sense with new pin descriptions.
+	 * Clear the complete net list.
+	 */
+	memset(aptNetList, 0, sizeof(PINDESCRIPTION_T*)*MAX_NET_COUNT*MAX_NET_SIZE);
+
+	tPtr.pucCnt = pucDefinition;
+	tPtr.pucEnd = pucDefinition + ulDefinitionSize;
 
 	ptPinDescCnt = atPinsUnderTest;
 	ptPinDescEnd = atPinsUnderTest + (sizeof(atPinsUnderTest)/sizeof(atPinsUnderTest[0]));
 
-	pucCnt = pucDefinition;
-	pucEnd = pucDefinition + ulDefinitionSize;
-
 	/* Parse all pin descriptions. */
-	while( pucCnt<pucEnd )
+	while( tPtr.pucCnt<tPtr.pucEnd )
 	{
 		/* Get the next name. */
-		pucNameStart = pucCnt;
-		while( pucCnt<pucEnd && *pucCnt!='\0')
+		pucNameStart = tPtr.pucCnt;
+		while( tPtr.pucCnt<tPtr.pucEnd && *(tPtr.pucCnt)!='\0')
 		{
-			++pucCnt;
+			++(tPtr.pucCnt);
 		}
 
-		/* The end of the list is marked by an empty name. */
-		if( (pucCnt-pucNameStart)==0 )
+		/* The name must not be empty. */
+		if( (tPtr.pucCnt - pucNameStart)==0 )
 		{
-			break;
-		}
-
-		/* Skip over the terminating 0. */
-		++pucCnt;
-
-		/* The entry needs some more bytes. */
-		if( (pucCnt+sizeof(ptPinDescCnt->tType)+sizeof(ptPinDescCnt->uiIndex)+sizeof(ptPinDescCnt->uiDefaultValue)+sizeof(ptPinDescCnt->ulFlags))>=pucEnd )
-		{
+			uprintf("Error: the name of pin %d is empty!\n", ptPinDescCnt-atPinsUnderTest);
 			iResult = -1;
 			break;
 		}
+		else
+		{
+			/* Skip over the terminating 0. */
+			++(tPtr.pucCnt);
 
-		ptPinDescCnt->pcName = (const char*)pucNameStart;
-		ptPinDescCnt->tType = (PINTYPE_T)get_dword(pucCnt);
-		pucCnt += 4;
-		ptPinDescCnt->uiIndex = (unsigned int)get_dword(pucCnt);
-		pucCnt += 4;
-		ptPinDescCnt->uiDefaultValue = (unsigned int)get_dword(pucCnt);
-		pucCnt += 4;
-		ptPinDescCnt->ulFlags = get_dword(pucCnt);
-		pucCnt += 4;
+			/* The entry needs some more bytes. */
+			if( (tPtr.pucCnt +
+			     sizeof(ptPinDescCnt->tType) +
+			     sizeof(ptPinDescCnt->uiIndex) +
+			     sizeof(ptPinDescCnt->uiDefaultValue) +
+			     sizeof(ptPinDescCnt->ulFlags))>=tPtr.pucEnd )
+			{
+				uprintf("Error: not enough data for the definition. The description seems to be truncated!\n");
+				iResult = -1;
+				break;
+			}
+			else
+			{
+				ptPinDescCnt->pcName = (const char*)pucNameStart;
+
+				ptPinDescCnt->tType = (PINTYPE_T)get_dword(&tPtr);
+				/* TODO: check the type. */
+
+				ptPinDescCnt->uiIndex = (unsigned int)get_dword(&tPtr);
+				ptPinDescCnt->uiDefaultValue = (unsigned int)get_dword(&tPtr);
+
+				ptPinDescCnt->ulFlags = get_dword(&tPtr);
+				/* TODO: check the flags. */
+
+				/* Move to the next space for the pin description. */
+				++ptPinDescCnt;
+				if( ptPinDescCnt>=ptPinDescEnd )
+				{
+					uprintf("Error: too many pin descriptions!\n");
+					iResult = -1;
+					break;
+				}
+			}
+		}
 	}
 
-	if( iResult==0 && pucCnt<pucEnd )
-	{
-		/* Skip over the terminating 0. */
-		++pucCnt;
-
-		/* Parse the net list. */
-	}
+	return iResult;
 }
+
+
+static int parse_netlist(const unsigned char *pucDefinition, unsigned long ulDefinitionSize)
+{
+	int iResult;
+	DATAPTR_T tPtr;
+	unsigned long ulIndex;
+	size_t sizNetListCnt;
+	size_t sizNetPinCnt;
+	const PINDESCRIPTION_T *ptPinHit;
+	const PINDESCRIPTION_T **pptNetList;
+
+
+	/* Be optimistic. */
+	iResult = 0;
+
+	/* Clear the complete net list. */
+	memset(aptNetList, 0, sizeof(PINDESCRIPTION_T*)*MAX_NET_COUNT*MAX_NET_SIZE);
+
+	/* Clear the net index. */
+	memset(apptNetOfPin, 0, sizeof(PINDESCRIPTION_T**)*MAX_PINS_UNDER_TEST);
+
+	pptNetList = aptNetList;
+
+	tPtr.pucCnt = pucDefinition;
+	tPtr.pucEnd = pucDefinition + ulDefinitionSize;
+
+	sizNetListCnt = 0;
+	sizNetPinCnt = 0;
+
+	/* Parse the net list. */
+	while( tPtr.pucCnt<tPtr.pucEnd )
+	{
+		ulIndex = get_dword(&tPtr);
+		if( ulIndex==0 )
+		{
+			/* End of list.
+			 * Is this the first entry in the net list -> Empty list.
+			 */
+			if( sizNetPinCnt==0 )
+			{
+				/* Yes -> this net is invalid. */
+				uprintf("Error: net %d is empty!\n", sizNetListCnt);
+				iResult = -1;
+				break;
+			}
+			else
+			{
+				/* No -> end of the net list.
+				 * Move to the next net list.
+				 */
+				pptNetList += MAX_NET_SIZE;
+				sizNetPinCnt = 0;
+				++sizNetListCnt;
+				if( sizNetListCnt>=MAX_NET_COUNT )
+				{
+					uprintf("Error: too many net lists!\n");
+					iResult = -1;
+					break;
+				}
+			}
+		}
+		else if( sizNetPinCnt>=MAX_NET_SIZE )
+		{
+			uprintf("Error: net %d exceeds the maximum number of pins!\n", sizNetListCnt);
+			iResult = -1;
+			break;
+		}
+		else
+		{
+			--ulIndex;
+			if( ulIndex>=MAX_PINS_UNDER_TEST )
+			{
+				uprintf("Error in net %d at pin %d: The net list index exceeds the maximum possible index!\n", sizNetListCnt, sizNetPinCnt);
+				iResult = -1;
+				break;
+			}
+			else
+			{
+				ptPinHit = atPinsUnderTest + ulIndex;
+				if( ptPinHit->pcName==NULL )
+				{
+					uprintf("Error in net %d at pin %d: The pin index points to an undefined pin!\n", sizNetListCnt, sizNetPinCnt);
+					iResult = -1;
+					break;
+				}
+				else if( apptNetOfPin[ulIndex]!=NULL )
+				{
+					/* The pin is already a member of another net. */
+					uprintf("Error in net %d: pin '%s' is already a member of another network!\n", sizNetListCnt, ptPinHit->pcName);
+					iResult = -1;
+					break;
+				}
+				else
+				{
+					/* Add the pin to the current network. */
+					pptNetList[sizNetPinCnt] = ptPinHit;
+
+					/* Mark the pin as 'used'. */
+					apptNetOfPin[ulIndex] = pptNetList;
+				}
+			}
+		}
+	}
+
+	return iResult;
+}
+
 
 /*-------------------------------------------------------------------------*/
 
-
+#if 0
 static const PINDESCRIPTION_T *find_pin_by_name(const PINDESCRIPTION_T *ptPinsUnderTest, const char *pcPinName)
 {
 	const PINDESCRIPTION_T *ptPinCnt;
@@ -461,7 +610,7 @@ static int build_net_list(const PINDESCRIPTION_T *ptPinsUnderTest, const char * 
 	return iResult;
 }
 
-
+#endif
 
 /*-------------------------------------------------------------------------*/
 
@@ -1109,45 +1258,92 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 	/* Get the test parameter. */
 	ptTestParams = (IOMATRIX_PARAMETER_T*)(ptTestParam->pvInitParams);
 	uprintf(". Parameters: 0x%08x\n", (unsigned long)ptTestParams);
-	uprintf(".   Verbosity: 0x%08x\n", ptTestParams->ulVerbosity);
+	uprintf(".   Verbose: 0x%08x\n", ptTestParams->ulVerbose);
+	uprintf(".   Command: 0x%08x\n", ptTestParams->tCommand);
 
-	s_ulVerbosity = ptTestParams->ulVerbosity;
+	/* Set the verbose mode. */
+	s_ulVerbosity = ptTestParams->ulVerbose;
 
-	/* Initialize the error array. */
-	memset(ausPinToPinErrors, 0, sizeof(ausPinToPinErrors));
+	/* Be pessimistic. */
+	iResult = -1;
 
-	iResult = parse_pin_description(ptTestParams->pucDefinitionStart, ptTestParams->ulDefinitionSize);
-	if( iResult==0 )
+	switch( ptTestParams->tCommand )
 	{
-		iResult = build_net_list(atPinsUnderTest, apcNetListNames, aptNetList);
+	case IOMATRIX_COMMAND_Parse_Pin_Description:
+		ptTestParams->uParameter.tParsePinDescription.pvPinDescription = NULL;
+
+		iResult = parse_pin_description(ptTestParams->uParameter.tParsePinDescription.pucPinDefinitionStart, ptTestParams->uParameter.tParsePinDescription.ulPinDefinitionSize);
 		if( iResult==0 )
 		{
-			/* TODO: check if all nets contain no more than 1 pins which
-			 * are OUT only. These pins can only drive and should not be
-			 * connected in one net.
-			 */
+			ptTestParams->uParameter.tParsePinDescription.pvPinDescription = (void*)atPinsUnderTest;
+		}
+		break;
 
+	case IOMATRIX_COMMAND_Run_Matrix_Test:
+		if( ptTestParams->uParameter.tParsePinDescription.pvPinDescription != (void*)atPinsUnderTest )
+		{
+			uprintf("Error: the pin description handle is invalid!\n");
+		}
+		else
+		{
+			/* Initialize the error array. */
+			memset(ausPinToPinErrors, 0, sizeof(ausPinToPinErrors));
 
-			if( s_ulVerbosity!=0 )
-			{
-				print_all_netlists(aptNetList);
-			}
-
-			iResult = iopins_configure(atPinsUnderTest, MAX_PINS_UNDER_TEST);
+			iResult = parse_netlist(ptTestParams->uParameter.tRunMatrixTest.pucNetlistDefinitionStart, ptTestParams->uParameter.tRunMatrixTest.ulNetlistDefinitionSize);
 			if( iResult==0 )
 			{
-				iResult = run_matrix_test(aptNetList);
+				/* TODO: check if all nets contain no more than 1 pins which
+				 * are OUT only. These pins can only drive and should not be
+				 * connected in one net.
+				 */
+
+				if( s_ulVerbosity!=0 )
+				{
+					print_all_netlists(aptNetList);
+				}
+
+				iResult = iopins_configure(atPinsUnderTest, MAX_PINS_UNDER_TEST);
 				if( iResult==0 )
 				{
-					uiErrorCount = dump_errors();
-					if( uiErrorCount!=0 )
+					iResult = run_matrix_test(aptNetList);
+					if( iResult==0 )
 					{
-						iResult = -1;
+						uiErrorCount = dump_errors();
+						if( uiErrorCount!=0 )
+						{
+							iResult = -1;
+						}
 					}
 				}
 			}
 		}
+		break;
+
+	case IOMATRIX_COMMAND_Set_Pin:
+		if( ptTestParams->uParameter.tParsePinDescription.pvPinDescription != (void*)atPinsUnderTest )
+		{
+			uprintf("Error: the pin description handle is invalid!\n");
+		}
+		else
+		{
+			/* TODO: Add this function. */
+			iResult = -1;
+		}
+		break;
+
+	case IOMATRIX_COMMAND_Get_Pin:
+		if( ptTestParams->uParameter.tParsePinDescription.pvPinDescription != (void*)atPinsUnderTest )
+		{
+			uprintf("Error: the pin description handle is invalid!\n");
+		}
+		else
+		{
+			/* TODO: Add this function. */
+			iResult = -1;
+		}
+		break;
 	}
+
 
 	if( iResult==0 )
 	{
