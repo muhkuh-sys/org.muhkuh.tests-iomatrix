@@ -70,6 +70,12 @@ SECTIONS
 	} >INTRAM
 
 
+	.matrix_definitions :
+	{
+		*(.matrix_definitions)
+	} >INTRAM
+	
+	
 	.parameter ALIGN(0x0100) :
 	{
 		parameter_start_address = . ;

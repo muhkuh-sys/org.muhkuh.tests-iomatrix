@@ -24,6 +24,9 @@
 
 #include <sys/types.h>
 
+
+#define MAX_PINDESCRIPTION_NAME 15
+
 typedef enum PINTYPE_ENUM
 {
 	PINTYPE_GPIO    = 0,
@@ -54,7 +57,7 @@ typedef enum PINFLAG_ENUM
 
 typedef struct PINDESCRIPTION_STRUCT
 {
-	const char *pcName;
+	char apcName[MAX_PINDESCRIPTION_NAME+1];
 	PINTYPE_T tType;
 	unsigned int uiIndex;
 	unsigned int uiDefaultValue;

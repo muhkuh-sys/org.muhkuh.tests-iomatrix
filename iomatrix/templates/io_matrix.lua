@@ -155,7 +155,7 @@ end
 
 
 
-local function compile_net_list(apcNetListNames)
+local function compile_net_list(atPinsUnderTest, apcNetListNames)
 	-- This table collects all chunks for the compiled net list.
 	local atChunks = {}
 	
@@ -195,6 +195,9 @@ function initialize(tPlugin, strPattern, fnCallbackProgress)
 	-- Invalidate the handle for the pin description.
 	aAttr.hPinDescription = 0
 
+	-- No pin list yet.
+	aAttr.atPinsUnderTest = nil
+	
 	-- Get the binary for the ASIC.
 	if tAsicTyp==romloader.ROMLOADER_CHIPTYP_NETX50 then
 		uiAsic = 50
@@ -262,6 +265,8 @@ end
 
 
 function parse_pin_description(aAttr, atPinsUnderTest, ulVerbose, fnCallbackProgress, fnCallbackMessage)
+	aAttr.atPinsUnderTest = atPinsUnderTest
+	
 	-- Set the defaults for the optional parameter.
 	ulVerbose = ulVerbose or 0                                            -- Disable verbose mode by default.
 	fnCallbackProgress = fnCallbackProgress or default_callback_progress  -- Use the built-in callback.
@@ -289,13 +294,13 @@ function parse_pin_description(aAttr, atPinsUnderTest, ulVerbose, fnCallbackProg
 	aAttr.tPlugin:write_data32(aAttr.ulParameterStartAddress+0x08, 0x00000000)                          -- Reserved
 	
 	-- Write the extended header.
-	for iIdx,ulValue in ipairs(aParameter) do
+	for iIdx,ulValue in ipairs(atParameters) do
 		aAttr.tPlugin:write_data32(aAttr.ulParameterStartAddress+0x0c+((iIdx-1)*4), ulValue)
 	end
 
 	-- Download the compiled pin description.
 	print(string.format("downloading to 0x%08x", ulPinDefinitionAddress))
-	tPlugin:write_image(ulPinDefinitionAddress, strPinDefinition, fnCallbackProgress, sizPinDefinition)
+	aAttr.tPlugin:write_image(ulPinDefinitionAddress, strPinDefinition, fnCallbackProgress, sizPinDefinition)
 	
 	-- Call the netX program.
 	 print("__/Output/____________________________________________________________________")
@@ -310,7 +315,8 @@ function parse_pin_description(aAttr, atPinsUnderTest, ulVerbose, fnCallbackProg
 	end
 	
 	-- Get the pin description handle.
-	aAttr.hPinDescription = hPinDescription = aAttr.tPlugin:read_data32(aAttr.ulParameterStartAddress+0x1c)
+	aAttr.hPinDescription = aAttr.tPlugin:read_data32(aAttr.ulParameterStartAddress+0x1c)
+	print(string.format("pin desc handle: %08x", aAttr.hPinDescription))
 end
 
 
@@ -322,7 +328,7 @@ function run_matrix_test(aAttr, atNetList, ulVerbose, fnCallbackProgress, fnCall
 	fnCallbackMessage = fnCallbackMessage or default_callback_message     -- Use the built-in callback.
 
 	-- Compile the net list.
-	local strNetList = compile_net_list(atNetList)
+	local strNetList = compile_net_list(aAttr.atPinsUnderTest, atNetList)
 	local sizNetList = strNetList:len()
 
 	-- Place the pin description right after the header. 
@@ -343,25 +349,23 @@ function run_matrix_test(aAttr, atNetList, ulVerbose, fnCallbackProgress, fnCall
 	aAttr.tPlugin:write_data32(aAttr.ulParameterStartAddress+0x08, 0x00000000)                          -- Reserved
 	
 	-- Write the extended header.
-	for iIdx,ulValue in ipairs(aParameter) do
+	for iIdx,ulValue in ipairs(atParameters) do
 		aAttr.tPlugin:write_data32(aAttr.ulParameterStartAddress+0x0c+((iIdx-1)*4), ulValue)
 	end
 
 	-- Download the compiled net list.
 	print(string.format("downloading to 0x%08x", ulNetListAddress))
-	tPlugin:write_image(ulNetListAddress, strNetList, fnCallbackProgress, sizNetList)
+	aAttr.tPlugin:write_image(ulNetListAddress, strNetList, fnCallbackProgress, sizNetList)
 	
 	-- Call the netX program.
-	 print("__/Output/____________________________________________________________________")
+	print("__/Output/____________________________________________________________________")
 	aAttr.tPlugin:call(aAttr.ulExecutionAddress, aAttr.ulParameterStartAddress, fnCallbackMessage, 0)
 	print("")
 	print("______________________________________________________________________________")
 	
 	-- Get the result.
 	local ulResult = aAttr.tPlugin:read_data32(aAttr.ulParameterStartAddress)
-	if ulResult~=0 then
-		error("The netX program returned an error!")
-	end
+	return ulResult
 end
 
 

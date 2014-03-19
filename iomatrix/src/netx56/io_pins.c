@@ -54,7 +54,7 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, size_t 
 	ptPinDescEnd = ptPinDesc + sizMaxPinDesc;
 	while( ptPinDescCnt<ptPinDescEnd )
 	{
-		if( (ptPinDescCnt->pcName)==NULL )
+		if( (ptPinDescCnt->apcName[0])=='\0' )
 		{
 			/* End of list. */
 			break;
@@ -96,7 +96,7 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, size_t 
 				}
 				else
 				{
-					uprintf("The pin %s has an invalid index of %d!", ptPinDescCnt->pcName, uiIndex);
+					uprintf("The pin %s has an invalid index of %d!", ptPinDescCnt->apcName, uiIndex);
 				}
 				break;
 
@@ -109,7 +109,7 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, size_t 
 				}
 				else
 				{
-					uprintf("The pin %s has an invalid index of %d!", ptPinDescCnt->pcName, uiIndex);
+					uprintf("The pin %s has an invalid index of %d!", ptPinDescCnt->apcName, uiIndex);
 				}
 				break;
 			}

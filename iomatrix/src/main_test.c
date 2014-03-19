@@ -48,116 +48,8 @@ typedef enum MATRIXERR_ENUM
 } MATRIXERR_T;
 
 
-#if 0
-static const PINDESCRIPTION_T atPinsUnderTest[MAX_PINS_UNDER_TEST] =
-{
-	{ "HIF_D00",    PINTYPE_HIFPIO,  0, 1, PINFLAG_IOZ },
-	{ "HIF_D01",    PINTYPE_HIFPIO,  1, 1, PINFLAG_IOZ },
-	{ "HIF_D02",    PINTYPE_HIFPIO,  2, 1, PINFLAG_IOZ },
-	{ "HIF_D03",    PINTYPE_HIFPIO,  3, 1, PINFLAG_IOZ },
-	{ "HIF_D04",    PINTYPE_HIFPIO,  4, 1, PINFLAG_IOZ },
-	{ "HIF_D05",    PINTYPE_HIFPIO,  5, 1, PINFLAG_IOZ },
-	{ "HIF_D06",    PINTYPE_HIFPIO,  6, 1, PINFLAG_IOZ },
-	{ "HIF_D07",    PINTYPE_HIFPIO,  7, 1, PINFLAG_IOZ },
-	{ "HIF_D08",    PINTYPE_HIFPIO,  8, 1, PINFLAG_IOZ },
-	{ "HIF_D09",    PINTYPE_HIFPIO,  9, 1, PINFLAG_IOZ },
-	{ "HIF_D10",    PINTYPE_HIFPIO, 10, 1, PINFLAG_IOZ },
-	{ "HIF_D11",    PINTYPE_HIFPIO, 11, 1, PINFLAG_IOZ },
-	{ "HIF_D12",    PINTYPE_HIFPIO, 12, 1, PINFLAG_IOZ },
-	{ "HIF_D13",    PINTYPE_HIFPIO, 13, 1, PINFLAG_IOZ },
-	{ "HIF_D14",    PINTYPE_HIFPIO, 14, 1, PINFLAG_IOZ },
-	{ "HIF_D15",    PINTYPE_HIFPIO, 15, 1, PINFLAG_IOZ },
-	{ "HIF_D16",    PINTYPE_HIFPIO, 16, 1, PINFLAG_IOZ },
-	{ "HIF_D17",    PINTYPE_HIFPIO, 17, 1, PINFLAG_IOZ },
-	{ "HIF_D18",    PINTYPE_HIFPIO, 18, 1, PINFLAG_IOZ },
-	{ "HIF_D19",    PINTYPE_HIFPIO, 19, 1, PINFLAG_IOZ },
-	{ "HIF_D20",    PINTYPE_HIFPIO, 20, 1, PINFLAG_IOZ },
-	{ "HIF_D21",    PINTYPE_HIFPIO, 21, 1, PINFLAG_IOZ },
-	{ "HIF_D22",    PINTYPE_HIFPIO, 22, 1, PINFLAG_IOZ },
-	{ "HIF_D23",    PINTYPE_HIFPIO, 23, 1, PINFLAG_IOZ },
-	{ "HIF_D24",    PINTYPE_HIFPIO, 24, 1, PINFLAG_IOZ },
-	{ "HIF_D25",    PINTYPE_HIFPIO, 25, 1, PINFLAG_IOZ },
-	{ "HIF_D26",    PINTYPE_HIFPIO, 26, 1, PINFLAG_IOZ },
-	{ "HIF_D27",    PINTYPE_HIFPIO, 27, 1, PINFLAG_IOZ },
-	{ "HIF_D28",    PINTYPE_HIFPIO, 28, 1, PINFLAG_IOZ },
-	{ "HIF_D29",    PINTYPE_HIFPIO, 29, 1, PINFLAG_IOZ },
-	{ "HIF_D30",    PINTYPE_HIFPIO, 30, 1, PINFLAG_IOZ },
-	{ "HIF_D31",    PINTYPE_HIFPIO, 31, 1, PINFLAG_IOZ },
-
-	{ "HIF_A00",    PINTYPE_HIFPIO, 32, 1, PINFLAG_IOZ },
-	{ "HIF_A01",    PINTYPE_HIFPIO, 33, 1, PINFLAG_IOZ },
-	{ "HIF_A02",    PINTYPE_HIFPIO, 34, 1, PINFLAG_IOZ },
-	{ "HIF_A03",    PINTYPE_HIFPIO, 35, 1, PINFLAG_IOZ },
-	{ "HIF_A04",    PINTYPE_HIFPIO, 36, 1, PINFLAG_IOZ },
-	{ "HIF_A05",    PINTYPE_HIFPIO, 37, 1, PINFLAG_IOZ },
-	{ "HIF_A06",    PINTYPE_HIFPIO, 38, 1, PINFLAG_IOZ },
-	{ "HIF_A07",    PINTYPE_HIFPIO, 39, 1, PINFLAG_IOZ },
-	{ "HIF_A08",    PINTYPE_HIFPIO, 40, 1, PINFLAG_IOZ },
-	{ "HIF_A09",    PINTYPE_HIFPIO, 41, 1, PINFLAG_IOZ },
-	{ "HIF_A10",    PINTYPE_HIFPIO, 42, 1, PINFLAG_IOZ },
-	{ "HIF_A11",    PINTYPE_HIFPIO, 43, 1, PINFLAG_IOZ },
-	{ "HIF_A12",    PINTYPE_HIFPIO, 44, 1, PINFLAG_IOZ },
-	{ "HIF_A13",    PINTYPE_HIFPIO, 45, 1, PINFLAG_IOZ },
-	{ "HIF_A14",    PINTYPE_HIFPIO, 46, 1, PINFLAG_IOZ },
-	{ "HIF_A15",    PINTYPE_HIFPIO, 47, 1, PINFLAG_IOZ },
-
-	{ "HIF_AHI0",   PINTYPE_HIFPIO, 48, 1, PINFLAG_IOZ },
-	{ "HIF_AHI1",   PINTYPE_HIFPIO, 49, 1, PINFLAG_IOZ },
-
-	{ "HIF_BHE3",   PINTYPE_HIFPIO, 50, 1, PINFLAG_IOZ },
-	{ "HIF_BHE1",   PINTYPE_HIFPIO, 51, 1, PINFLAG_IOZ },
-
-	{ "HIF_RDn",    PINTYPE_HIFPIO, 52, 1, PINFLAG_IOZ },
-	{ "HIF_WRn",    PINTYPE_HIFPIO, 53, 1, PINFLAG_IOZ },
-	{ "HIF_CSn",    PINTYPE_HIFPIO, 54, 1, PINFLAG_IOZ },
-	{ "HIF_RDY",    PINTYPE_HIFPIO, 55, 1, PINFLAG_I | PINFLAG_Z },
-	{ "HIF_DIRQ",   PINTYPE_HIFPIO, 56, 1, PINFLAG_IOZ },
-	{ "HIF_SDCLK",  PINTYPE_HIFPIO, 57, 1, PINFLAG_IOZ },
-
-	{ "RSTOUT",     PINTYPE_RSTOUT,  0, 0, PINFLAG_O | PINFLAG_Z }
-};
-
-
-
-static const char * const apcNetListNames[MAX_NET_COUNT][MAX_NET_SIZE] =
-{
-	{ "HIF_A00",    "HIF_A08" },
-	{ "HIF_A01",    "HIF_A09" },
-	{ "HIF_A02",    "HIF_A10" },
-	{ "HIF_A03",    "HIF_A11" },
-	{ "HIF_A04",    "HIF_A12" },
-	{ "HIF_A05",    "HIF_A13" },
-	{ "HIF_A06",    "HIF_A14" },
-	{ "HIF_A07",    "HIF_A15" },
-	{ "HIF_D00",    "HIF_D08" },
-	{ "HIF_D01",    "HIF_D09" },
-	{ "HIF_D02",    "HIF_D10" },
-	{ "HIF_D03",    "HIF_D11" },
-	{ "HIF_D04",    "HIF_D12" },
-	{ "HIF_D05",    "HIF_D13" },
-	{ "HIF_D06",    "HIF_D14" },
-	{ "HIF_D07",    "HIF_D15" },
-
-	{ "HIF_D16",    "HIF_CSn" },
-	{ "HIF_D17",    "HIF_D25" },
-	{ "HIF_D18",    "HIF_BHE3" },
-	{ "HIF_D19",    "HIF_D21" },
-	{ "HIF_D20",    "HIF_D27",      "HIF_AHI0" },
-	{ "HIF_D22",    "HIF_D29" },
-	{ "HIF_D23",    "HIF_D28" },
-	{ "HIF_D24",    "HIF_D30" },
-	{ "HIF_D26",    "HIF_BHE1" },
-	{ "HIF_SDCLK",  "HIF_WRn" },
-	{ "HIF_AHI1",   "HIF_DIRQ" },
-
-	{ "RSTOUT",     "HIF_RDY" }
-};
-#else
-static PINDESCRIPTION_T atPinsUnderTest[MAX_PINS_UNDER_TEST];
-#endif
-
-
-static const PINDESCRIPTION_T *aptNetList[MAX_NET_COUNT][MAX_NET_SIZE];
+PINDESCRIPTION_T atPinsUnderTest[MAX_PINS_UNDER_TEST] __attribute__ ((section (".matrix_definitions")));
+const PINDESCRIPTION_T *aptNetList[MAX_NET_COUNT][MAX_NET_SIZE] __attribute__ ((section (".matrix_definitions")));
 
 
 /* This array has one entry for every pin under test.
@@ -173,37 +65,6 @@ static unsigned short ausPinToPinErrors[MAX_PINS_UNDER_TEST][MAX_PINS_UNDER_TEST
 static unsigned long s_ulVerbosity;
 
 /*-------------------------------------------------------------------------*/
-#if 0
-static void print_net_desc(const char * const *ppcNetDesc)
-{
-	const char * const *ppcCnt;
-	const char * const *ppcEnd;
-
-
-	ppcCnt = ppcNetDesc;
-	ppcEnd = ppcNetDesc + MAX_NET_SIZE;
-	if( *ppcCnt==NULL )
-	{
-		uprintf("empty net");
-	}
-	else
-	{
-		do
-		{
-			uprintf("%s", *ppcCnt);
-			++ppcCnt;
-			if( *ppcCnt==NULL )
-			{
-				break;
-			}
-			else
-			{
-				uprintf(" - ");
-			}
-		} while( ppcCnt<ppcEnd );
-	}
-}
-#endif
 
 
 static void print_netlist(const PINDESCRIPTION_T **pptNetList)
@@ -220,7 +81,7 @@ static void print_netlist(const PINDESCRIPTION_T **pptNetList)
 	}
 	do
 	{
-		uprintf("%s", (*pptCnt)->pcName);
+		uprintf("%s", (*pptCnt)->apcName);
 
 		++pptCnt;
 		if( *pptCnt==NULL )
@@ -263,6 +124,71 @@ static void print_all_netlists(const PINDESCRIPTION_T **pptNetList)
 }
 
 
+
+typedef struct PINTYPE_PRINT_STRUCT
+{
+	PINTYPE_T tType;
+	const char *pcPrint;
+} PINTYPE_PRINT_T;
+
+static const PINTYPE_PRINT_T atPintypePrint[] =
+{
+	{ PINTYPE_GPIO,   "GPIO" },
+	{ PINTYPE_PIO,    "PIO" },
+	{ PINTYPE_MMIO,   "MMIO" },
+	{ PINTYPE_HIFPIO, "HIFPIO" },
+	{ PINTYPE_RSTOUT, "RSTOUT" }
+};
+
+static void print_pin(ptrdiff_t ptdIndex, const PINDESCRIPTION_T *ptPinDesc)
+{
+	PINTYPE_T tType;
+	const PINTYPE_PRINT_T *ptCnt;
+	const PINTYPE_PRINT_T *ptEnd;
+	const char *pcPrint;
+	unsigned long ulFlags;
+	char acFlags[4];
+
+
+	/* Get the print representation of the pin type. */
+	pcPrint = "???";
+	tType = ptPinDesc->tType;
+	ptCnt = atPintypePrint;
+	ptEnd = atPintypePrint + (sizeof(atPintypePrint)/sizeof(atPintypePrint[0]));
+	do
+	{
+		if( ptCnt->tType==tType )
+		{
+			pcPrint = ptCnt->pcPrint;
+			break;
+		}
+		++ptCnt;
+	} while( ptCnt<ptEnd );
+
+	/* Set the default values for the flags. */
+	acFlags[0] = ' ';
+	acFlags[1] = ' ';
+	acFlags[2] = ' ';
+	acFlags[3] = '\0';
+
+	ulFlags = ptPinDesc->ulFlags;
+	if( (ulFlags&PINFLAG_I)!=0 )
+	{
+		acFlags[0] = 'I';
+	}
+	if( (ulFlags&PINFLAG_O)!=0 )
+	{
+		acFlags[1] = 'O';
+	}
+	if( (ulFlags&PINFLAG_Z)!=0 )
+	{
+		acFlags[2] = 'Z';
+	}
+
+	uprintf("%03d: Pin '%s': %s[%d] (default %d, flags: %s)\n", ptdIndex, ptPinDesc->apcName, pcPrint, ptPinDesc->uiIndex, ptPinDesc->uiDefaultValue, acFlags);
+}
+
+
 /*-------------------------------------------------------------------------*/
 
 typedef struct DATAPTR_STRUCT
@@ -293,6 +219,7 @@ static int parse_pin_description(const unsigned char *pucDefinition, unsigned lo
 	PINDESCRIPTION_T *ptPinDescCnt;
 	PINDESCRIPTION_T *ptPinDescEnd;
 	const unsigned char *pucNameStart;
+	ptrdiff_t ptdName;
 
 
 	/* Be optimistic. */
@@ -323,9 +250,16 @@ static int parse_pin_description(const unsigned char *pucDefinition, unsigned lo
 		}
 
 		/* The name must not be empty. */
-		if( (tPtr.pucCnt - pucNameStart)==0 )
+		ptdName = tPtr.pucCnt - pucNameStart;
+		if( ptdName<=0 )
 		{
 			uprintf("Error: the name of pin %d is empty!\n", ptPinDescCnt-atPinsUnderTest);
+			iResult = -1;
+			break;
+		}
+		else if( ptdName>MAX_PINDESCRIPTION_NAME )
+		{
+			uprintf("Error: the name of pin %d is too long!\n", ptPinDescCnt-atPinsUnderTest);
 			iResult = -1;
 			break;
 		}
@@ -347,7 +281,9 @@ static int parse_pin_description(const unsigned char *pucDefinition, unsigned lo
 			}
 			else
 			{
-				ptPinDescCnt->pcName = (const char*)pucNameStart;
+				/* Copy the name. */
+				memset(ptPinDescCnt->apcName, 0, MAX_PINDESCRIPTION_NAME);
+				strncpy(ptPinDescCnt->apcName, (const char*)pucNameStart, MAX_PINDESCRIPTION_NAME);
 
 				ptPinDescCnt->tType = (PINTYPE_T)get_dword(&tPtr);
 				/* TODO: check the type. */
@@ -357,6 +293,11 @@ static int parse_pin_description(const unsigned char *pucDefinition, unsigned lo
 
 				ptPinDescCnt->ulFlags = get_dword(&tPtr);
 				/* TODO: check the flags. */
+
+				if( s_ulVerbosity!=0 )
+				{
+					print_pin(ptPinDescCnt-atPinsUnderTest, ptPinDescCnt);
+				}
 
 				/* Move to the next space for the pin description. */
 				++ptPinDescCnt;
@@ -452,7 +393,7 @@ static int parse_netlist(const unsigned char *pucDefinition, unsigned long ulDef
 			else
 			{
 				ptPinHit = atPinsUnderTest + ulIndex;
-				if( ptPinHit->pcName==NULL )
+				if( ptPinHit->apcName[0]=='\0' )
 				{
 					uprintf("Error in net %d at pin %d: The pin index points to an undefined pin!\n", sizNetListCnt, sizNetPinCnt);
 					iResult = -1;
@@ -461,7 +402,7 @@ static int parse_netlist(const unsigned char *pucDefinition, unsigned long ulDef
 				else if( apptNetOfPin[ulIndex]!=NULL )
 				{
 					/* The pin is already a member of another net. */
-					uprintf("Error in net %d: pin '%s' is already a member of another network!\n", sizNetListCnt, ptPinHit->pcName);
+					uprintf("Error in net %d: pin '%s' is already a member of another network!\n", sizNetListCnt, ptPinHit->apcName);
 					iResult = -1;
 					break;
 				}
@@ -469,6 +410,7 @@ static int parse_netlist(const unsigned char *pucDefinition, unsigned long ulDef
 				{
 					/* Add the pin to the current network. */
 					pptNetList[sizNetPinCnt] = ptPinHit;
+					++sizNetPinCnt;
 
 					/* Mark the pin as 'used'. */
 					apptNetOfPin[ulIndex] = pptNetList;
@@ -480,137 +422,6 @@ static int parse_netlist(const unsigned char *pucDefinition, unsigned long ulDef
 	return iResult;
 }
 
-
-/*-------------------------------------------------------------------------*/
-
-#if 0
-static const PINDESCRIPTION_T *find_pin_by_name(const PINDESCRIPTION_T *ptPinsUnderTest, const char *pcPinName)
-{
-	const PINDESCRIPTION_T *ptPinCnt;
-	const PINDESCRIPTION_T *ptPinEnd;
-	const PINDESCRIPTION_T *ptPinHit;
-
-
-	/* Search for the pin name in the pins under test. */
-	ptPinCnt = ptPinsUnderTest;
-	ptPinEnd = ptPinsUnderTest + MAX_PINS_UNDER_TEST;
-	ptPinHit = NULL;
-
-	while( ptPinCnt<ptPinEnd )
-	{
-		if( ptPinCnt->pcName==NULL )
-		{
-			/* A NULL name means: end of list. */
-			break;
-		}
-		else if( strcmp(ptPinCnt->pcName, pcPinName)==0 )
-		{
-			ptPinHit = ptPinCnt;
-			break;
-		}
-		else
-		{
-			++ptPinCnt;
-		}
-	}
-
-	return ptPinHit;
-}
-
-
-
-static int build_net_list(const PINDESCRIPTION_T *ptPinsUnderTest, const char * const *ppcNetListNames, const PINDESCRIPTION_T **pptNetList)
-{
-	int iResult;
-	size_t sizNetListCnt;
-	size_t sizNetPinCnt;
-	const PINDESCRIPTION_T *ptPinHit;
-	const char *pcPinName;
-	size_t sizPinIdx;
-
-
-	/* Be optimistic. */
-	iResult = 0;
-
-	/* Clear the complete net list. */
-	memset(pptNetList, 0, sizeof(PINDESCRIPTION_T*)*MAX_NET_COUNT*MAX_NET_SIZE);
-
-	/* Clear the net index. */
-	memset(apptNetOfPin, 0, sizeof(PINDESCRIPTION_T**)*MAX_PINS_UNDER_TEST);
-
-	/* Loop over all net list name entries. */
-	sizNetListCnt = 0;
-	do
-	{
-		if( *ppcNetListNames==NULL )
-		{
-			/* End of list. */
-			break;
-		}
-		else
-		{
-			/* Loop over all pins in this net. */
-			sizNetPinCnt = 0;
-			do
-			{
-				pcPinName = ppcNetListNames[sizNetPinCnt];
-				if( pcPinName==NULL )
-				{
-					break;
-				}
-				else
-				{
-					ptPinHit = find_pin_by_name(ptPinsUnderTest, pcPinName);
-					if( ptPinHit==NULL )
-					{
-						uprintf("Error in net ");
-						print_net_desc(ppcNetListNames);
-						uprintf(": the pin name '%s' is not a member of the pins under test!\n", pcPinName);
-						iResult = -1;
-						break;
-					}
-					else
-					{
-						/* Is this pin already part of a network? */
-						sizPinIdx = (size_t)(ptPinHit - atPinsUnderTest);
-						if( apptNetOfPin[sizPinIdx]!=NULL )
-						{
-							/* The pin is already a member of another net. */
-							uprintf("Error in net ");
-							print_net_desc(ppcNetListNames);
-							uprintf(": the pin '%s' is already a member of another network!\n", pcPinName);
-							iResult = -1;
-							break;
-						}
-						else
-						{
-							/* Add the pin to the current network. */
-							pptNetList[sizNetPinCnt] = ptPinHit;
-
-							/* Mark the pin as 'used'. */
-							apptNetOfPin[sizPinIdx] = pptNetList;
-						}
-					}
-				}
-
-				++sizNetPinCnt;
-			} while( sizNetPinCnt<MAX_NET_SIZE );
-		}
-
-		if( iResult!=0 )
-		{
-			break;
-		}
-
-		ppcNetListNames += MAX_NET_SIZE;
-		pptNetList += MAX_NET_SIZE;
-		++sizNetListCnt;
-	} while( sizNetListCnt<MAX_NET_COUNT );
-
-	return iResult;
-}
-
-#endif
 
 /*-------------------------------------------------------------------------*/
 
@@ -684,7 +495,7 @@ static unsigned int dump_errors(void)
 			{
 				ptDrivingPin = atPinsUnderTest + sizDriverIdx;
 				ptReceivingPin = atPinsUnderTest + sizReceiverIdx;
-				uprintf("%s - %s:\n", ptDrivingPin->pcName, ptReceivingPin->pcName);
+				uprintf("%s - %s:\n", ptDrivingPin->apcName, ptReceivingPin->apcName);
 				if( (usError&((unsigned short)MATRIXERR_Loopback_but_drive0_does_not_follow))!=0 )
 				{
 					uprintf("\tLoopback_but_drive0_does_not_follow\n");
@@ -787,7 +598,7 @@ static int set_net_to_default(const PINDESCRIPTION_T **pptNet)
 				}
 				else
 				{
-					uprintf("The pin '%s' is neither I, O, nor HIGHZ!", ptPin->pcName);
+					uprintf("The pin '%s' is neither I, O, nor HIGHZ!", ptPin->apcName);
 					iResult = -1;
 				}
 			}
@@ -914,7 +725,7 @@ static int check_all_pins_for_default(const PINDESCRIPTION_T **pptNetList, const
 								if( uiValue!=uiDefaultValue )
 								{
 									iResult = record_error(ptDrivingPin, ptPin, tError);
-									uprintf("Pin '%s' is not at its default value of %d, but %d!\n", ptPin->pcName, uiDefaultValue, uiValue);
+									uprintf("Pin '%s' is not at its default value of %d, but %d!\n", ptPin->apcName, uiDefaultValue, uiValue);
 								}
 							}
 							if( iResult!=0 )
@@ -990,7 +801,7 @@ static int test_pin_state(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPT
 	/* Set the pin to output. */
 	if( s_ulVerbosity!=0 )
 	{
-		uprintf("Driving pin '%s' to %d.\n", ptDrivingPin->pcName, uiExpectedValue);
+		uprintf("Driving pin '%s' to %d.\n", ptDrivingPin->apcName, uiExpectedValue);
 	}
 	iResult = iopins_set(ptDrivingPin, tStatus);
 	if( iResult==0 )
@@ -1021,7 +832,7 @@ static int test_pin_state(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPT
 					{
 						if( s_ulVerbosity!=0 )
 						{
-							uprintf("  Pin '%s' does not follow.\n", ptPin->pcName);
+							uprintf("  Pin '%s' does not follow.\n", ptPin->apcName);
 						}
 						iResult = record_error(ptDrivingPin, ptPin, tError1);
 					}
@@ -1029,7 +840,7 @@ static int test_pin_state(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPT
 					{
 						if( s_ulVerbosity!=0 )
 						{
-							uprintf("  Pin '%s' follows.\n", ptPin->pcName);
+							uprintf("  Pin '%s' follows.\n", ptPin->apcName);
 						}
 					}
 				}
@@ -1115,12 +926,12 @@ static int test_pin(const PINDESCRIPTION_T **pptNetList, const PINDESCRIPTION_T 
 
 		if( ptOutputOnlyPin!=NULL )
 		{
-			uprintf("Not driving pin '%s'. The network contains an output only pin: %s\n", ptDrivingPin->pcName, ptOutputOnlyPin->pcName);
+			uprintf("Not driving pin '%s'. The network contains an output only pin: %s\n", ptDrivingPin->apcName, ptOutputOnlyPin->apcName);
 			iResult = 0;
 		}
 		else if( iAtLeastOneInput==0 )
 		{
-			uprintf("Not driving pin '%s'. The network contains no other input pins.\n", ptDrivingPin->pcName);
+			uprintf("Not driving pin '%s'. The network contains no other input pins.\n", ptDrivingPin->apcName);
 			iResult = 0;
 		}
 		else
@@ -1270,6 +1081,11 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 	switch( ptTestParams->tCommand )
 	{
 	case IOMATRIX_COMMAND_Parse_Pin_Description:
+		if( s_ulVerbosity!=0 )
+		{
+			uprintf("Mode: Parse Pin Description\n");
+		}
+
 		ptTestParams->uParameter.tParsePinDescription.pvPinDescription = NULL;
 
 		iResult = parse_pin_description(ptTestParams->uParameter.tParsePinDescription.pucPinDefinitionStart, ptTestParams->uParameter.tParsePinDescription.ulPinDefinitionSize);
@@ -1280,7 +1096,12 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 		break;
 
 	case IOMATRIX_COMMAND_Run_Matrix_Test:
-		if( ptTestParams->uParameter.tParsePinDescription.pvPinDescription != (void*)atPinsUnderTest )
+		if( s_ulVerbosity!=0 )
+		{
+			uprintf("Mode: Run Matrix Test\n");
+		}
+
+		if( ptTestParams->uParameter.tRunMatrixTest.pvPinDescription != (void*)atPinsUnderTest )
 		{
 			uprintf("Error: the pin description handle is invalid!\n");
 		}
@@ -1320,7 +1141,12 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 		break;
 
 	case IOMATRIX_COMMAND_Set_Pin:
-		if( ptTestParams->uParameter.tParsePinDescription.pvPinDescription != (void*)atPinsUnderTest )
+		if( s_ulVerbosity!=0 )
+		{
+			uprintf("Mode: Set Pin\n");
+		}
+
+		if( ptTestParams->uParameter.tSetPin.pvPinDescription != (void*)atPinsUnderTest )
 		{
 			uprintf("Error: the pin description handle is invalid!\n");
 		}
@@ -1332,7 +1158,12 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 		break;
 
 	case IOMATRIX_COMMAND_Get_Pin:
-		if( ptTestParams->uParameter.tParsePinDescription.pvPinDescription != (void*)atPinsUnderTest )
+		if( s_ulVerbosity!=0 )
+		{
+			uprintf("Mode: Get Pin\n");
+		}
+
+		if( ptTestParams->uParameter.tGetPin.pvPinDescription != (void*)atPinsUnderTest )
 		{
 			uprintf("Error: the pin description handle is invalid!\n");
 		}
