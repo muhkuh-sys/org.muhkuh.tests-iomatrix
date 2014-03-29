@@ -1,6 +1,6 @@
 [submodule "mbs"]
 	path = mbs
-	url = http://scm.netx01.hilscher.local/git/muhkuh_tests/mbs
+	url = https://github.com/docbacardi/mbs.git
 [submodule "platform"]
 	path = platform
-	url = http://scm.netx01.hilscher.local/git/muhkuh_tests/platform
+	url = https://github.com/docbacardi/platform.git
