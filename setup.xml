@@ -7,11 +7,6 @@
 		<minor>0</minor>
 	</project_version>
 
-	<!-- Add a custom repository. -->
-	<repositories>
-		<repository name="nexus@netx01">http://nexus.netx01.hilscher.local/content/repositories/mbs_testing</repository>
-	</repositories>
-
 	<scons>
 		<group>org.scons</group>
 		<name>scons-local</name>
