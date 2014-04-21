@@ -37,9 +37,16 @@ sources_common = """
 	src/init_netx_test.S
 	src/main_test.c
 	src/netx_test.c
-	src/netx56/io_pins.c
 """
 
+
+sources_netx10 = """
+	src/netx10/io_pins.c
+"""
+
+sources_netx56 = """
+	src/netx56/io_pins.c
+"""
 
 #----------------------------------------------------------------------------
 #
@@ -57,7 +64,7 @@ aCppPath = ['src', '#platform/src', '#platform/src/lib', '#targets/version']
 env_netx56_t = env_netx56_default.Clone()
 env_netx56_t.Replace(LDFILE = 'src/netx56/netx56.ld')
 env_netx56_t.Append(CPPPATH = aCppPath)
-src_netx56_t = env_netx56_t.SetBuildPath('targets/netx56', 'src', sources_common)
+src_netx56_t = env_netx56_t.SetBuildPath('targets/netx56', 'src', sources_common + sources_netx56)
 elf_netx56_t = env_netx56_t.Elf('targets/netx56/iomatrix.elf', src_netx56_t + platform_lib_netx56)
 IOMATRIX_NETX56 = env_netx56_t.ObjCopy('targets/netx56/iomatrix.bin', elf_netx56_t)
 
@@ -68,12 +75,12 @@ IOMATRIX_NETX56 = env_netx56_t.ObjCopy('targets/netx56/iomatrix.bin', elf_netx56
 #elf_netx50_t = env_netx50_t.Elf('targets/netx50/crctest.elf', src_netx50_t + platform_lib_netx50)
 #crctest_netx50 = env_netx50_t.ObjCopy('targets/netx50/crctest.bin', elf_netx50_t)
 
-#env_netx10_t = env_netx10_default.Clone()
-#env_netx10_t.Replace(LDFILE = 'src/netx10/netx10.ld')
-#env_netx10_t.Append(CPPPATH = aCppPath)
-#src_netx10_t = env_netx10_t.SetBuildPath('targets/netx10', 'src', sources_common)
-#elf_netx10_t = env_netx10_t.Elf('targets/netx10/crctest.elf', src_netx10_t + platform_lib_netx10)
-#crctest_netx10 = env_netx10_t.ObjCopy('targets/netx10/crctest.bin', elf_netx10_t)
+env_netx10_t = env_netx10_default.Clone()
+env_netx10_t.Replace(LDFILE = 'src/netx10/netx10.ld')
+env_netx10_t.Append(CPPPATH = aCppPath)
+src_netx10_t = env_netx10_t.SetBuildPath('targets/netx10', 'src', sources_common + sources_netx10)
+elf_netx10_t = env_netx10_t.Elf('targets/netx10/crctest.elf', src_netx10_t + platform_lib_netx10)
+crctest_netx10 = env_netx10_t.ObjCopy('targets/netx10/crctest.bin', elf_netx10_t)
 
 #Export('crctest_netx500', 'crctest_netx56', 'crctest_netx50', 'crctest_netx10')
 Export('IOMATRIX_NETX56')
