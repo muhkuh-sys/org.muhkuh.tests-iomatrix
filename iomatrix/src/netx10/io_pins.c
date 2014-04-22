@@ -187,36 +187,9 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, size_t 
 /*-------------------------------------------------------------------------*/
 
 
-static int iopins_configure_gpio(UNITCONFIGURATION_T *ptUnitCfg)
-{
-	HOSTDEF(ptGpioArea);
-	unsigned long ulAct;
-	unsigned long ulValue;
-	unsigned int uiCnt;
-
-
-	ulAct = ptUnitCfg->ulGpio;
-	if( ulAct!=0 )
-	{
-		for(uiCnt=0; uiCnt<16; ++uiCnt)
-		{
-			ulValue  = 1U << uiCnt;
-			ulValue &= ulAct;
-			if( ulValue!=0 )
-			{
-				ptGpioArea->aulGpio_cfg[uiCnt] = 0;
-			}
-		}
-	}
-
-	return 0;
-}
-
-
-
 static int iopins_configure_hifpio(UNITCONFIGURATION_T *ptUnitCfg)
 {
-  HOSTDEF(ptAsicCtrlArea);
+	HOSTDEF(ptAsicCtrlArea);
 	HOSTDEF(ptHifIoCtrlArea);
 	unsigned long ulAct0;
 	unsigned long ulAct1;
@@ -310,26 +283,6 @@ static int iopins_configure_rdyrun(UNITCONFIGURATION_T *ptUnitCfg)
 
 
 
-static int iopins_configure_rstout(UNITCONFIGURATION_T *ptUnitCfg)
-{
-	HOSTDEF(ptAsicCtrlArea);
-	unsigned long ulValue;
-
-
-	if( ptUnitCfg->ulRstOut!=0 )
-	{
-		/* Disable the reset out driver. */
-		ulValue  = ptAsicCtrlArea->ulReset_ctrl;
-		ulValue &= ~(HOSTMSK(reset_ctrl_EN_RES_REQ_OUT) | HOSTMSK(reset_ctrl_RES_REQ_OUT));
-		ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
-		ptAsicCtrlArea->ulReset_ctrl = ulValue;
-	}
-
-	return 0;
-}
-
-
-
 static int iopins_configure_xmio(UNITCONFIGURATION_T *ptUnitCfg)
 {
 	HOSTDEF(ptXmac0Area);
@@ -383,41 +336,27 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc)
 	if( iResult==0 )
 	{
 		/*
-		 *  GPIO
+		 *  HIFPIO
 		 */
-		iResult = iopins_configure_gpio(&tUnitCfg);
+		iResult = iopins_configure_hifpio(&tUnitCfg);
 		if( iResult==0 )
 		{
 			/*
-			 *  HIFPIO
+			 *  MMIO
 			 */
-			iResult = iopins_configure_hifpio(&tUnitCfg);
+			iResult = iopins_configure_mmio(&tUnitCfg);
 			if( iResult==0 )
 			{
 				/*
-				 *  MMIO
+				 *  RDYRUN
 				 */
-				iResult = iopins_configure_mmio(&tUnitCfg);
+				iResult = iopins_configure_rdyrun(&tUnitCfg);
 				if( iResult==0 )
 				{
 					/*
-					 *  RDYRUN
+					 *  XMIO
 					 */
-					iResult = iopins_configure_rdyrun(&tUnitCfg);
-					if( iResult==0 )
-					{
-						/*
-						 * RstOut
-						 */
-						iResult = iopins_configure_rstout(&tUnitCfg);
-						if( iResult==0 )
-						{
-							/*
-							 *  XMIO
-							 */
-							iResult = iopins_configure_xmio(&tUnitCfg);
-						}
-					}
+					iResult = iopins_configure_xmio(&tUnitCfg);
 				}
 			}
 		}
@@ -428,72 +367,6 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc)
 
 
 /*---------------------------------------------------------------------------*/
-
-
-static int set_gpio(unsigned int uiIndex, PINSTATUS_T tValue)
-{
-  HOSTDEF(ptGpioArea);
-  int iResult;
-  unsigned long ulValue;
-
-
-  /* Be pessimistic. */
-  iResult = -1;
-  switch( tValue )
-    {
-    case PINSTATUS_HIGHZ:
-      ulValue = 0;
-      iResult = 0;
-      break;
-
-    case PINSTATUS_OUTPUT0:
-      ulValue = 4;
-      iResult = 0;
-      break;
-
-    case PINSTATUS_OUTPUT1:
-      ulValue = 5;
-      iResult = 0;
-      break;
-    };
-
-  if( iResult==0 )
-    {
-      /* set gpio mode */
-      ptGpioArea->aulGpio_cfg[uiIndex] = ulValue;
-    }
-
-  return iResult;
-}
-
-
-
-static int get_gpio(unsigned int uiIndex, unsigned int *puiValue)
-{
-	HOSTDEF(ptGpioArea);
-	int iResult;
-	unsigned long ulValue;
-	unsigned int uiResult;
-
-
-	iResult = 0;
-
-	/* Read GPIO pin. */
-	ulValue  = ptGpioArea->ulGpio_in;
-	ulValue &= 1U << uiIndex;
-	if( ulValue==0 )
-	{
-		uiResult = 0;
-	}
-	else
-	{
-		uiResult = 1;
-	}
-	*puiValue = uiResult;
-
-	return iResult;
-}
-
 
 
 static int set_hifpio(unsigned int uiIndex, PINSTATUS_T tValue)
@@ -642,57 +515,55 @@ static int get_hifpio(unsigned int uiIndex, unsigned int *puiValue)
 
 static int set_mmio(unsigned int uiIndex, PINSTATUS_T tValue)
 {
-  HOSTDEF(ptMmioCtrlArea);
-  int iResult;
-  unsigned long ulOe;
-  unsigned long ulOut;
-  unsigned long ulMask;
+	HOSTDEF(ptMmioCtrlArea);
+	int iResult;
+	unsigned long ulOe;
+	unsigned long ulOut;
+	unsigned long ulMask;
 
 
-  /* Be pessimistic. */
-  iResult = -1;
+	/* Be pessimistic. */
+	iResult = -1;
 
-  ulOut = ptMmioCtrlArea->ulMmio_pio_out_line_cfg;
-  ulOe  = ptMmioCtrlArea->ulMmio_pio_oe_line_cfg;
+	ulOut = ptMmioCtrlArea->ulMmio_pio_out_line_cfg;
+	ulOe  = ptMmioCtrlArea->ulMmio_pio_oe_line_cfg;
 
-  /* get bit for the pin */
-  ulMask = 1U << uiIndex;
+	/* get bit for the pin */
+	ulMask = 1U << uiIndex;
 
-  switch( tValue )
-    {
-    case PINSTATUS_HIGHZ:
-      /* Disable the output driver. */
-      ulOe  &= ~ulMask;
-      iResult = 0;
-      break;
+	switch( tValue )
+	{
+	case PINSTATUS_HIGHZ:
+		/* Disable the output driver. */
+		ulOe  &= ~ulMask;
+		iResult = 0;
+		break;
 
-    case PINSTATUS_OUTPUT0:
-      /* Set the output value to 0. */
-      ulOut &= ~ulMask;
-      /* set pio pin to output */
-      ulOe  |=  ulMask;
-      iResult = 0;
-      break;
+	case PINSTATUS_OUTPUT0:
+		/* Set the output value to 0. */
+		ulOut &= ~ulMask;
+		ulOe  |=  ulMask;
+		iResult = 0;
+		break;
 
-    case PINSTATUS_OUTPUT1:
-      /* Set the output value to 1. */
-      ulOut |= ulMask;
-      /* set pio pin to output */
-      ulOe  |= ulMask;
-      iResult = 0;
-      break;
-    };
+	case PINSTATUS_OUTPUT1:
+		/* Set the output value to 1. */
+		ulOut |= ulMask;
+		ulOe  |= ulMask;
+		iResult = 0;
+		break;
+	};
 
-  if( iResult==0 )
-    {
-      /* Write back the modified values.
-       * NOTE: first write the output value, then the output enable.
-       */
-      ptMmioCtrlArea->ulMmio_pio_out_line_cfg = ulOut;
-      ptMmioCtrlArea->ulMmio_pio_oe_line_cfg  = ulOe;
-    }
+	if( iResult==0 )
+	{
+		/* Write back the modified values.
+		 * NOTE: first write the output value, then the output enable.
+		 */
+		ptMmioCtrlArea->ulMmio_pio_out_line_cfg = ulOut;
+		ptMmioCtrlArea->ulMmio_pio_oe_line_cfg  = ulOe;
+	}
 
-  return iResult;
+	return iResult;
 }
 
 
@@ -725,58 +596,57 @@ static int get_mmio(unsigned int uiIndex, unsigned int *puiValue)
 
 static int set_rdyrun(unsigned int uiIndex, PINSTATUS_T tValue)
 {
-  int iResult;
-  unsigned long ulMaskOe;
-  unsigned long ulMaskOut;
-  unsigned long ulValue;
+	HOSTDEF(ptAsicCtrlArea);
+	int iResult;
+	unsigned long ulMaskOe;
+	unsigned long ulMaskOut;
+	unsigned long ulValue;
 
 
-  /* Be epssimistic. */
-  iResult = -1;
+	/* Be pessimistic. */
+	iResult = -1;
 
-  if( uiIndex==0 )
-    {
-      ulMaskOe  = HOSTMSK(rdy_run_cfg_RDY_DRV);
-      ulMaskOut = HOSTMSK(rdy_run_cfg_RDY_OUT);
-    }
-  else
-    {
-      ulMaskOe  = HOSTMSK(rdy_run_cfg_RUN_DRV);
-      ulMaskOut = HOSTMSK(rdy_run_cfg_RUN_OUT);
-    }
+	if( uiIndex==0 )
+	{
+		ulMaskOe  = HOSTMSK(rdy_run_cfg_RDY_DRV);
+		ulMaskOut = HOSTMSK(rdy_run_cfg_RDY);
+	}
+	else
+	{
+		ulMaskOe  = HOSTMSK(rdy_run_cfg_RUN_DRV);
+		ulMaskOut = HOSTMSK(rdy_run_cfg_RUN);
+	}
 
-  ulValue = ptAsicCtrlArea->ulRdy_run_cfg;
-  switch( tValue )
-    {
-    case PINSTATUS_HIGHZ:
-      /* Disable the output driver. */
-      ulValue &= ~ulMaskOe;
-      iResult = 0;
-      break;
+	ulValue = ptAsicCtrlArea->ulRdy_run_cfg;
+	switch( tValue )
+	{
+	case PINSTATUS_HIGHZ:
+		/* Disable the output driver. */
+		ulValue &= ~ulMaskOe;
+		iResult = 0;
+		break;
 
-    case PINSTATUS_OUTPUT0:
-      /* Set the output value to 0. */
-      ulValue &= ~ulMaskOut;
-      /* set pio pin to output */
-      ulValue |=  ulMaskOe;
-      iResult = 0;
-      break;
+	case PINSTATUS_OUTPUT0:
+		/* Set the output value to 0. */
+		ulValue &= ~ulMaskOut;
+		ulValue |=  ulMaskOe;
+		iResult = 0;
+		break;
 
-    case PINSTATUS_OUTPUT1:
-      /* Set the output value to 1. */
-      ulValue |= ulMaskOut;
-      /* set pio pin to output */
-      ulValue |= ulMaskOe;
-      iResult = 0;
-      break;
-    };
+	case PINSTATUS_OUTPUT1:
+		/* Set the output value to 1. */
+		ulValue |= ulMaskOut;
+		ulValue |= ulMaskOe;
+		iResult = 0;
+		break;
+	};
 
-  if( iResult==0 )
-    {
-      ptAsicCtrlArea->ulRdy_run_cfg = ulValue;
-    }
+	if( iResult==0 )
+	{
+		ptAsicCtrlArea->ulRdy_run_cfg = ulValue;
+	}
 
-  return iResult;
+	return iResult;
 }
 
 
@@ -818,153 +688,91 @@ static int get_rdyrun(unsigned int uiIndex, unsigned int *puiValue)
 }
 
 
-static int set_rstout(unsigned int uiIndex, PINSTATUS_T tValue)
+static int set_xmio(unsigned int uiIndex, PINSTATUS_T tValue)
 {
-	HOSTDEF(ptAsicCtrlArea);
-	unsigned long ulValue;
+	HOSTDEF(ptXmac0Area);
 	int iResult;
+	unsigned long ulValue;
+	unsigned long ulMaskOe;
+	unsigned long ulMaskOut;
 
 
-	/* Be pessimistic. */
-	iResult = -1;
-
-	if( uiIndex==0U )
+	if( uiIndex==0 )
 	{
-		ulValue  = ptAsicCtrlArea->ulReset_ctrl;
+		ulMaskOut = MSK_NX10_xmac_config_shared0_gpio0_out;
+		ulMaskOe  = MSK_NX10_xmac_config_shared0_gpio0_oe;
+	}
+	else
+	{
+		ulMaskOut = MSK_NX10_xmac_config_shared0_gpio1_out;
+		ulMaskOe  = MSK_NX10_xmac_config_shared0_gpio1_oe;
+	}
 
-		switch( tValue )
-		{
-		case PINSTATUS_HIGHZ:
-			/* Disable the reset out driver. */
-			ulValue &= ~(HOSTMSK(reset_ctrl_EN_RES_REQ_OUT));
-			iResult = 0;
-			break;
+	/* Get initial value of the register */
+	ulValue = ptXmac0Area->ulXmac_config_shared0;
+	switch( tValue )
+	{
+	case PINSTATUS_HIGHZ:
+		/* set pin to input */
+		ulValue &= ~ulMaskOe;
+		iResult = 0;
+		break;
 
-		case PINSTATUS_OUTPUT0:
-			/* Set the output enable bit. */
-			ulValue |= HOSTMSK(reset_ctrl_EN_RES_REQ_OUT);
+	case PINSTATUS_OUTPUT0:
+		/* set pin to 0 and output */
+		ulValue &= ~ulMaskOut;
+		ulValue |=  ulMaskOe;
+		iResult = 0;
+		break;
 
-			/* The output bit is inverted: set the output bit to get a 0. */
-			ulValue |= HOSTMSK(reset_ctrl_RES_REQ_OUT);
+	case PINSTATUS_OUTPUT1:
+		/* set pin to output and 1 */
+		ulValue |=  ulMaskOut;
+		ulValue |=  ulMaskOe;
+		iResult = 0;
+		break;
+	};
 
-			iResult = 0;
-			break;
-
-		case PINSTATUS_OUTPUT1:
-			/* Set the output enable bit. */
-			ulValue |= HOSTMSK(reset_ctrl_EN_RES_REQ_OUT);
-
-			/* The output bit is inverted: clear the output bit to get a 1. */
-			ulValue &= ~(HOSTMSK(reset_ctrl_RES_REQ_OUT));
-
-			iResult = 0;
-			break;
-		}
-
-		if( iResult==0 )
-		{
-			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
-			ptAsicCtrlArea->ulReset_ctrl = ulValue;
-		}
+	if( iResult==0 )
+	{
+		/* write back new value of the register */
+		ptXmac0Area->ulXmac_config_shared0 = ulValue;
 	}
 
 	return iResult;
 }
 
 
-static int get_rstout(unsigned int uiIndex __attribute__ ((unused)), unsigned int *puiValue __attribute__ ((unused)))
-{
-	/* The RstOut pin is output only. */
-	uprintf("The RSTOUT pin can not be used as an input!\n");
-	return -1;
-}
-
-
-static int set_xmio(unsigned int uiIndex, PINSTATUS_T tValue)
-{
-  HOSTDEF(ptXmac0Area);
-  int iResult;
-  unsigned long ulValue;
-  unsigned long ulMaskOe;
-  unsigned long ulMaskOut;
-
-
-  if( uiIndex==0 )
-    {
-      ulMaskOut = MSK_NX10_xmac_config_shared0_gpio0_out;
-      ulMaskOe  = MSK_NX10_xmac_config_shared0_gpio0_oe;
-    }
-  else
-    {
-      ulMaskOut = MSK_NX10_xmac_config_shared0_gpio1_out;
-      ulMaskOe  = MSK_NX10_xmac_config_shared0_gpio1_oe;
-    }
-
-  /* Get initial value of the register */
-  ulValue = ptXmac0Area->ulXmac_config_shared0;
-  switch( tValue )
-    {
-    case PINSTATUS_HIGHZ:
-      /* set pin to input */
-      ulValue &= ~ulMaskOe;
-      iResult = 0;
-      break;
-
-    case PINSTATUS_OUTPUT0:
-      /* set pin to 0 and output */
-      ulValue &= ~ulMaskOut;
-      ulValue |=  ulMaskOe;
-      iResult = 0;
-      break;
-
-    case PINSTATUS_OUTPUT1:
-      /* set pin to output and 1 */
-      ulValue |=  ulMaskOut;
-      ulValue |=  ulMaskOe;
-      iResult = 0;
-      break;
-    };
-
-  if( iResult==0 )
-    {
-      /* write back new value of the register */
-      ptXmac0Area->ulXmac_config_shared0 = ulValue;
-    }
-
-  return iResult;
-}
-
-
 static int get_xmio(unsigned int uiIndex, unsigned int *puiValue)
 {
-  HOSTDEF(ptXmac0Area);
-  unsigned long ulValue;
-  unsigned long ulMask;
-  unsigned int uiValue;
+	HOSTDEF(ptXmac0Area);
+	unsigned long ulValue;
+	unsigned long ulMask;
+	unsigned int uiValue;
 
   
-  if( uiIndex==0 )
-    {
-      ulMask = HOSTMSK(xmac_status_shared0_gpio0_in);
-    }
-  else
-    {
-      ulMask = HOSTMSK(xmac_status_shared0_gpio1_in);
-    }
+	if( uiIndex==0 )
+	{
+		ulMask = HOSTMSK(xmac_status_shared0_gpio0_in);
+	}
+	else
+	{
+		ulMask = HOSTMSK(xmac_status_shared0_gpio1_in);
+	}
 
-  ulValue  = ptXmac0Area->ulXmac_config_shared0;
-  ulValue &= ulMask;
-  if( ulValue==0 )
-    {
-      uiValue = 0;
-    }
-  else
-    {
-      uiValue = 1;
-    }
-  *puiValue = uiValue;
+	ulValue  = ptXmac0Area->ulXmac_config_shared0;
+	ulValue &= ulMask;
+	if( ulValue==0 )
+	{
+		uiValue = 0;
+	}
+	else
+	{
+		uiValue = 1;
+	}
+	*puiValue = uiValue;
 
-  return 0;
+	return 0;
 }
 
 
@@ -981,18 +789,18 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 	switch( ptPinDescription->tType )
 	{
 	case PINTYPE_GPIO:
-		uiIndex = ptPinDescription->uiIndex;
-		iResult = set_gpio(uiIndex, tValue);		
+		uprintf("The pin type GPIO is not supported on this platform!\n");
+		iResult = -1;
 		break;
 
 	case PINTYPE_PIO:
-	  uprintf("The pin type PIO is not supported on this platform!\n");
-	  iResult = -1;
+		uprintf("The pin type PIO is not supported on this platform!\n");
+		iResult = -1;
 		break;
 
 	case PINTYPE_MMIO:
-	  uiIndex = ptPinDescription->uiIndex;
-	  iResult = set_mmio(uiIndex, tValue);
+		uiIndex = ptPinDescription->uiIndex;
+		iResult = set_mmio(uiIndex, tValue);
 		break;
 
 	case PINTYPE_HIFPIO:
@@ -1006,8 +814,8 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 		break;
 
 	case PINTYPE_RSTOUT:
-		uiIndex = ptPinDescription->uiIndex;
-		iResult = set_rstout(uiIndex, tValue);
+		uprintf("The pin type RSTOUT is not supported on this platform!\n");
+		iResult = -1;
 		break;
 
 	case PINTYPE_XMIO:
@@ -1030,13 +838,13 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned int *puiValue)
 	switch( ptPinDescription->tType )
 	{
 	case PINTYPE_GPIO:
-		uiIndex = ptPinDescription->uiIndex;
-		iResult = get_gpio(uiIndex, puiValue);
+		uprintf("The pin type GPIO is not supported on this platform!\n");
+		iResult = -1;
 		break;
 
 	case PINTYPE_PIO:
-	  uprintf("The pin type PIO is not supported on this platform!\n");
-	  iResult = -1;		
+		uprintf("The pin type PIO is not supported on this platform!\n");
+		iResult = -1;
 		break;
 
 	case PINTYPE_MMIO:
@@ -1055,8 +863,8 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned int *puiValue)
 		break;
 
 	case PINTYPE_RSTOUT:
-		uiIndex = ptPinDescription->uiIndex;
-		iResult = get_rstout(uiIndex, puiValue);
+		uprintf("The pin type RSTOUT is not supported on this platform!\n");
+		iResult = -1;
 		break;
 
 	case PINTYPE_XMIO:
