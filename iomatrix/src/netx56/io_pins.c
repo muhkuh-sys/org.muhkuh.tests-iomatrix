@@ -27,7 +27,8 @@
 typedef struct UNITCONFIGURATION_STRUCT
 {
 	unsigned long aulHifPio[2];
-	unsigned long  ulRstOut;
+	unsigned long aulMmio[2];
+	unsigned long ulRstOut;
 } UNITCONFIGURATION_T;
 
 
@@ -35,6 +36,8 @@ static void initialize_unit_configuration(UNITCONFIGURATION_T *ptUnitCfg)
 {
 	ptUnitCfg->aulHifPio[0] = 0;
 	ptUnitCfg->aulHifPio[1] = 0;
+	ptUnitCfg->aulMmio[0]   = 0;
+	ptUnitCfg->aulMmio[1]   = 0;
 	ptUnitCfg->ulRstOut     = 0;
 }
 
@@ -74,7 +77,21 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, size_t 
 				break;
 
 			case PINTYPE_MMIO:
-				/* Not yet... */
+				uiIndex = ptPinDescCnt->uiIndex;
+				if( uiIndex<32 )
+				{
+					ptUnitCfg->aulMmio[0] |= 1U<<uiIndex;
+					iResult = 0;
+				}
+				else if( (uiIndex<40) || (uiIndex == 48) )
+				{
+					ptUnitCfg->aulMmio[1] |= 1U<<(uiIndex-32U);
+					iResult = 0;
+				}
+				else
+				{
+					uprintf("The pin %s has an invalid index of %d!", ptPinDescCnt->apcName, uiIndex);
+				}
 				break;
 
 			case PINTYPE_HIFPIO:
@@ -133,6 +150,7 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc)
 	int iResult;
 	HOSTDEF(ptAsicCtrlArea);
 	HOSTDEF(ptHifIoCtrlArea);
+	HOSTDEF(ptMmioCtrlArea);
 	UNITCONFIGURATION_T tUnitCfg;
 	unsigned long ulValue;
 
@@ -162,6 +180,19 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc)
 			ptHifIoCtrlArea->ulHif_pio_cfg = ulValue;
 		}
 
+		/*
+		 *  MMIO
+		 *  Configure all MMIO pins as PIO/input.
+		 */
+		if( (tUnitCfg.aulMmio[0]|tUnitCfg.aulMmio[1])!=0 )
+		{
+			int i;
+			for (i=0; i<=48; i++)
+			{
+				ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+				ptMmioCtrlArea->aulMmio_cfg[i] = MSK_NX56_mmio0_cfg_mmio_sel;
+			}
+		}
 
 		/*
 		 * RstOut
@@ -325,6 +356,95 @@ static int get_hifpio(unsigned int uiIndex, unsigned int *puiValue)
 }
 
 
+static int set_mmiopio(unsigned int uiIndex, PINSTATUS_T tValue)
+{
+	int iResult;
+	HOSTDEF(ptAsicCtrlArea);
+	HOSTDEF(ptMmioCtrlArea);
+	unsigned long ulValue;
+	
+	/* assume failure */
+	iResult = -1;
+	
+	/* check the index */
+	if ((uiIndex <= 39) || (uiIndex == 48))
+	{
+		iResult = 0;
+	}
+	
+	/* set the value */
+	if( iResult==0 )
+	{
+		iResult = -1;
+		
+		switch( tValue )
+		{
+		case PINSTATUS_HIGHZ:
+			/* Set PIO mode, clear the output enable bit. */
+			ulValue = MSK_NX56_mmio0_cfg_mmio_sel;
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT0:
+			/* Set PIO mode, set the output enable bit and the output bit to 0. */
+			ulValue = MSK_NX56_mmio0_cfg_mmio_sel | MSK_NX56_mmio0_cfg_pio_oe;
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT1:
+			/* Set PIO mode, set the output enable bit and the output bit to 1. */
+			ulValue = MSK_NX56_mmio0_cfg_mmio_sel | MSK_NX56_mmio0_cfg_pio_oe | MSK_NX56_mmio0_cfg_pio_out;
+			iResult = 0;
+			break;
+		}
+
+		/* reconfigure the MMIO */
+		if( iResult==0 )
+		{
+			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+			ptMmioCtrlArea->aulMmio_cfg[uiIndex] = ulValue;
+		}
+	}
+
+	return iResult;
+}
+
+
+static int get_mmiopio(unsigned int uiIndex, unsigned int *puiValue)
+{
+	int iResult;
+	HOSTDEF(ptMmioCtrlArea);
+	unsigned long ulValue;
+	unsigned int uiValue;
+
+	/* assume failure */
+	iResult = -1;
+	
+	/* check the index */
+	if ((uiIndex <= 39) || (uiIndex == 48))
+	{
+		iResult = 0;
+	}
+
+	/* get the input value */
+	if( iResult==0 )
+	{
+		ulValue = ptMmioCtrlArea->aulMmio_cfg[uiIndex];
+		ulValue &= MSK_NX56_mmio0_cfg_status_in_ro;
+		if (ulValue == 0)
+		{
+			uiValue = 0;
+		}
+		else
+		{
+			uiValue = 1;
+		}
+		*puiValue = uiValue;
+	}
+
+	return iResult;
+}
+
 
 
 static int set_rstout(unsigned int uiIndex, PINSTATUS_T tValue)
@@ -409,7 +529,8 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 		break;
 
 	case PINTYPE_MMIO:
-		/* Not yet... */
+		uiIndex = ptPinDescription->uiIndex;
+		iResult = set_mmiopio(uiIndex, tValue);
 		break;
 
 	case PINTYPE_HIFPIO:
@@ -445,7 +566,8 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned int *puiValue)
 		break;
 
 	case PINTYPE_MMIO:
-		/* Not yet... */
+		uiIndex = ptPinDescription->uiIndex;
+		iResult = get_mmiopio(uiIndex, puiValue);
 		break;
 
 	case PINTYPE_HIFPIO:
