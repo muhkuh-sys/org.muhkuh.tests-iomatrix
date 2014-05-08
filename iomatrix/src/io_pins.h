@@ -57,12 +57,20 @@ typedef enum PINFLAG_ENUM
 } PINFLAG_ENUM;
 
 
+typedef enum PINDEFAULT_ENUM
+{
+	PINDEFAULT_0       = 0,  /* If all pins in the network are I or Z this pin reads 0. */
+	PINDEFAULT_1       = 1,  /* If all pins in the network are I or Z this pin reads 1. */
+	PINDEFAULT_INVALID = 2   /* If all pins in the network are I or Z this pin has an invalid input level and can be 0 or 1. */
+} PINDEFAULT_T;
+
+
 typedef struct PINDESCRIPTION_STRUCT
 {
 	char apcName[MAX_PINDESCRIPTION_NAME+1];
 	PINTYPE_T tType;
 	unsigned int uiIndex;
-	unsigned int uiDefaultValue;
+	PINDEFAULT_T tDefaultValue;
 	unsigned long ulFlags;
 } PINDESCRIPTION_T;
 

@@ -143,9 +143,11 @@ static const PINTYPE_PRINT_T atPintypePrint[] =
 static void print_pin(ptrdiff_t ptdIndex, const PINDESCRIPTION_T *ptPinDesc)
 {
 	PINTYPE_T tType;
+	PINDEFAULT_T tDefaultValue;
 	const PINTYPE_PRINT_T *ptCnt;
 	const PINTYPE_PRINT_T *ptEnd;
 	const char *pcPrint;
+	const char *pcDefault;
 	unsigned long ulFlags;
 	char acFlags[4];
 
@@ -164,6 +166,22 @@ static void print_pin(ptrdiff_t ptdIndex, const PINDESCRIPTION_T *ptPinDesc)
 		}
 		++ptCnt;
 	} while( ptCnt<ptEnd );
+
+	pcDefault = "?";
+	tDefaultValue = ptPinDesc->tDefaultValue;
+	if( tDefaultValue==PINDEFAULT_0 )
+	{
+		pcDefault = "0";
+	}
+	else if( tDefaultValue==PINDEFAULT_1 )
+	{
+		pcDefault = "1";
+	}
+	else if( tDefaultValue==PINDEFAULT_INVALID )
+	{
+		pcDefault = "invalid";
+	}
+
 
 	/* Set the default values for the flags. */
 	acFlags[0] = ' ';
@@ -185,7 +203,7 @@ static void print_pin(ptrdiff_t ptdIndex, const PINDESCRIPTION_T *ptPinDesc)
 		acFlags[2] = 'Z';
 	}
 
-	uprintf("%03d: Pin '%s': %s[%d] (default %d, flags: %s)\n", ptdIndex, ptPinDesc->apcName, pcPrint, ptPinDesc->uiIndex, ptPinDesc->uiDefaultValue, acFlags);
+	uprintf("%03d: Pin '%s': %s[%d] (default %s, flags: %s)\n", ptdIndex, ptPinDesc->apcName, pcPrint, ptPinDesc->uiIndex, pcDefault, acFlags);
 }
 
 
@@ -272,7 +290,7 @@ static int parse_pin_description(const unsigned char *pucDefinition, unsigned lo
 			if( (tPtr.pucCnt +
 			     sizeof(ptPinDescCnt->tType) +
 			     sizeof(ptPinDescCnt->uiIndex) +
-			     sizeof(ptPinDescCnt->uiDefaultValue) +
+			     sizeof(ptPinDescCnt->tDefaultValue) +
 			     sizeof(ptPinDescCnt->ulFlags))>=tPtr.pucEnd )
 			{
 				uprintf("Error: not enough data for the definition. The description seems to be truncated!\n");
@@ -289,7 +307,7 @@ static int parse_pin_description(const unsigned char *pucDefinition, unsigned lo
 				/* TODO: check the type. */
 
 				ptPinDescCnt->uiIndex = (unsigned int)get_dword(&tPtr);
-				ptPinDescCnt->uiDefaultValue = (unsigned int)get_dword(&tPtr);
+				ptPinDescCnt->tDefaultValue = (PINDEFAULT_T)get_dword(&tPtr);
 
 				ptPinDescCnt->ulFlags = get_dword(&tPtr);
 				/* TODO: check the flags. */
@@ -587,13 +605,18 @@ static int set_net_to_default(const PINDESCRIPTION_T **pptNet)
 				if( ulFlags!=0 )
 				{
 					/* Drive the default value. */
-					if( ptPin->uiDefaultValue==0 )
+					if( ptPin->tDefaultValue==PINDEFAULT_0 )
 					{
 						tPinStatus = PINSTATUS_OUTPUT0;
 					}
-					else
+					else if( ptPin->tDefaultValue==PINDEFAULT_1 )
 					{
 						tPinStatus = PINSTATUS_OUTPUT1;
+					}
+					else
+					{
+						uprintf("The pin '%s' is an output only pin with an invalid default state. This is not supported!", ptPin->apcName);
+						iResult = -1;
 					}
 				}
 				else
@@ -660,6 +683,7 @@ static int check_all_pins_for_default(const PINDESCRIPTION_T **pptNetList, const
 	const PINDESCRIPTION_T **pptCnt;
 	const PINDESCRIPTION_T **pptEnd;
 	unsigned int uiValue;
+	PINDEFAULT_T tDefaultValue;
 	unsigned int uiDefaultValue;
 	unsigned long ulFlags;
 
@@ -717,20 +741,36 @@ static int check_all_pins_for_default(const PINDESCRIPTION_T **pptNetList, const
 						ulFlags &= ((unsigned long)PINFLAG_I);
 						if( ulFlags!=0 )
 						{
-							uiDefaultValue = ptPin->uiDefaultValue;
-
-							iResult = iopins_get(ptPin, &uiValue);
-							if( iResult==0 )
+							/* Does this pin have a valid default state? */
+							uiDefaultValue = 2U;
+							tDefaultValue = ptPin->tDefaultValue;
+							switch(tDefaultValue)
 							{
-								if( uiValue!=uiDefaultValue )
-								{
-									iResult = record_error(ptDrivingPin, ptPin, tError);
-									uprintf("Pin '%s' is not at its default value of %d, but %d!\n", ptPin->apcName, uiDefaultValue, uiValue);
-								}
-							}
-							if( iResult!=0 )
-							{
+							case PINDEFAULT_0:
+								uiDefaultValue = 0U;
 								break;
+							case PINDEFAULT_1:
+								uiDefaultValue = 1U;
+								break;
+							case PINDEFAULT_INVALID:
+								break;
+							}
+
+							if( uiDefaultValue!=2U )
+							{
+								iResult = iopins_get(ptPin, &uiValue);
+								if( iResult==0 )
+								{
+									if( uiValue!=uiDefaultValue )
+									{
+										iResult = record_error(ptDrivingPin, ptPin, tError);
+										uprintf("Pin '%s' is not at its default value of %d, but %d!\n", ptPin->apcName, uiDefaultValue, uiValue);
+									}
+								}
+								if( iResult!=0 )
+								{
+									break;
+								}
 							}
 						}
 					}
