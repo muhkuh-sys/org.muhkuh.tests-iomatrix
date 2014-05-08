@@ -70,7 +70,7 @@ SECTIONS
 	} >INTRAM
 
 
-	.matrix_definitions :
+	.matrix_definitions (NOLOAD):
 	{
 		*(.matrix_definitions)
 	} >INTRAM
