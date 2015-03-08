@@ -1,5 +1,19 @@
 language: python
 python:
-  - "2.7"
+  - '2.7'
+
+
 # This is the command to build the whole project and pack the results in a distributable form.
-script:  python mbs/mbs
+script:
+  - python mbs/mbs
+
+
+#deploy:
+#  provider: releases
+#  api_key:
+#    secure: hgQgH8+YKlM3v6Oak/LCg7MR+ie7CkhjfMf9tDEtfHr+qlER6lH045XMycJZwonvGatrc/QP06MEeKHEAX+ft5pJFPN/1QMhItedyRha4gjrZL7KUcy+gBNn3VClczTIy/t7Uyd/fZuOenXvngo5NfTrW5gYq9zGhrhCSCE4IFw=
+#  file:
+#    - 
+#    - 
+#  on:
+#    repo: muhkuh-sys/org.muhkuh.tests-iomatrix
