@@ -1192,8 +1192,8 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 		}
 		else
 		{
-			/* TODO: Add this function. */
-			iResult = -1;
+			unsigned long ulPinIndex =  ptTestParams->uParameter.tSetPin.ulPinIndex;
+			iResult = iopins_set((PINDESCRIPTION_T *)(ptTestParams->uParameter.tSetPin.pvPinDescription + ulPinIndex*sizeof(PINDESCRIPTION_T)), ptTestParams->uParameter.tSetPin.tStatus);
 		}
 		break;
 
@@ -1209,7 +1209,6 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 		}
 		else
 		{
-			/* TODO: Add this function. */
 			iResult = -1;
 		}
 		break;
