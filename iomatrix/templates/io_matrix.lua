@@ -32,31 +32,31 @@ require("romloader")
 --                           Definitions                                   --
 -----------------------------------------------------------------------------
 
-IOMATRIX_VERSION_MAJ  = ${VERSION_MAJ}
-IOMATRIX_VERSION_MIN  = ${VERSION_MIN}
-IOMATRIX_VERSION_VCS  = ${VERSION_VCS}
+IOMATRIX_VERSION_MAJ  = 1
+IOMATRIX_VERSION_MIN  = 0
+IOMATRIX_VERSION_VCS  = "unknown"
 
-PINTYPE_GPIO          = ${PINTYPE_GPIO}
-PINTYPE_PIO           = ${PINTYPE_PIO}
-PINTYPE_MMIO          = ${PINTYPE_MMIO}
-PINTYPE_HIFPIO        = ${PINTYPE_HIFPIO}
-PINTYPE_RSTOUT        = ${PINTYPE_RSTOUT}
+PINTYPE_GPIO          = 0
+PINTYPE_PIO           = 1
+PINTYPE_MMIO          = 2
+PINTYPE_HIFPIO        = 3
+PINTYPE_RSTOUT        = 5
 
-PINSTATUS_HIGHZ       = ${PINSTATUS_HIGHZ}
-PINSTATUS_OUTPUT0     = ${PINSTATUS_OUTPUT0}
-PINSTATUS_OUTPUT1     = ${PINSTATUS_OUTPUT1}
+PINSTATUS_HIGHZ       = 0
+PINSTATUS_OUTPUT0     = 1
+PINSTATUS_OUTPUT1     = 2
 
-PINFLAG_I             = ${PINFLAG_I}
-PINFLAG_O             = ${PINFLAG_O}
-PINFLAG_Z             = ${PINFLAG_Z}
-PINFLAG_IOZ           = ${PINFLAG_IOZ}
+PINFLAG_I             = 1
+PINFLAG_O             = 2
+PINFLAG_Z             = 4
+PINFLAG_IOZ           = 7
 
 HEADER_MAGIC          = 0x686f6f6d
 
-IOMATRIX_COMMAND_Parse_Pin_Description    = ${IOMATRIX_COMMAND_Parse_Pin_Description}
-IOMATRIX_COMMAND_Run_Matrix_Test          = ${IOMATRIX_COMMAND_Run_Matrix_Test}
-IOMATRIX_COMMAND_Set_Pin                  = ${IOMATRIX_COMMAND_Set_Pin}
-IOMATRIX_COMMAND_Get_Pin                  = ${IOMATRIX_COMMAND_Get_Pin}
+IOMATRIX_COMMAND_Parse_Pin_Description    = 0
+IOMATRIX_COMMAND_Run_Matrix_Test          = 1
+IOMATRIX_COMMAND_Set_Pin                  = 2
+IOMATRIX_COMMAND_Get_Pin                  = 3
 
 
 -----------------------------------------------------------------------------
@@ -220,15 +220,15 @@ function initialize(tPlugin, strPattern, fnCallbackProgress)
 	end
 
 	-- Check the magic cookie.
-	ulMagicCookie = get_dword(strData, ${OFFSETOF_VERSION_HEADER_STRUCT_acMagic} + 1)
+	ulMagicCookie = get_dword(strData, 0 + 1)
 	if ulMagicCookie~=HEADER_MAGIC then
 		error("The binary has no magic at the beginning. Is this an old binary?")
 	end
 
 	-- Check the version.
-	ulVersionMaj = get_dword(strData, ${OFFSETOF_VERSION_HEADER_STRUCT_ulVersionMaj} + 1)
-	ulVersionMin = get_dword(strData, ${OFFSETOF_VERSION_HEADER_STRUCT_ulVersionMin} + 1)
-	strVersionVcs = string.sub(strData, ${OFFSETOF_VERSION_HEADER_STRUCT_acVersionVcs} + 1, ${OFFSETOF_VERSION_HEADER_STRUCT_acVersionVcs} + 16)
+	ulVersionMaj = get_dword(strData, 24 + 1)
+	ulVersionMin = get_dword(strData, 28 + 1)
+	strVersionVcs = string.sub(strData, 32 + 1, 32 + 16)
 	while string.byte(strVersionVcs,-1)==0 do
 		strVersionVcs = string.sub(strVersionVcs,1,-2)
 	end
@@ -245,10 +245,10 @@ function initialize(tPlugin, strPattern, fnCallbackProgress)
 	end
 
 	-- Get the header from the binary.
-	aAttr.ulLoadAddress           = get_dword(strData, ${OFFSETOF_VERSION_HEADER_STRUCT_pulLoadAddress} + 1)
-	aAttr.ulExecutionAddress      = get_dword(strData, ${OFFSETOF_VERSION_HEADER_STRUCT_pfnExecutionAddress} + 1)
-	aAttr.ulParameterStartAddress = get_dword(strData, ${OFFSETOF_VERSION_HEADER_STRUCT_pulParameterStart} + 1)
-	aAttr.ulParameterEndAddress   = get_dword(strData, ${OFFSETOF_VERSION_HEADER_STRUCT_pulParameterEnd} + 1)
+	aAttr.ulLoadAddress           = get_dword(strData, 8 + 1)
+	aAttr.ulExecutionAddress      = get_dword(strData, 12 + 1)
+	aAttr.ulParameterStartAddress = get_dword(strData, 16 + 1)
+	aAttr.ulParameterEndAddress   = get_dword(strData, 20 + 1)
 
 	-- Show the information:
 	print(string.format("load address:       0x%08x", aAttr.ulLoadAddress))
@@ -275,6 +275,9 @@ function parse_pin_description(aAttr, atPinsUnderTest, ulVerbose, fnCallbackProg
 	-- Compile the pin definition.
 	local strPinDefinition = compile_pin_definition(atPinsUnderTest)
 	local sizPinDefinition = strPinDefinition:len()
+	
+	
+	print(string.format("size: %d\n", sizPinDefinition))
 
 	-- Place the pin description right after the header. 
 	local ulPinDefinitionAddress = aAttr.ulParameterStartAddress+0x20
@@ -368,4 +371,67 @@ function run_matrix_test(aAttr, atNetList, ulVerbose, fnCallbackProgress, fnCall
 	return ulResult
 end
 
+function getIndexByName(aAttr, strPinName)
+	local uiCounter = 1 
+	local uiIndex 
+	
+	while(aAttr.atPinsUnderTest[uiCounter] ~= nil) do 
+		if aAttr.atPinsUnderTest[uiCounter][1] == strPinName then 
+			uiIndex = uiCounter - 1 
+		end 
+		uiCounter = uiCounter + 1 
+	end 
+	
+	if uiIndex == nil then 
+		print("Pin name not found in net table.")
+	end 
+	return uiIndex 
+end 
+
+function set_pin(aAttr, ulPinIndex_strName, tStatus, ulVerbose, fnCallbackProgress, fnCallbackMessage)
+	-- Set the defaults for the optional parameter.
+	ulVerbose = ulVerbose or 0                                            -- Disable verbose mode by default.
+	fnCallbackProgress = fnCallbackProgress or default_callback_progress  -- Use the built-in callback.
+	fnCallbackMessage = fnCallbackMessage or default_callback_message     -- Use the built-in callback.
+	
+	-- local ulPinIndex
+	local ulPinIndex 
+	
+	-- Check if ulPinIndex is a string, if yes extract your index.
+	if(type(ulPinIndex_strName) == "string") then 
+		ulPinIndex = getIndexByName(aAttr, ulPinIndex_strName)
+	else
+	-- ulPinIndex was actually given as a number. 
+		ulPinIndex = ulPinIndex_strName
+	end 
+	
+	-- Collect the parameter.
+	local atParameters = {
+		ulVerbose,                           -- Verbose mode.
+		IOMATRIX_COMMAND_Set_Pin,    		 -- The command code.
+		aAttr.hPinDescription,               -- Pin description handle.
+		ulPinIndex,                   		 -- index of the pin to set. 
+		tStatus                              -- status of the pin to set. 
+	}
+	
+	-- Write the standard header.
+	aAttr.tPlugin:write_data32(aAttr.ulParameterStartAddress+0x00, 0xFFFFFFFF)                          -- Init the test result.
+	aAttr.tPlugin:write_data32(aAttr.ulParameterStartAddress+0x04, aAttr.ulParameterStartAddress+0x0c)  -- Address of test parameters.
+	aAttr.tPlugin:write_data32(aAttr.ulParameterStartAddress+0x08, 0x00000000)                          -- Reserved
+	
+	-- Write the extended header.
+	for iIdx,ulValue in ipairs(atParameters) do
+		aAttr.tPlugin:write_data32(aAttr.ulParameterStartAddress+0x0c+((iIdx-1)*4), ulValue)
+	end
+
+	-- Call the netX program.
+	print("__/Output/____________________________________________________________________")
+	aAttr.tPlugin:call(aAttr.ulExecutionAddress, aAttr.ulParameterStartAddress, fnCallbackMessage, 0)
+	print("")
+	print("______________________________________________________________________________")
+	
+	-- Get the result.
+	local ulResult = aAttr.tPlugin:read_data32(aAttr.ulParameterStartAddress)
+	return ulResult
+end
 
