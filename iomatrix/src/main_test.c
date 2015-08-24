@@ -1086,6 +1086,47 @@ static int run_matrix_test(const PINDESCRIPTION_T **pptNetList)
 }
 
 
+
+static int set_pin(const IOMATRIX_PARAMETER_SET_PIN_T *ptParameter)
+{
+	unsigned long ulPinIndex;
+	int iResult;
+	const PINDESCRIPTION_T *ptPinDescription;
+
+
+	/* Check if the index of the pin is in the allowed range. */
+	ulPinIndex = ptParameter->ulPinIndex;
+	if( ulPinIndex>=MAX_PINS_UNDER_TEST )
+	{
+		/* No, the index exceeds the array. */
+		uprintf("Error: the pin index is invalid: %d\n", ulPinIndex);
+		iResult = -1;
+	}
+	else
+	{
+		/* Get the pointer to the pin description. */
+		ptPinDescription  = atPinsUnderTest;
+		ptPinDescription += ulPinIndex;
+		/* Set the pin to the requested state. */
+		iResult = iopins_set(ptPinDescription, ptParameter->tStatus);
+	}
+
+	return iResult;
+}
+
+
+
+static int get_pin(const IOMATRIX_PARAMETER_GET_PIN_T *ptParameter)
+{
+	int iResult;
+
+
+	/* Not yet... */
+	iResult = -1;
+	return iResult;
+}
+
+
 /*-------------------------------------------------------------------------*/
 
 TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
@@ -1192,8 +1233,7 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 		}
 		else
 		{
-			unsigned long ulPinIndex =  ptTestParams->uParameter.tSetPin.ulPinIndex;
-			iResult = iopins_set((PINDESCRIPTION_T *)(ptTestParams->uParameter.tSetPin.pvPinDescription + ulPinIndex*sizeof(PINDESCRIPTION_T)), ptTestParams->uParameter.tSetPin.tStatus);
+			iResult = set_pin(&(ptTestParams->uParameter.tSetPin));
 		}
 		break;
 
@@ -1209,7 +1249,7 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 		}
 		else
 		{
-			iResult = -1;
+			iResult = get_pin(&(ptTestParams->uParameter.tGetPin));
 		}
 		break;
 	}
