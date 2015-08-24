@@ -125,11 +125,11 @@ tArcList.AddFiles('netx/',
         IOMATRIX_NETX56)
 tArcList.AddFiles('lua/',
         LUA_IOMATRIX)
-tArcList.AddFiles('templates/',
-        'lua/attributes_template.lua',
-        'lua/ramtest_template.lua',
-        'lua/test.lua',
-        'lua/timing_phase_test_template.lua')
+#tArcList.AddFiles('templates/',
+#        'lua/attributes_template.lua',
+#        'lua/ramtest_template.lua',
+#        'lua/test.lua',
+#        'lua/timing_phase_test_template.lua')
 tArcList.AddFiles('doc/',
         tDoc)
 tArcList.AddFiles('',
