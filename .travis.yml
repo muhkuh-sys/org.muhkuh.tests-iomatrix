@@ -28,8 +28,9 @@ script:
   - python mbs/mbs
 
 
-#after_success:
-#  -
+after_success:
+  - python ivy/deploy.py targets/artifacts.xml
+
 
 #deploy:
 #  provider: releases
