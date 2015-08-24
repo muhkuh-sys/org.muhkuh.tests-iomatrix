@@ -14,6 +14,11 @@ cache:
     - $HOME/.ant/lib
 
 
+env:
+  global:
+    - secure: "MXZQNZvztG3RdrPFQceviubtCvCBeRNt/Q0KL3/4kzUU4Diy3X1p+ZZC2maBP2yz1AAm39yy2O2eKFFRfoDRVnunawPW8xfKkS//mDACBOoTjrcgDPH2pvqzbxivCz9hUw4tTXs18tKLbtK8annRlSbkoh9cZn53GwOiLTyHbuU="
+
+
 install:
   - pip install -q requests
 
