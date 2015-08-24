@@ -72,28 +72,6 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, size_t 
 				/* Not yet... */
 				break;
 
-			case PINTYPE_PIO:
-				/* Not yet... */
-				break;
-
-			case PINTYPE_MMIO:
-				uiIndex = ptPinDescCnt->uiIndex;
-				if( uiIndex<32 )
-				{
-					ptUnitCfg->aulMmio[0] |= 1U<<uiIndex;
-					iResult = 0;
-				}
-				else if( (uiIndex<40) || (uiIndex == 48) )
-				{
-					ptUnitCfg->aulMmio[1] |= 1U<<(uiIndex-32U);
-					iResult = 0;
-				}
-				else
-				{
-					uprintf("The pin %s has an invalid index of %d!", ptPinDescCnt->apcName, uiIndex);
-				}
-				break;
-
 			case PINTYPE_HIFPIO:
 				uiIndex = ptPinDescCnt->uiIndex;
 				if( uiIndex<32 )
@@ -117,6 +95,32 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, size_t 
 				}
 				break;
 
+			case PINTYPE_MMIO:
+				uiIndex = ptPinDescCnt->uiIndex;
+				if( uiIndex<32 )
+				{
+					ptUnitCfg->aulMmio[0] |= 1U<<uiIndex;
+					iResult = 0;
+				}
+				else if( (uiIndex<40) || (uiIndex == 48) )
+				{
+					ptUnitCfg->aulMmio[1] |= 1U<<(uiIndex-32U);
+					iResult = 0;
+				}
+				else
+				{
+					uprintf("The pin %s has an invalid index of %d!", ptPinDescCnt->apcName, uiIndex);
+				}
+				break;
+
+			case PINTYPE_PIO:
+				/* Not yet... */
+				break;
+
+			case PINTYPE_RDYRUN:
+				/* Not yet... */
+				break;
+
 			case PINTYPE_RSTOUT:
 				uiIndex = ptPinDescCnt->uiIndex;
 				if( uiIndex==0 )
@@ -128,6 +132,10 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, size_t 
 				{
 					uprintf("The pin %s has an invalid index of %d!", ptPinDescCnt->apcName, uiIndex);
 				}
+				break;
+
+			case PINTYPE_XMIO:
+				/* Not yet... */
 				break;
 			}
 
@@ -524,8 +532,9 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 		/* Not yet... */
 		break;
 
-	case PINTYPE_PIO:
-		/* Not yet... */
+	case PINTYPE_HIFPIO:
+		uiIndex = ptPinDescription->uiIndex;
+		iResult = set_hifpio(uiIndex, tValue);
 		break;
 
 	case PINTYPE_MMIO:
@@ -533,14 +542,21 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 		iResult = set_mmiopio(uiIndex, tValue);
 		break;
 
-	case PINTYPE_HIFPIO:
-		uiIndex = ptPinDescription->uiIndex;
-		iResult = set_hifpio(uiIndex, tValue);
+	case PINTYPE_PIO:
+		/* Not yet... */
+		break;
+
+	case PINTYPE_RDYRUN:
+		/* Not yet... */
 		break;
 
 	case PINTYPE_RSTOUT:
 		uiIndex = ptPinDescription->uiIndex;
 		iResult = set_rstout(uiIndex, tValue);
+		break;
+
+	case PINTYPE_XMIO:
+		/* Not yet... */
 		break;
 	}
 
@@ -561,8 +577,9 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned int *puiValue)
 		/* Not yet... */
 		break;
 
-	case PINTYPE_PIO:
-		/* Not yet... */
+	case PINTYPE_HIFPIO:
+		uiIndex = ptPinDescription->uiIndex;
+		iResult = get_hifpio(uiIndex, puiValue);
 		break;
 
 	case PINTYPE_MMIO:
@@ -570,14 +587,21 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned int *puiValue)
 		iResult = get_mmiopio(uiIndex, puiValue);
 		break;
 
-	case PINTYPE_HIFPIO:
-		uiIndex = ptPinDescription->uiIndex;
-		iResult = get_hifpio(uiIndex, puiValue);
+	case PINTYPE_PIO:
+		/* Not yet... */
+		break;
+
+	case PINTYPE_RDYRUN:
+		/* Not yet... */
 		break;
 
 	case PINTYPE_RSTOUT:
 		uiIndex = ptPinDescription->uiIndex;
 		iResult = get_rstout(uiIndex, puiValue);
+		break;
+
+	case PINTYPE_XMIO:
+		/* Not yet... */
 		break;
 	}
 
