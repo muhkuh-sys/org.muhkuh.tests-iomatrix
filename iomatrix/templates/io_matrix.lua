@@ -32,8 +32,9 @@ require("romloader")
 --                           Definitions                                   --
 -----------------------------------------------------------------------------
 
-IOMATRIX_VERSION_MAJ  = ${VERSION_MAJ}
-IOMATRIX_VERSION_MIN  = ${VERSION_MIN}
+IOMATRIX_VERSION_MAJOR  = ${VERSION_MAJOR}
+IOMATRIX_VERSION_MINOR  = ${VERSION_MINOR}
+IOMATRIX_VERSION_MICRO  = ${VERSION_MICRO}
 IOMATRIX_VERSION_VCS  = ${VERSION_VCS}
 
 PINTYPE_GPIO          = ${PINTYPE_GPIO}
@@ -226,19 +227,23 @@ function initialize(tPlugin, strPattern, fnCallbackProgress)
 	end
 
 	-- Check the version.
-	ulVersionMaj = get_dword(strData, ${OFFSETOF_VERSION_HEADER_STRUCT_ulVersionMaj} + 1)
-	ulVersionMin = get_dword(strData, ${OFFSETOF_VERSION_HEADER_STRUCT_ulVersionMin} + 1)
+	ulVersionMajor = get_dword(strData, ${OFFSETOF_VERSION_HEADER_STRUCT_ulVersionMajor} + 1)
+	ulVersionMinor = get_dword(strData, ${OFFSETOF_VERSION_HEADER_STRUCT_ulVersionMinor} + 1)
+	ulVersionMicro = get_dword(strData, ${OFFSETOF_VERSION_HEADER_STRUCT_ulVersionMicro} + 1)
 	strVersionVcs = string.sub(strData, ${OFFSETOF_VERSION_HEADER_STRUCT_acVersionVcs} + 1, ${OFFSETOF_VERSION_HEADER_STRUCT_acVersionVcs} + 16)
 	while string.byte(strVersionVcs,-1)==0 do
 		strVersionVcs = string.sub(strVersionVcs,1,-2)
 	end
-	print(string.format("Binary version: %d.%d.%s", ulVersionMaj, ulVersionMin, strVersionVcs))
-	print(string.format("Script version: %d.%d.%s", IOMATRIX_VERSION_MAJ, IOMATRIX_VERSION_MIN, IOMATRIX_VERSION_VCS))
-	if ulVersionMaj~=IOMATRIX_VERSION_MAJ then
+	print(string.format("Binary version: %d.%d.%d %s", ulVersionMajor, ulVersionMinor, ulVersionMicro, strVersionVcs))
+	print(string.format("Script version: %d.%d.%d %s", IOMATRIX_VERSION_MAJOR, IOMATRIX_VERSION_MINOR, IOMATRIX_VERSION_MICRO, IOMATRIX_VERSION_VCS))
+	if ulVersionMajor~=IOMATRIX_VERSION_MAJOR then
 		error("The major version number of the binary and this script differs. Cowardly refusing to continue.")
 	end
-	if ulVersionMin~=IOMATRIX_VERSION_MIN then
+	if ulVersionMinor~=IOMATRIX_VERSION_MINOR then
 		error("The minor version number of the binary and this script differs. Cowardly refusing to continue.")
+	end
+	if ulVersionMicro~=IOMATRIX_VERSION_MICRO then
+		error("The micro version number of the binary and this script differs. Cowardly refusing to continue.")
 	end
 	if strVersionVcs~=IOMATRIX_VERSION_VCS then
 		error("The VCS version number of the binary and this script differs. Cowardly refusing to continue.")
