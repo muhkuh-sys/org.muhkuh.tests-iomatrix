@@ -1,0 +1,34 @@
+org.muhkuh.tests-iomatrix
+=========================
+
+== Status
+
+TravisCI: image:https://travis-ci.org/muhkuh-sys/org.muhkuh.tests-iomatrix.svg?branch=master["TravisCI build status", link="https://travis-ci.org/muhkuh-sys/org.muhkuh.tests-iomatrix"]
+
+circleci: image:https://circleci.com/gh/muhkuh-sys/org.muhkuh.tests-iomatrix.svg?style=shield["circleci build status", link="https://circleci.com/gh/muhkuh-sys/org.muhkuh.tests-iomatrix"]
+
+
+== About
+
+The iomatrix test case checks a range of I/O pins with the help of a loopback adaptor. It can also stimulate and read IO pins, which is useful for LED, switch and button tests.
+
+
+== Infrastructure
+
+This chapter describes the current infrastructure of the project.
+
+The source code is hosted on GitHub: https://github.com/muhkuh-sys/org.muhkuh.tests-iomatrix
+
+Issues are collected here: https://github.com/muhkuh-sys/org.muhkuh.tests-iomatrix/issues
+
+Each push to the GitHub repository triggers a build on these services:
+
+ * TravisCI using a Ubuntu 12.04 64bit VM: https://travis-ci.org/muhkuh-sys/org.muhkuh.tests-iomatrix
+ * circleci running on Ubuntu 12.04 64bit VM: https://circleci.com/gh/muhkuh-sys/org.muhkuh.tests-iomatrix
+
+The build results from TravisCI are copied after auccess to Bintray: https://bintray.com/muhkuh/Muhkuh/iomatrix/view
+Please note that this is done for each build, and not only tagged ones.
+
+Build results for every commit are also available on circleci if you are logged in: //circleci.com/gh/muhkuh-sys/org.muhkuh.tests-iomatrix
+
+Build results from a tag are released on GitHub: https://github.com/muhkuh-sys/org.muhkuh.tests-iomatrix/releases
