@@ -241,13 +241,13 @@ The current example has the following table:
 .Example for the "pins under test" table.
 ------------------------------------------------------------------------------
 PINS_UNDER_TEST = {
-	{"GPIO0", iomatrix.IOTYP_GPIO, 0, 0, 0 },
-	{"GPIO1", iomatrix.IOTYP_GPIO, 1, 0, 0 },
-	{"GPIO2", iomatrix.IOTYP_GPIO, 2, 0, 0 },
-	{"GPIO3", iomatrix.IOTYP_GPIO, 3, 0, 0 },
-	{"PIO6",  iomatrix.IOTYP_PIO,  6, 0, 0 },
-	{"XMIO0", iomatrix.IOTYP_XMIO, 0, 0, 0 },
-	{"XMIO4", iomatrix.IOTYP_XMIO, 4, 0, 0 }
+	{"GPIO0", iomatrix.PINTYPE_GPIO, 0, 0, 0 },
+	{"GPIO1", iomatrix.PINTYPE_GPIO, 1, 0, 0 },
+	{"GPIO2", iomatrix.PINTYPE_GPIO, 2, 0, 0 },
+	{"GPIO3", iomatrix.PINTYPE_GPIO, 3, 0, 0 },
+	{"PIO6",  iomatrix.PINTYPE_PIO,  6, 0, 0 },
+	{"XMIO0", iomatrix.PINTYPE_XMIO, 0, 0, 0 },
+	{"XMIO4", iomatrix.PINTYPE_XMIO, 4, 0, 0 }
 }
 ------------------------------------------------------------------------------
 
@@ -281,8 +281,8 @@ NETWORKS = {
 
 [cols="<m,<,<m,>m,>m,>,>",options="header"]
 |============================================================================================
-|       unit| index|     pin name| ball pos| I/O| built-in resistor| standalone default value
-.16+|   GPIO|     0|        GPIO0|     AA19| I/O| 50k Ohm pull-down|                        0
+| pin type| index|     pin name| ball pos| I/O| built-in resistor| standalone default value
+.16+| PINTYPE_GPIO|     0|        GPIO0|     AA19| I/O| 50k Ohm pull-down|                        0
             |     1|        GPIO1|      Y19| I/O| 50k Ohm pull-down|                        0
             |     2|        GPIO2|     AA18| I/O| 50k Ohm pull-down|                        0
             |     3|        GPIO3|      Y18| I/O| 50k Ohm pull-down|                        0
@@ -298,7 +298,7 @@ NETWORKS = {
             |    13|       GPIO13|      Y13| I/O| 50k Ohm pull-down|                        0
             |    14|       GPIO14|      W13| I/O| 50k Ohm pull-down|                        0
             |    15|       GPIO15|      V13| I/O| 50k Ohm pull-down|                        0
-.52+|    HIF|     0|      EXT_A00|       A7| I/O|              n.a.|                        -
+.52+| PINTYPE_HIFPIO|     0|      EXT_A00|       A7| I/O|              n.a.|                        -
             |     1|      EXT_A01|       C8| I/O|              n.a.|                        -
             |     2|      EXT_A02|       B8| I/O|              n.a.|                        -
             |     3|      EXT_A03|       C9| I/O|              n.a.|                        -
@@ -350,7 +350,7 @@ NETWORKS = {
             |    36|      EXT_RDY|      D14| I/O|              n.a.|                        -
             |    37|     EXT_WRHn|      B14| I/O|              n.a.|                        -
             |    38|     EXT_WRLn|      C14| I/O|              n.a.|                        -
-.31+|    PIO|     0|         PIO0|      M21| I/O| 50k Ohm pull-down|                        0
+.31+|  PINTYPE_PIO|     0|         PIO0|      M21| I/O| 50k Ohm pull-down|                        0
             |     1|         PIO1|      M20| I/O| 50k Ohm pull-down|                        0
             |     2|         PIO2|      M19| I/O| 50k Ohm pull-down|                        0
             |     3|         PIO3|      M18| I/O| 50k Ohm pull-down|                        0
@@ -381,8 +381,8 @@ NETWORKS = {
             |    28|        PIO28|       W8| I/O| 50k Ohm pull-down|                        0
             |    29|        PIO29|       V8| I/O| 50k Ohm pull-down|                        0
             |    30|        PIO30|       U8| I/O| 50k Ohm pull-down|                        0
-    | RSTOUT|     0|       RSTOUT|      V19|   O|              n.a.|                        -
- .2+| RDYRUN|     0|          RDY|      W20| I/O|   50k Ohm pull-up|                        1
+    | PINTYPE_RSTOUT|     0|       RSTOUT|      V19|   O|              n.a.|                        -
+ .2+| PINTYPE_RDYRUN|     0|          RDY|      W20| I/O|   50k Ohm pull-up|                        1
             |     1|          RUN|      W21| I/O|   50k Ohm pull-up|                        1
  .2+|  XM0IO|     0|       XM0IO0|      N19| I/O| 50k Ohm pull-down|                        0
             |     1|       XM0IO1|      N18| I/O| 50k Ohm pull-down|                        0
@@ -399,8 +399,8 @@ NETWORKS = {
 
 [cols="<m,<,<m,>m,>,>",options="header"]
 |==========================
-|       unit| index|     pin name| I/O| built-in resistor| standalone default value
-.55+|    HIF|     0|      HIFPIO0| I/O|              n.a.|                        -
+|  pin type| index|     pin name| I/O| built-in resistor| standalone default value
+.55+| PINTYPE_HIFPIO|     0|      HIFPIO0| I/O|              n.a.|                        -
             |     1|      HIFPIO1| I/O|              n.a.|                        -
             |     2|      HIFPIO2| I/O|              n.a.|                        -
             |     3|      HIFPIO3| I/O|              n.a.|                        -
@@ -455,7 +455,7 @@ NETWORKS = {
             |    52|     HIFPIO52| I/O|              n.a.|                        -
             |    53|     HIFPIO53| I/O|              n.a.|                        -
             |    54|     HIFPIO54| I/O|              n.a.|                        -
-.40+|   MMIO|     0|        MMIO0| I/O| 50k Ohm pull-down|                        0
+.40+| PINTYPE_MMIO|     0|        MMIO0| I/O| 50k Ohm pull-down|                        0
             |     1|        MMIO1| I/O| 50k Ohm pull-down|                        0
             |     2|        MMIO2| I/O| 50k Ohm pull-down|                        0
             |     3|        MMIO3| I/O| 50k Ohm pull-down|                        0
@@ -495,9 +495,9 @@ NETWORKS = {
             |    37|       MMIO37| I/O| 50k Ohm pull-down|                        0
             |    38|       MMIO38| I/O| 50k Ohm pull-down|                        0
             |    39|       MMIO39| I/O| 50k Ohm pull-down|                        0
- .2+| RDYRUN|     0|      RDYRUN0| I/O| 50k Ohm pull-down|                        0
+ .2+| PINTYPE_RDYRUN|     0|      RDYRUN0| I/O| 50k Ohm pull-down|                        0
             |     1|      RDYRUN1| I/O| 50k Ohm pull-down|                        0
-    | RSTOUT|     0|       RSTOUT|   O|              n.a.|                        -
+    | PINTYPE_RSTOUT|     0|       RSTOUT|   O|              n.a.|                        -
 |==========================
 
 
@@ -505,8 +505,8 @@ NETWORKS = {
 
 [cols="<m,<,<m,>m,>,>",options="header"]
 |==========================
-|       unit| index|     pin name| I/O| built-in resistor| standalone default value
-.48+|    HIF|     0|      HIFPIO0| I/O| 50k Ohm pull-down|                        0
+| pin type| index|     pin name| I/O| built-in resistor| standalone default value
+.48+| PINTYPE_HIFPIO|     0|      HIFPIO0| I/O| 50k Ohm pull-down|                        0
             |     1|      HIFPIO1| I/O| 50k Ohm pull-down|                        0
             |     2|      HIFPIO2| I/O| 50k Ohm pull-down|                        0
             |     3|      HIFPIO3| I/O| 50k Ohm pull-down|                        0
@@ -554,7 +554,7 @@ NETWORKS = {
             |    45|     HIFPIO45| I/O| 50k Ohm pull-down|                        0
             |    46|     HIFPIO46| I/O|   50k Ohm pull-up|                        1
             |    47|     HIFPIO47| I/O|   50k Ohm pull-up|                        1
-.24+|   MMIO|     0|        MMIO0| I/O| 50k Ohm pull-down|                        0
+.24+| PINTYPE_MMIO|     0|        MMIO0| I/O| 50k Ohm pull-down|                        0
             |     1|        MMIO1| I/O| 50k Ohm pull-down|                        0
             |     2|        MMIO2| I/O| 50k Ohm pull-down|                        0
             |     3|        MMIO3| I/O| 50k Ohm pull-down|                        0
@@ -578,7 +578,7 @@ NETWORKS = {
             |    21|       MMIO21| I/O|    5k Ohm pull-up|                        0
             |    22|       MMIO22| I/O|    5k Ohm pull-up|                        1
             |    23|       MMIO23| I/O|    5k Ohm pull-up|                        1
- .2+| RDYRUN|     0|      RDYRUN0| I/O|   50k Ohm pull-up|                        1
+ .2+| PINTYPE_RDYRUN|     0|      RDYRUN0| I/O|   50k Ohm pull-up|                        1
             |     1|      RDYRUN1| I/O|   50k Ohm pull-up|                        1
 |==========================
 
@@ -587,8 +587,8 @@ NETWORKS = {
 
 [cols="<m,<,<m,>m,>m,>,>",options="header"]
 |============================================================================================
-|       unit| index|     pin name| ball pos| I/O| built-in resistor| standalone default value
-.58+|    HIF|     0|      HIF_D00|       A1| I/O|   50k Ohm pull-up|                        1
+| pin type| index|     pin name| ball pos| I/O| built-in resistor| standalone default value
+.58+| PINTYPE_HIFPIO|     0|      HIF_D00|       A1| I/O|   50k Ohm pull-up|                        1
             |     1|      HIF_D01|       B2| I/O|   50k Ohm pull-up|                        1
             |     2|      HIF_D02|       C2| I/O|   50k Ohm pull-up|                        1
             |     3|      HIF_D03|       C6| I/O|   50k Ohm pull-up|                        1
@@ -646,7 +646,7 @@ NETWORKS = {
             |    55|      HIF_RDY|      B18| I/O|   50k Ohm pull-up|                        1
             |    56|     HIF_DIRQ|      C17| I/O|   50k Ohm pull-up|                        1
             |    57|    HIF_SDCLK|      B11| I/O|   50k Ohm pull-up|                        1
-.40+|   MMIO|     0|        MMIO0|       H1| I/O| 50k Ohm pull-down|                        0
+.40+| PINTYPE_MMIO|     0|        MMIO0|       H1| I/O| 50k Ohm pull-down|                        0
             |     1|        MMIO1|       J1| I/O| 50k Ohm pull-down|                        0
             |     2|        MMIO2|       J2| I/O| 50k Ohm pull-down|                        0
             |     3|        MMIO3|       L2| I/O| 50k Ohm pull-down|                        0
@@ -686,9 +686,9 @@ NETWORKS = {
             |    37|       MMIO37|      U13| I/O| 50k Ohm pull-down|                        0
             |    38|       MMIO38|      T13| I/O| 50k Ohm pull-down|                        0
             |    39|       MMIO39|      V14| I/O| 50k Ohm pull-down|                        0
- .2+| RDYRUN|     0|          RDY|       E1| I/O| 50k Ohm pull-down|                        1
+ .2+| PINTYPE_RDYRUN|     0|          RDY|       E1| I/O| 50k Ohm pull-down|                        1
             |     1|          RUN|       E2| I/O| 50k Ohm pull-down|                        1
-    | RSTOUT|     0|       RSTOUT|       C1|   O|              n.a.|                        -
+    | PINTYPE_RSTOUT|     0|       RSTOUT|       C1|   O|              n.a.|                        -
 |============================================================================================
 
 
@@ -696,8 +696,8 @@ NETWORKS = {
 
 [cols="<m,<,<m,>m,>m,>,>",options="header"]
 |============================================================================================
-|       unit| index|     pin name| ball pos| I/O| built-in resistor| standalone default value
-.58+|    HIF|     0|      HIF_D00|       A1| I/O|   50k Ohm pull-up|                        1
+| pin type| index|     pin name| ball pos| I/O| built-in resistor| standalone default value
+.58+| PINTYPE_HIFPIO|     0|      HIF_D00|       A1| I/O|   50k Ohm pull-up|                        1
             |     1|      HIF_D01|       C2| I/O|   50k Ohm pull-up|                        1
             |     2|      HIF_D02|       D2| I/O|   50k Ohm pull-up|                        1
             |     3|      HIF_D03|       B3| I/O|   50k Ohm pull-up|                        1
@@ -755,7 +755,7 @@ NETWORKS = {
             |    55|      HIF_RDY|      B15| I/O|   50k Ohm pull-up|                        1
             |    56|     HIF_DIRQ|      D16| I/O|   50k Ohm pull-up|                        1
             |    57|    HIF_SDCLK|       C8| I/O|   50k Ohm pull-up|                        1
-.24+|   MMIO|     0|        MMIO0|       H2| I/O| 50k Ohm pull-down|                        0
+.24+| PINTYPE_MMIO|     0|        MMIO0|       H2| I/O| 50k Ohm pull-down|                        0
             |     1|        MMIO1|       K2| I/O| 50k Ohm pull-down|                        0
             |     2|        MMIO2|       J2| I/O| 50k Ohm pull-down|                        0
             |     3|        MMIO3|       L3| I/O| 50k Ohm pull-down|                        0
@@ -779,9 +779,9 @@ NETWORKS = {
             |    21|       MMIO21|       V3| I/O| 50k Ohm pull-down|                        0
             |    22|       MMIO22|       T6| I/O| 50k Ohm pull-down|                        0
             |    23|       MMIO23|       U5| I/O| 50k Ohm pull-down|                        0
- .2+| RDYRUN|     0|          RDY|       F1| I/O| 50k Ohm pull-down|                        1
+ .2+| PINTYPE_RDYRUN|     0|          RDY|       F1| I/O| 50k Ohm pull-down|                        1
             |     1|          RUN|       F2| I/O| 50k Ohm pull-down|                        1
-    | RSTOUT|     0|       RSTOUT|       D1|   O|              n.a.|                        -
+    | PINTYPE_RSTOUT|     0|       RSTOUT|       D1|   O|              n.a.|                        -
 |============================================================================================
 
 
