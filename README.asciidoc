@@ -230,7 +230,7 @@ The "pins under test" table has the following syntax:
 .Syntax of the "pins under test" table.
 ==============================================================================
 +PINS_UNDER_TEST+ = { +
-{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}["'name'"] =   { iomatrix.IOTYP_$$'unit', 'index', 'default value', 'flags' }, +
+{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{ "'name'", iomatrix.IOTYP_$$'unit', 'index', 'default value', 'flags' }, +
 {nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}... +
 }
 ==============================================================================
@@ -241,13 +241,13 @@ The current example has the following table:
 .Example for the "pins under test" table.
 ------------------------------------------------------------------------------
 PINS_UNDER_TEST = {
-	["GPIO0"] =   { iomatrix.IOTYP_GPIO, 0, 0, 0 },
-	["GPIO1"] =   { iomatrix.IOTYP_GPIO, 1, 0, 0 },
-	["GPIO2"] =   { iomatrix.IOTYP_GPIO, 2, 0, 0 },
-	["GPIO3"] =   { iomatrix.IOTYP_GPIO, 3, 0, 0 },
-	["PIO6"]  =   { iomatrix.IOTYP_PIO,  6, 0, 0 },
-	["XMIO0"] =   { iomatrix.IOTYP_XMIO, 0, 0, 0 },
-	["XMIO4"] =   { iomatrix.IOTYP_XMIO, 4, 0, 0 }
+	{"GPIO0", iomatrix.IOTYP_GPIO, 0, 0, 0 },
+	{"GPIO1", iomatrix.IOTYP_GPIO, 1, 0, 0 },
+	{"GPIO2", iomatrix.IOTYP_GPIO, 2, 0, 0 },
+	{"GPIO3", iomatrix.IOTYP_GPIO, 3, 0, 0 },
+	{"PIO6",  iomatrix.IOTYP_PIO,  6, 0, 0 },
+	{"XMIO0", iomatrix.IOTYP_XMIO, 0, 0, 0 },
+	{"XMIO4", iomatrix.IOTYP_XMIO, 4, 0, 0 }
 }
 ------------------------------------------------------------------------------
 
