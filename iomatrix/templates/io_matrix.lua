@@ -403,6 +403,9 @@ function set_pin(aAttr, ulPinIndex_strName, tStatus, ulVerbose, fnCallbackProgre
 	-- Check if ulPinIndex is a string, if yes extract your index.
 	if(type(ulPinIndex_strName) == "string") then 
 		ulPinIndex = getIndexByName(aAttr, ulPinIndex_strName)
+		if ulPinIndex==nil then
+			error(string.format("Pin name not found: '%s'", ulPinIndex_strName))
+		end
 	else
 	-- ulPinIndex was actually given as a number. 
 		ulPinIndex = ulPinIndex_strName
