@@ -32,12 +32,14 @@ after_success:
   - python ivy/deploy.py targets/artifacts.xml
 
 
-#deploy:
-#  provider: releases
-#  api_key:
-#    secure: hgQgH8+YKlM3v6Oak/LCg7MR+ie7CkhjfMf9tDEtfHr+qlER6lH045XMycJZwonvGatrc/QP06MEeKHEAX+ft5pJFPN/1QMhItedyRha4gjrZL7KUcy+gBNn3VClczTIy/t7Uyd/fZuOenXvngo5NfTrW5gYq9zGhrhCSCE4IFw=
-#  file:
-#    - 
-#    - 
-#  on:
-#    repo: muhkuh-sys/org.muhkuh.tests-iomatrix
+deploy:
+  provider: releases
+  api_key:
+    secure: T/FGPIRHv0wr1D5vHCkP+rg1mbHqYBkURh6ee51vAZN2/BBzzZiDt8ZUu+TfN+zmVDY/t+wlIyaXOVv7DPdWK3OBOctVsVJ27JRPfIcy2BAQD2tvxsHSBe7CEY5l+KmydPPUagYfgiG/YPjPgh4cPtaXoO0tPyEmnURAw00h1dA=
+  file:
+    - targets/ivy/iomatrix.zip
+    - targets/ivy/ivy.xml
+  skip_cleanup: true
+  on:
+    repo: muhkuh-sys/org.muhkuh.tests-iomatrix
+    tags: true
