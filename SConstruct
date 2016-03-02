@@ -103,7 +103,7 @@ aAttribs.update(dict({
 #	--attribute="iconsdir=${ASCIIDOC_PATH}/images/icons" --attribute="source-highlighter=pygments" --attribute="pygmentize=${PYGMENTS}"
 }))
 
-tDoc = env_default.Asciidoc('targets/doc/io_matrix.html', 'README.asciidoc', ASCIIDOC_BACKEND='html5', ASCIIDOC_ATTRIBUTES=aAttribs)
+tDoc = env_default.Asciidoc('targets/doc/org.muhkuh.tests-iomatrix.html', 'doc/org.muhkuh.tests-iomatrix.asciidoc', ASCIIDOC_BACKEND='html5', ASCIIDOC_ATTRIBUTES=aAttribs)
 
 
 #----------------------------------------------------------------------------
