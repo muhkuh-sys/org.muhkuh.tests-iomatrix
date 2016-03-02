@@ -69,8 +69,7 @@ env_default.Version('targets/version/version.h', 'templates/version.h')
 # Build all sub-projects.
 #
 SConscript('iomatrix/SConscript')
-#Import('iomatrix_netx500', 'iomatrix_netx56', 'iomatrix_netx50', 'iomatrix_netx10')
-Import('IOMATRIX_NETX56')
+Import('IOMATRIX_NETX500', 'IOMATRIX_NETX56', 'IOMATRIX_NETX10')
 Import('LUA_IOMATRIX')
 
 
@@ -122,7 +121,9 @@ aArtifactGroupReverse.reverse()
 strArtifactId = 'iomatrix'
 tArcList = env_default.ArchiveList('zip')
 tArcList.AddFiles('netx/',
-        IOMATRIX_NETX56)
+	IOMATRIX_NETX500,
+        IOMATRIX_NETX56,
+	IOMATRIX_NETX10)
 tArcList.AddFiles('lua/',
         LUA_IOMATRIX)
 #tArcList.AddFiles('templates/',
@@ -156,10 +157,10 @@ Command('targets/ivy/ivy.xml', tIvy,  Copy("$TARGET", "$SOURCE"))
 # Make a local demo installation.
 #
 # Copy all binary binaries.
-#Command('targets/testbench/netx/iomatrix_netx10.bin',  iomatrix_netx10,  Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/iomatrix_netx10.bin',  IOMATRIX_NETX10,  Copy("$TARGET", "$SOURCE"))
 #Command('targets/testbench/netx/iomatrix_netx50.bin',  iomatrix_netx50,  Copy("$TARGET", "$SOURCE"))
 Command('targets/testbench/netx/iomatrix_netx56.bin',  IOMATRIX_NETX56,  Copy("$TARGET", "$SOURCE"))
-#Command('targets/testbench/netx/iomatrix_netx500.bin', iomatrix_netx500, Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/iomatrix_netx500.bin', IOMATRIX_NETX500, Copy("$TARGET", "$SOURCE"))
 
 # Copy all LUA scripts.
 Command('targets/testbench/lua/io_matrix.lua',  LUA_IOMATRIX, Copy("$TARGET", "$SOURCE"))
