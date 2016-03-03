@@ -28,6 +28,7 @@ typedef struct UNITCONFIGURATION_STRUCT
 {
 	unsigned long aulHifPio[2];
 	unsigned long aulMmio[2];
+	unsigned long ulRdyRun;
 	unsigned long ulRstOut;
 } UNITCONFIGURATION_T;
 
@@ -38,6 +39,7 @@ static void initialize_unit_configuration(UNITCONFIGURATION_T *ptUnitCfg)
 	ptUnitCfg->aulHifPio[1] = 0;
 	ptUnitCfg->aulMmio[0]   = 0;
 	ptUnitCfg->aulMmio[1]   = 0;
+	ptUnitCfg->ulRdyRun     = 0;
 	ptUnitCfg->ulRstOut     = 0;
 }
 
@@ -118,7 +120,16 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, size_t 
 				break;
 
 			case PINTYPE_RDYRUN:
-				/* Not yet... */
+				uiIndex = ptPinDescCnt->uiIndex;
+				if( uiIndex<2 )
+				{
+					ptUnitCfg->ulRdyRun |= 1U<<uiIndex;
+					iResult = 0;
+				}
+				else
+				{
+					uprintf("The pin %s has an invalid index of %d!", ptPinDescCnt->apcName, uiIndex);
+				}
 				break;
 
 			case PINTYPE_RSTOUT:
@@ -200,6 +211,18 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc)
 				ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
 				ptMmioCtrlArea->aulMmio_cfg[i] = MSK_NX56_mmio0_cfg_mmio_sel;
 			}
+		}
+
+		/*
+		 * RdyRun
+		 */
+		if( tUnitCfg.ulRdyRun!=0 )
+		{
+			/* Disable the RDY and RUN driver. */
+			ulValue  = ptAsicCtrlArea->ulRdy_run_cfg;
+			ulValue &= ~HOSTMSK(rdy_run_cfg_RDY_DRV);
+			ulValue &= ~HOSTMSK(rdy_run_cfg_RUN_DRV);
+			ptAsicCtrlArea->ulRdy_run_cfg = ulValue;
 		}
 
 		/*
@@ -455,6 +478,108 @@ static int get_mmiopio(unsigned int uiIndex, unsigned int *puiValue)
 
 
 
+static int set_rdyrun(unsigned int uiIndex, PINSTATUS_T tValue)
+{
+	int iResult;
+	HOSTDEF(ptAsicCtrlArea);
+	unsigned long ulValue;
+	unsigned long ulMaskOe;
+	unsigned long ulMaskOut;
+	
+	/* assume failure */
+	iResult = -1;
+	
+	/* check the index */
+	if( uiIndex<2 )
+	{
+		if( uiIndex==0 )
+		{
+			ulMaskOe  = HOSTMSK(rdy_run_cfg_RDY_DRV);
+			ulMaskOut = HOSTMSK(rdy_run_cfg_RDY);
+		}
+		else
+		{
+			ulMaskOe  = HOSTMSK(rdy_run_cfg_RUN_DRV);
+			ulMaskOut = HOSTMSK(rdy_run_cfg_RUN);
+		}
+
+		ulValue = ptAsicCtrlArea->ulRdy_run_cfg;
+
+		switch( tValue )
+		{
+		case PINSTATUS_HIGHZ:
+			/* Clear the output enable bit for the pin. */
+			ulValue &= ~ulMaskOe;
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT0:
+			/* Set the output enable bit and the output bit to 0. */
+			ulValue |=  ulMaskOe;
+			ulValue &= ~ulMaskOut;
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT1:
+			/* Set the output enable bit and the output bit to 1. */
+			ulValue |=  ulMaskOe;
+			ulValue |=  ulMaskOut;
+			iResult = 0;
+			break;
+		}
+
+		if( iResult==0 )
+		{
+			ptAsicCtrlArea->ulRdy_run_cfg = ulValue;
+		}
+	}
+
+	return iResult;
+}
+
+
+static int get_rdyrun(unsigned int uiIndex, unsigned int *puiValue)
+{
+	int iResult;
+	HOSTDEF(ptAsicCtrlArea);
+	unsigned long ulValue;
+	unsigned long ulMaskOe;
+	unsigned long ulMaskOut;
+	unsigned int uiValue;
+	
+	
+	/* assume failure */
+	iResult = -1;
+	
+	/* check the index */
+	if( uiIndex<2 )
+	{
+		ulValue = ptAsicCtrlArea->ulRdy_run_cfg;
+		if( uiIndex==0 )
+		{
+			ulValue &= HOSTMSK(rdy_run_cfg_RDY_IN);
+		}
+		else
+		{
+			ulValue &= HOSTMSK(rdy_run_cfg_RUN_IN);
+		}
+
+		if (ulValue == 0)
+		{
+			uiValue = 0;
+		}
+		else
+		{
+			uiValue = 1;
+		}
+		*puiValue = uiValue;
+	}
+
+	return iResult;
+}
+
+
+
 static int set_rstout(unsigned int uiIndex, PINSTATUS_T tValue)
 {
 	HOSTDEF(ptAsicCtrlArea);
@@ -547,7 +672,8 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 		break;
 
 	case PINTYPE_RDYRUN:
-		/* Not yet... */
+		uiIndex = ptPinDescription->uiIndex;
+		iResult = set_rdyrun(uiIndex, tValue);
 		break;
 
 	case PINTYPE_RSTOUT:
@@ -592,7 +718,8 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned int *puiValue)
 		break;
 
 	case PINTYPE_RDYRUN:
-		/* Not yet... */
+		uiIndex = ptPinDescription->uiIndex;
+		iResult = get_rdyrun(uiIndex, puiValue);
 		break;
 
 	case PINTYPE_RSTOUT:
