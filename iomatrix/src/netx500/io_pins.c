@@ -284,7 +284,10 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc)
 			/* Disable the reset out driver. */
 			ulValue  = ptAsicCtrlArea->ulReset_ctrl;
 			ulValue &= ~(HOSTMSK(reset_ctrl_EN_RES_REQ_OUT) | HOSTMSK(reset_ctrl_RES_REQ_OUT));
+#if 0
+			/* NOTE: This is not necessary for the netX500, but "recommended to keep software compatible for later netX versions". */
 			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+#endif
 			ptAsicCtrlArea->ulReset_ctrl = ulValue;
 		}
 	}
@@ -554,6 +557,71 @@ static int get_rdyrun(unsigned int uiIndex, unsigned int *puiValue)
 	return iResult;
 }
 
+
+
+static int set_rstout(unsigned int uiIndex, PINSTATUS_T tValue)
+{
+	HOSTDEF(ptAsicCtrlArea);
+	int iResult;
+	unsigned long ulValue;
+
+
+	/* assume failure */
+	iResult = -1;
+
+	/* check the index */
+	if( uiIndex==0 )
+	{
+		ulValue = ptAsicCtrlArea->ulReset_ctrl;
+		switch( tValue )
+		{
+		case PINSTATUS_HIGHZ:
+			/* Set input mode. */
+			ulValue &= ~(HOSTMSK(reset_ctrl_EN_RES_REQ_OUT) | HOSTMSK(reset_ctrl_RES_REQ_OUT));
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT0:
+			/* Set the output enable bit and the output bit to 0. */
+			ulValue |=  HOSTMSK(reset_ctrl_EN_RES_REQ_OUT) | HOSTMSK(reset_ctrl_RES_REQ_OUT);
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT1:
+			/* Set the output enable bit and the output bit to 1. */
+			ulValue |=  HOSTMSK(reset_ctrl_EN_RES_REQ_OUT);
+			ulValue &= ~HOSTMSK(reset_ctrl_RES_REQ_OUT);
+			iResult = 0;
+			break;
+		}
+
+		if( iResult==0 )
+		{
+#if 0
+			/* NOTE: This is not necessary for the netX500, but "recommended to keep software compatible for later netX versions". */
+			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+#endif
+			ptAsicCtrlArea->ulReset_ctrl = ulValue;
+		}
+	}
+
+	return iResult;
+}
+
+
+
+static int get_rstout(unsigned int uiIndex __attribute__((unused)), unsigned int *puiValue __attribute__((unused)))
+{
+	int iResult;
+
+
+	/* RSTOUT has not input function. */
+	iResult = -1;
+
+	return iResult;
+}
+
+
 /*---------------------------------------------------------------------------*/
 
 
@@ -590,7 +658,8 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 		break;
 
 	case PINTYPE_RSTOUT:
-		/* Not yet... */
+		uiIndex = ptPinDescription->uiIndex;
+		iResult = set_rstout(uiIndex, tValue);
 		break;
 
 	case PINTYPE_XMIO:
@@ -635,7 +704,8 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned int *puiValue)
 		break;
 
 	case PINTYPE_RSTOUT:
-		/* Not yet... */
+		uiIndex = ptPinDescription->uiIndex;
+		iResult = get_rstout(uiIndex, puiValue);
 		break;
 
 	case PINTYPE_XMIO:
