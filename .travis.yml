@@ -14,32 +14,6 @@ cache:
     - $HOME/.ant/lib
 
 
-env:
-  global:
-    - secure: "MXZQNZvztG3RdrPFQceviubtCvCBeRNt/Q0KL3/4kzUU4Diy3X1p+ZZC2maBP2yz1AAm39yy2O2eKFFRfoDRVnunawPW8xfKkS//mDACBOoTjrcgDPH2pvqzbxivCz9hUw4tTXs18tKLbtK8annRlSbkoh9cZn53GwOiLTyHbuU="
-
-
-install:
-  - pip install -q requests
-
-
 # This is the command to build the whole project and pack the results in a distributable form.
 script:
   - python mbs/mbs
-
-
-after_success:
-  - python ivy/deploy.py targets/artifacts.xml
-
-
-deploy:
-  provider: releases
-  api_key:
-    secure: T/FGPIRHv0wr1D5vHCkP+rg1mbHqYBkURh6ee51vAZN2/BBzzZiDt8ZUu+TfN+zmVDY/t+wlIyaXOVv7DPdWK3OBOctVsVJ27JRPfIcy2BAQD2tvxsHSBe7CEY5l+KmydPPUagYfgiG/YPjPgh4cPtaXoO0tPyEmnURAw00h1dA=
-  file:
-    - targets/ivy/iomatrix.zip
-    - targets/ivy/ivy.xml
-  skip_cleanup: true
-  on:
-    repo: muhkuh-sys/org.muhkuh.tests-iomatrix
-    tags: true
