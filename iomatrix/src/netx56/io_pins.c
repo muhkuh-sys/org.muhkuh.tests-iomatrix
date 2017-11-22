@@ -47,10 +47,12 @@ static void initialize_unit_configuration(UNITCONFIGURATION_T *ptUnitCfg)
 
 static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc, UNITCONFIGURATION_T *ptUnitCfg)
 {
+	HOSTDEF(ptAsicCtrlArea);
 	int iResult;
 	const PINDESCRIPTION_T *ptPinDescCnt;
 	const PINDESCRIPTION_T *ptPinDescEnd;
 	unsigned int uiIndex;
+	unsigned long ulValue;
 
 
 	iResult = 0;
@@ -88,8 +90,27 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, size_t 
 				}
 				else if( uiIndex<58 )
 				{
-					ptUnitCfg->aulHifPio[1] |= 1U<<(uiIndex-26U);
-					iResult = 0;
+					/* Index 55 is the HIF_RDY pin. It needs the DPM clock. */
+					if( uiIndex==55 )
+					{
+						/* Check if the DPM clock can be enabled. */
+						ulValue  = ptAsicCtrlArea->ulClock_enable_mask;
+						ulValue &= HOSTMSK(clock_enable_mask_dpm);
+						if( ulValue==0 )
+						{
+							uprintf("The pin %s needs the DPM clock, but it is masked in the clock_enable_mask register.\n", ptPinDescCnt->apcName);
+						}
+						else
+						{
+							ptUnitCfg->aulHifPio[1] |= 1U<<(uiIndex-26U);
+							iResult = 0;
+						}
+					}
+					else
+					{
+						ptUnitCfg->aulHifPio[1] |= 1U<<(uiIndex-26U);
+						iResult = 0;
+					}
 				}
 				else
 				{
@@ -172,6 +193,7 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc)
 	HOSTDEF(ptMmioCtrlArea);
 	UNITCONFIGURATION_T tUnitCfg;
 	unsigned long ulValue;
+	unsigned long ulClockEnable;
 
 
 	initialize_unit_configuration(&tUnitCfg);
@@ -188,8 +210,21 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc)
 			ptHifIoCtrlArea->aulHif_pio_oe[1] = 0;
 
 			/* Collect the configuration. */
-			/* FIXME: only do this if the RDY pin is really used. */
-			ulValue  = HOSTMSK(hif_io_cfg_en_hif_rdy_pio_mi);
+			ulValue = 0;
+			/* Only do this if the RDY pin is really used. */
+			if( (tUnitCfg.aulHifPio[1]&HOSTMSK(hif_pio_oe1_hif_rdy))!=0 )
+			{
+				/* The RDY pin is special. The PIO funcion must
+				 * be enabled with a bit in the hif_io_cfg register
+				 * and the DPM clock must be enabled.
+				 */
+				ulValue |= HOSTMSK(hif_io_cfg_en_hif_rdy_pio_mi);
+
+				ulClockEnable  = ptAsicCtrlArea->ulClock_enable;
+				ulClockEnable |= HOSTMSK(clock_enable_dpm);
+				ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+				ptAsicCtrlArea->ulClock_enable = ulClockEnable;
+			}
 
 			ulValue |= 3 << HOSTSRT(hif_io_cfg_hif_mi_cfg);
 			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
