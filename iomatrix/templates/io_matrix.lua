@@ -202,18 +202,20 @@ function initialize(tPlugin, strPattern, fnCallbackProgress)
 	
 	-- Get the binary for the ASIC.
 	if tAsicTyp==romloader.ROMLOADER_CHIPTYP_NETX50 then
-		uiAsic = 50
+		strAsic = '50'
 	elseif tAsicTyp==romloader.ROMLOADER_CHIPTYP_NETX100 or tAsicTyp==romloader.ROMLOADER_CHIPTYP_NETX500 then
-		uiAsic = 500
+		strAsic = '500'
 	elseif tAsicTyp==romloader.ROMLOADER_CHIPTYP_NETX10 then
-		uiAsic = 10
+		strAsic = '10'
 	elseif tAsicTyp==romloader.ROMLOADER_CHIPTYP_NETX56 or tAsicTyp==romloader.ROMLOADER_CHIPTYP_NETX56B then
-		uiAsic = 56
+		strAsic = '56'
+	elseif tAsicTyp==romloader.ROMLOADER_CHIPTYP_NETX90_MPW then
+		strAsic = '90_mpw'
 	else
 		error("Unknown chiptyp!")
 	end
 
-	strBinaryName = string.format(strPattern, uiAsic)
+	strBinaryName = string.format(strPattern, strAsic)
 
 	-- Try to load the binary.
 	strData, strMsg = muhkuh.load(strBinaryName)

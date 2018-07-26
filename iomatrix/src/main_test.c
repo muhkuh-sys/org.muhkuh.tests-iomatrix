@@ -23,7 +23,6 @@
 
 #include <string.h>
 
-#include "netx_test.h"
 #include "rdy_run.h"
 #include "systime.h"
 #include "uprintf.h"
@@ -1129,10 +1128,9 @@ static int get_pin(const IOMATRIX_PARAMETER_GET_PIN_T *ptParameter)
 
 /*-------------------------------------------------------------------------*/
 
-TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
+TEST_RESULT_T test(IOMATRIX_PARAMETER_T *ptTestParams)
 {
 	TEST_RESULT_T tTestResult;
-	IOMATRIX_PARAMETER_T *ptTestParams;
 	int iResult;
 	unsigned int uiErrorCount;
 
@@ -1148,7 +1146,6 @@ TEST_RESULT_T test(TEST_PARAMETER_T *ptTestParam)
 	 */
 
 	/* Get the test parameter. */
-	ptTestParams = (IOMATRIX_PARAMETER_T*)(ptTestParam->pvInitParams);
 	uprintf(". Parameters: 0x%08x\n", (unsigned long)ptTestParams);
 	uprintf(".   Verbose: 0x%08x\n", ptTestParams->ulVerbose);
 	uprintf(".   Command: 0x%08x\n", ptTestParams->tCommand);

@@ -27,41 +27,42 @@ import os.path
 # Set up the Muhkuh Build System.
 #
 SConscript('mbs/SConscript')
-Import('env_default')
+Import('atEnv')
 
 
 #----------------------------------------------------------------------------
 #
 # Create the compiler environments.
 #
-env_netx500_default = env_default.CreateCompilerEnv('500', ['arch=armv5te'])
-env_netx500_default.Replace(BOOTBLOCK_CHIPTYPE = 500)
+# Create a build environment for the ARM9 based netX chips.
+env_arm9 = atEnv.DEFAULT.CreateEnvironment(['gcc-arm-none-eabi-4.7', 'asciidoc'])
+env_arm9.CreateCompilerEnv('NETX500', ['arch=armv5te'])
+env_arm9.CreateCompilerEnv('NETX56', ['arch=armv5te'])
+env_arm9.CreateCompilerEnv('NETX50', ['arch=armv5te'])
+env_arm9.CreateCompilerEnv('NETX10', ['arch=armv5te'])
 
-env_netx56_default = env_default.CreateCompilerEnv('56', ['arch=armv5te'])
-env_netx56_default.Replace(BOOTBLOCK_CHIPTYPE = 56)
+# Create a build environment for the Cortex-R7 and Cortex-A9 based netX chips.
+env_cortexR7 = atEnv.DEFAULT.CreateEnvironment(['gcc-arm-none-eabi-4.9', 'asciidoc'])
+env_cortexR7.CreateCompilerEnv('NETX4000_RELAXED', ['arch=armv7', 'thumb'], ['arch=armv7-r', 'thumb'])
 
-env_netx50_default = env_default.CreateCompilerEnv('50', ['arch=armv5te'])
-env_netx50_default.Replace(BOOTBLOCK_CHIPTYPE = 50)
-
-env_netx10_default = env_default.CreateCompilerEnv('10', ['arch=armv5te'])
-env_netx10_default.Replace(BOOTBLOCK_CHIPTYPE = 10)
-
-Export('env_netx500_default', 'env_netx56_default', 'env_netx50_default', 'env_netx10_default')
+# Create a build environment for the Cortex-M4 based netX chips.
+env_cortexM4 = atEnv.DEFAULT.CreateEnvironment(['gcc-arm-none-eabi-4.9', 'asciidoc'])
+env_cortexM4.CreateCompilerEnv('NETX90_MPW', ['arch=armv7', 'thumb'], ['arch=armv7e-m', 'thumb'])
+env_cortexM4.CreateCompilerEnv('NETX90_MPW_APP', ['arch=armv7', 'thumb'], ['arch=armv7e-m', 'thumb'])
 
 
 #----------------------------------------------------------------------------
 #
 # Build the platform library.
 #
-PLATFORM_LIB_CFG_BUILDS = [500, 56, 50, 10]
-SConscript('platform/SConscript', exports='PLATFORM_LIB_CFG_BUILDS')
+SConscript('platform/SConscript')
 
 
 #----------------------------------------------------------------------------
 #
 # Get the source code version from the VCS.
 #
-env_default.Version('targets/version/version.h', 'templates/version.h')
+atEnv.DEFAULT.Version('targets/version/version.h', 'templates/version.h')
 
 
 #----------------------------------------------------------------------------
@@ -69,7 +70,7 @@ env_default.Version('targets/version/version.h', 'templates/version.h')
 # Build all sub-projects.
 #
 SConscript('iomatrix/SConscript')
-Import('IOMATRIX_NETX500', 'IOMATRIX_NETX56', 'IOMATRIX_NETX10')
+Import('IOMATRIX_NETX500', 'IOMATRIX_NETX90_MPW', 'IOMATRIX_NETX56', 'IOMATRIX_NETX10')
 Import('LUA_IOMATRIX')
 
 
@@ -79,7 +80,7 @@ Import('LUA_IOMATRIX')
 #
 
 # Get the default attributes.
-aAttribs = env_default['ASCIIDOC_ATTRIBUTES']
+aAttribs = atEnv.DEFAULT['ASCIIDOC_ATTRIBUTES']
 # Add some custom attributes.
 aAttribs.update(dict({
 	# Use ASCIIMath formulas.
@@ -103,7 +104,7 @@ aAttribs.update(dict({
 #	--attribute="iconsdir=${ASCIIDOC_PATH}/images/icons" --attribute="source-highlighter=pygments" --attribute="pygmentize=${PYGMENTS}"
 }))
 
-tDoc = env_default.Asciidoc('targets/doc/org.muhkuh.tests-iomatrix.html', 'doc/org.muhkuh.tests-iomatrix.asciidoc', ASCIIDOC_BACKEND='html5', ASCIIDOC_ATTRIBUTES=aAttribs)
+tDoc = atEnv.DEFAULT.Asciidoc('targets/doc/org.muhkuh.tests-iomatrix.html', 'doc/org.muhkuh.tests-iomatrix.asciidoc', ASCIIDOC_BACKEND='html5', ASCIIDOC_ATTRIBUTES=aAttribs)
 
 
 #----------------------------------------------------------------------------
@@ -119,10 +120,11 @@ aArtifactGroupReverse.reverse()
 
 
 strArtifactId = 'iomatrix'
-tArcList = env_default.ArchiveList('zip')
+tArcList = atEnv.DEFAULT.ArchiveList('zip')
 tArcList.AddFiles('netx/',
 	IOMATRIX_NETX500,
-        IOMATRIX_NETX56,
+	IOMATRIX_NETX90_MPW,
+	IOMATRIX_NETX56,
 	IOMATRIX_NETX10)
 tArcList.AddFiles('lua/',
         LUA_IOMATRIX)
@@ -137,15 +139,15 @@ tArcList.AddFiles('',
         'ivy/org.muhkuh.tests.iomatrix/install.xml')
 
 strArtifactPath = 'targets/ivy/repository/%s/%s/%s' % ('/'.join(aArtifactGroupReverse),strArtifactId,PROJECT_VERSION)
-tArc = env_default.Archive(os.path.join(strArtifactPath, '%s-%s.zip' % (strArtifactId,PROJECT_VERSION)), None, ARCHIVE_CONTENTS=tArcList)
-tIvy = env_default.Version(os.path.join(strArtifactPath, 'ivy-%s.xml' % PROJECT_VERSION), 'ivy/%s.%s/ivy.xml' % ('.'.join(aArtifactGroupReverse),strArtifactId))
-tPom = env_default.ArtifactVersion(os.path.join(strArtifactPath, '%s-%s.pom' % (strArtifactId,PROJECT_VERSION)), 'ivy/%s.%s/pom.xml' % ('.'.join(aArtifactGroupReverse),strArtifactId))
+tArc = atEnv.DEFAULT.Archive(os.path.join(strArtifactPath, '%s-%s.zip' % (strArtifactId,PROJECT_VERSION)), None, ARCHIVE_CONTENTS=tArcList)
+tIvy = atEnv.DEFAULT.Version(os.path.join(strArtifactPath, 'ivy-%s.xml' % PROJECT_VERSION), 'ivy/%s.%s/ivy.xml' % ('.'.join(aArtifactGroupReverse),strArtifactId))
+tPom = atEnv.DEFAULT.ArtifactVersion(os.path.join(strArtifactPath, '%s-%s.pom' % (strArtifactId,PROJECT_VERSION)), 'ivy/%s.%s/pom.xml' % ('.'.join(aArtifactGroupReverse),strArtifactId))
 
 
 # Build the artifact list for the deploy operation to bintray.
-env_default.AddArtifact(tArc, aArtifactServer, strArtifactGroup, strArtifactId, PROJECT_VERSION, 'zip')
-env_default.AddArtifact(tIvy, aArtifactServer, strArtifactGroup, strArtifactId, PROJECT_VERSION, 'ivy')
-tArtifacts = env_default.Artifact('targets/artifacts.xml', None)
+atEnv.DEFAULT.AddArtifact(tArc, aArtifactServer, strArtifactGroup, strArtifactId, PROJECT_VERSION, 'zip')
+atEnv.DEFAULT.AddArtifact(tIvy, aArtifactServer, strArtifactGroup, strArtifactId, PROJECT_VERSION, 'ivy')
+tArtifacts = atEnv.DEFAULT.Artifact('targets/artifacts.xml', None)
 
 # Copy the artifacts to a fixed filename to allow a deploy to github.
 Command('targets/ivy/%s.zip' % strArtifactId,  tArc,  Copy("$TARGET", "$SOURCE"))
@@ -160,6 +162,7 @@ Command('targets/ivy/ivy.xml', tIvy,  Copy("$TARGET", "$SOURCE"))
 Command('targets/testbench/netx/iomatrix_netx10.bin',  IOMATRIX_NETX10,  Copy("$TARGET", "$SOURCE"))
 #Command('targets/testbench/netx/iomatrix_netx50.bin',  iomatrix_netx50,  Copy("$TARGET", "$SOURCE"))
 Command('targets/testbench/netx/iomatrix_netx56.bin',  IOMATRIX_NETX56,  Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/iomatrix_netx90_mpw.bin',  IOMATRIX_NETX90_MPW,  Copy("$TARGET", "$SOURCE"))
 Command('targets/testbench/netx/iomatrix_netx500.bin', IOMATRIX_NETX500, Copy("$TARGET", "$SOURCE"))
 
 # Copy all LUA scripts.

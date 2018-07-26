@@ -24,9 +24,7 @@
 #
 # Import all required objects.
 #
-Import('env_default')
-Import('env_netx500_default', 'env_netx56_default', 'env_netx50_default', 'env_netx10_default')
-Import('platform_lib_netx500', 'platform_lib_netx56', 'platform_lib_netx50', 'platform_lib_netx10')
+Import('atEnv')
 
 
 #----------------------------------------------------------------------------
@@ -34,9 +32,8 @@ Import('platform_lib_netx500', 'platform_lib_netx56', 'platform_lib_netx50', 'pl
 # (i.e. spaces, tabs, newlines). The amount of whitespace does not matter.
 sources_common = """
 	src/header.c
-	src/init_netx_test.S
+	src/init_muhkuh.S
 	src/main_test.c
-	src/netx_test.c
 """
 
 
@@ -46,6 +43,10 @@ sources_netx10 = """
 
 sources_netx56 = """
 	src/netx56/io_pins.c
+"""
+
+sources_netx90_mpw = """
+	src/netx90_mpw/io_pins.c
 """
 
 sources_netx500 = """
@@ -58,35 +59,42 @@ sources_netx500 = """
 #
 aCppPath = ['src', '#platform/src', '#platform/src/lib', '#targets/version']
 
-env_netx500_t = env_netx500_default.Clone()
+env_netx500_t = atEnv.NETX500.Clone()
 env_netx500_t.Replace(LDFILE = 'src/netx500/netx500.ld')
 env_netx500_t.Append(CPPPATH = aCppPath)
 src_netx500_t = env_netx500_t.SetBuildPath('targets/netx500', 'src', sources_common + sources_netx500)
-elf_netx500_t = env_netx500_t.Elf('targets/netx500/iomatrix_netx500.elf', src_netx500_t + platform_lib_netx500)
+elf_netx500_t = env_netx500_t.Elf('targets/netx500/iomatrix_netx500.elf', src_netx500_t + env_netx500_t['PLATFORM_LIBRARY'])
 IOMATRIX_NETX500 = env_netx500_t.ObjCopy('targets/netx500/iomatrix_netx500.bin', elf_netx500_t)
 
-env_netx56_t = env_netx56_default.Clone()
+env_netx90_mpw_t = atEnv.NETX90_MPW.Clone()
+env_netx90_mpw_t.Replace(LDFILE = 'src/netx90_mpw/netx90.ld')
+env_netx90_mpw_t.Append(CPPPATH = aCppPath)
+src_netx90_mpw_t = env_netx90_mpw_t.SetBuildPath('targets/netx90_mpw', 'src', sources_common + sources_netx90_mpw)
+elf_netx90_mpw_t = env_netx90_mpw_t.Elf('targets/netx90_mpw/iomatrix_netx90_mpw.elf', src_netx90_mpw_t + env_netx90_mpw_t['PLATFORM_LIBRARY'])
+IOMATRIX_NETX90_MPW = env_netx90_mpw_t.ObjCopy('targets/netx90_mpw/iomatrix_netx90_mpw.bin', elf_netx90_mpw_t)
+
+env_netx56_t = atEnv.NETX56.Clone()
 env_netx56_t.Replace(LDFILE = 'src/netx56/netx56.ld')
 env_netx56_t.Append(CPPPATH = aCppPath)
 src_netx56_t = env_netx56_t.SetBuildPath('targets/netx56', 'src', sources_common + sources_netx56)
-elf_netx56_t = env_netx56_t.Elf('targets/netx56/iomatrix_netx56.elf', src_netx56_t + platform_lib_netx56)
+elf_netx56_t = env_netx56_t.Elf('targets/netx56/iomatrix_netx56.elf', src_netx56_t + env_netx56_t['PLATFORM_LIBRARY'])
 IOMATRIX_NETX56 = env_netx56_t.ObjCopy('targets/netx56/iomatrix_netx56.bin', elf_netx56_t)
 
-#env_netx50_t = env_netx50_default.Clone()
+#env_netx50_t = atEnv.NETX50.Clone()
 #env_netx50_t.Replace(LDFILE = 'src/netx50/netx50.ld')
 #env_netx50_t.Append(CPPPATH = aCppPath)
 #src_netx50_t = env_netx50_t.SetBuildPath('targets/netx50', 'src', sources_common)
-#elf_netx50_t = env_netx50_t.Elf('targets/netx50/crctest.elf', src_netx50_t + platform_lib_netx50)
+#elf_netx50_t = env_netx50_t.Elf('targets/netx50/crctest.elf', src_netx50_t + env_netx50_t['PLATFORM_LIBRARY'])
 #crctest_netx50 = env_netx50_t.ObjCopy('targets/netx50/crctest.bin', elf_netx50_t)
 
-env_netx10_t = env_netx10_default.Clone()
+env_netx10_t = atEnv.NETX10.Clone()
 env_netx10_t.Replace(LDFILE = 'src/netx10/netx10.ld')
 env_netx10_t.Append(CPPPATH = aCppPath)
 src_netx10_t = env_netx10_t.SetBuildPath('targets/netx10', 'src', sources_common + sources_netx10)
-elf_netx10_t = env_netx10_t.Elf('targets/netx10/iomatrix_netx10.elf', src_netx10_t + platform_lib_netx10)
+elf_netx10_t = env_netx10_t.Elf('targets/netx10/iomatrix_netx10.elf', src_netx10_t + env_netx10_t['PLATFORM_LIBRARY'])
 IOMATRIX_NETX10 = env_netx10_t.ObjCopy('targets/netx10/iomatrix_netx10.bin', elf_netx10_t)
 
-Export('IOMATRIX_NETX500', 'IOMATRIX_NETX56', 'IOMATRIX_NETX10')
+Export('IOMATRIX_NETX500', 'IOMATRIX_NETX90_MPW', 'IOMATRIX_NETX56', 'IOMATRIX_NETX10')
 
 
 #----------------------------------------------------------------------------
@@ -95,7 +103,7 @@ Export('IOMATRIX_NETX500', 'IOMATRIX_NETX56', 'IOMATRIX_NETX10')
 # This extracts symbols and enumeration values from the ELF file and inserts
 # them into the LUA script.
 #
-LUA_IOMATRIX = env_netx56_t.GccSymbolTemplate('targets/lua/io_matrix.lua', elf_netx56_t, GCCSYMBOLTEMPLATE_TEMPLATE=File('templates/io_matrix.lua'))
+LUA_IOMATRIX = atEnv.NETX56.GccSymbolTemplate('targets/lua/io_matrix.lua', elf_netx56_t, GCCSYMBOLTEMPLATE_TEMPLATE=File('templates/io_matrix.lua'))
 Export('LUA_IOMATRIX')
 
 
