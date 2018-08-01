@@ -48,30 +48,11 @@ typedef enum PINSTATUS_ENUM
 } PINSTATUS_T;
 
 
-typedef enum PINFLAG_ENUM
-{
-	PINFLAG_I          = 1,  /* The pin can be switched to input mode. */
-	PINFLAG_O          = 2,  /* The pin can be switched to output mode. */
-	PINFLAG_Z          = 4,  /* The pin can be switched to high-Z mode. */
-	PINFLAG_IOZ        = 7,  /* A shortcut for PINFLAG_I|PINFLAG_O|PINFLAG_Z. */
-} PINFLAG_ENUM;
-
-
-typedef enum PINDEFAULT_ENUM
-{
-	PINDEFAULT_0       = 0,  /* If all pins in the network are I or Z this pin reads 0. */
-	PINDEFAULT_1       = 1,  /* If all pins in the network are I or Z this pin reads 1. */
-	PINDEFAULT_INVALID = 2   /* If all pins in the network are I or Z this pin has an invalid input level and can be 0 or 1. */
-} PINDEFAULT_T;
-
-
 typedef struct PINDESCRIPTION_STRUCT
 {
 	char apcName[MAX_PINDESCRIPTION_NAME+1];
 	PINTYPE_T tType;
 	unsigned int uiIndex;
-	PINDEFAULT_T tDefaultValue;
-	unsigned long ulFlags;
 } PINDESCRIPTION_T;
 
 

@@ -30,25 +30,8 @@
 
 /*-----------------------------------*/
 
-#define MAX_NET_SIZE 4
-#define MAX_NET_COUNT 64
-
-
-typedef enum MATRIXERR_ENUM
-{
-	MATRIXERR_Loopback_but_drive0_does_not_follow           = 0x0001,
-	MATRIXERR_Loopback_but_drive1_does_not_follow           = 0x0002,
-	MATRIXERR_No_Loopback_but_shortcut_for_drive0           = 0x0004,
-	MATRIXERR_No_Loopback_but_shortcut_for_drive1           = 0x0008,
-	MATRIXERR_Not_at_default_state_0_at_pin_test_start      = 0x0010,
-	MATRIXERR_Not_at_default_state_0_after_pin_test_drive0  = 0x0020,
-	MATRIXERR_Not_at_default_state_0_after_pin_test_drive1  = 0x0040
-} MATRIXERR_T;
-
-
-unsigned long ulPinsUnderTest __attribute__ ((section (".matrix_definitions")));
+unsigned int ulPinsUnderTest __attribute__ ((section (".matrix_definitions")));
 PINDESCRIPTION_T atPinsUnderTest[MAX_PINS_UNDER_TEST] __attribute__ ((section (".matrix_definitions")));
-const PINDESCRIPTION_T *aptNetList[MAX_NET_COUNT][MAX_NET_SIZE] __attribute__ ((section (".matrix_definitions")));
 
 
 static unsigned long s_ulVerbosity;
@@ -71,16 +54,12 @@ static const PINTYPE_PRINT_T atPintypePrint[] =
 	{ PINTYPE_RSTOUT, "RSTOUT" }
 };
 
-static void print_pin(ptrdiff_t ptdIndex, const PINDESCRIPTION_T *ptPinDesc)
+static void print_pin(unsigned long ulIndex, const PINDESCRIPTION_T *ptPinDesc)
 {
 	PINTYPE_T tType;
-	PINDEFAULT_T tDefaultValue;
 	const PINTYPE_PRINT_T *ptCnt;
 	const PINTYPE_PRINT_T *ptEnd;
 	const char *pcPrint;
-	const char *pcDefault;
-	unsigned long ulFlags;
-	char acFlags[4];
 
 
 	/* Get the print representation of the pin type. */
@@ -98,43 +77,7 @@ static void print_pin(ptrdiff_t ptdIndex, const PINDESCRIPTION_T *ptPinDesc)
 		++ptCnt;
 	} while( ptCnt<ptEnd );
 
-	pcDefault = "?";
-	tDefaultValue = ptPinDesc->tDefaultValue;
-	if( tDefaultValue==PINDEFAULT_0 )
-	{
-		pcDefault = "0";
-	}
-	else if( tDefaultValue==PINDEFAULT_1 )
-	{
-		pcDefault = "1";
-	}
-	else if( tDefaultValue==PINDEFAULT_INVALID )
-	{
-		pcDefault = "invalid";
-	}
-
-
-	/* Set the default values for the flags. */
-	acFlags[0] = ' ';
-	acFlags[1] = ' ';
-	acFlags[2] = ' ';
-	acFlags[3] = '\0';
-
-	ulFlags = ptPinDesc->ulFlags;
-	if( (ulFlags&PINFLAG_I)!=0 )
-	{
-		acFlags[0] = 'I';
-	}
-	if( (ulFlags&PINFLAG_O)!=0 )
-	{
-		acFlags[1] = 'O';
-	}
-	if( (ulFlags&PINFLAG_Z)!=0 )
-	{
-		acFlags[2] = 'Z';
-	}
-
-	uprintf("%03d: Pin '%s': %s[%d] (default %s, flags: %s)\n", ptdIndex, ptPinDesc->apcName, pcPrint, ptPinDesc->uiIndex, pcDefault, acFlags);
+	uprintf("%03d: Pin '%s': %s[%d]\n", ulIndex, ptPinDesc->apcName, pcPrint, ptPinDesc->uiIndex);
 }
 
 
@@ -165,10 +108,12 @@ static int parse_pin_description(const unsigned char *pucDefinition, unsigned lo
 {
 	int iResult;
 	DATAPTR_T tPtr;
-	PINDESCRIPTION_T *ptPinDescCnt;
-	PINDESCRIPTION_T *ptPinDescEnd;
+	PINDESCRIPTION_T *ptPinDesc;
 	const unsigned char *pucNameStart;
-	ptrdiff_t ptdName;
+	PINTYPE_T tPinType;
+	unsigned int uiPinIndex;
+	long lNameSize;
+	unsigned long ulPinCnt;
 
 
 	/* Be optimistic. */
@@ -181,12 +126,12 @@ static int parse_pin_description(const unsigned char *pucDefinition, unsigned lo
 	tPtr.pucCnt = pucDefinition;
 	tPtr.pucEnd = pucDefinition + ulDefinitionSize;
 
-	ptPinDescCnt = atPinsUnderTest;
-	ptPinDescEnd = atPinsUnderTest + (sizeof(atPinsUnderTest)/sizeof(atPinsUnderTest[0]));
-
+	ulPinCnt = 0;
 	/* Parse all pin descriptions. */
 	while( tPtr.pucCnt<tPtr.pucEnd )
 	{
+		ptPinDesc = atPinsUnderTest + ulPinCnt;
+
 		/* Get the next name. */
 		pucNameStart = tPtr.pucCnt;
 		while( tPtr.pucCnt<tPtr.pucEnd && *(tPtr.pucCnt)!='\0')
@@ -195,16 +140,16 @@ static int parse_pin_description(const unsigned char *pucDefinition, unsigned lo
 		}
 
 		/* The name must not be empty. */
-		ptdName = tPtr.pucCnt - pucNameStart;
-		if( ptdName<=0 )
+		lNameSize = tPtr.pucCnt - pucNameStart;
+		if( lNameSize<=0 )
 		{
-			uprintf("Error: the name of pin %d is empty!\n", ptPinDescCnt-atPinsUnderTest);
+			uprintf("Error: the name of pin %d is empty!\n", ulPinCnt);
 			iResult = -1;
 			break;
 		}
-		else if( ptdName>MAX_PINDESCRIPTION_NAME )
+		else if( lNameSize>MAX_PINDESCRIPTION_NAME )
 		{
-			uprintf("Error: the name of pin %d is too long!\n", ptPinDescCnt-atPinsUnderTest);
+			uprintf("Error: the name of pin %d is too long!\n", ulPinCnt);
 			iResult = -1;
 			break;
 		}
@@ -214,43 +159,58 @@ static int parse_pin_description(const unsigned char *pucDefinition, unsigned lo
 			++(tPtr.pucCnt);
 
 			/* The entry needs some more bytes. */
-			if( (tPtr.pucCnt +
-			     sizeof(ptPinDescCnt->tType) +
-			     sizeof(ptPinDescCnt->uiIndex) +
-			     sizeof(ptPinDescCnt->tDefaultValue) +
-			     sizeof(ptPinDescCnt->ulFlags))>=tPtr.pucEnd )
+			if( (tPtr.pucCnt + sizeof(unsigned long) + sizeof(unsigned long))>tPtr.pucEnd )
 			{
-				uprintf("Error: not enough data for the definition. The description seems to be truncated!\n");
+				uprintf("Error: not enough data for the definition of entry %d. The description seems to be truncated!\n", ulPinCnt);
 				iResult = -1;
 				break;
 			}
 			else
 			{
-				/* Copy the name. */
-				memset(ptPinDescCnt->apcName, 0, MAX_PINDESCRIPTION_NAME);
-				strncpy(ptPinDescCnt->apcName, (const char*)pucNameStart, MAX_PINDESCRIPTION_NAME);
-
-				ptPinDescCnt->tType = (PINTYPE_T)get_dword(&tPtr);
-				/* TODO: check the type. */
-
-				ptPinDescCnt->uiIndex = (unsigned int)get_dword(&tPtr);
-				ptPinDescCnt->tDefaultValue = (PINDEFAULT_T)get_dword(&tPtr);
-
-				ptPinDescCnt->ulFlags = get_dword(&tPtr);
-				/* TODO: check the flags. */
-
-				if( s_ulVerbosity!=0 )
+				/* Check the type. */
+				tPinType = (PINTYPE_T)get_dword(&tPtr);
+				iResult = -1;
+				switch(tPinType)
 				{
-					print_pin(ptPinDescCnt-atPinsUnderTest, ptPinDescCnt);
-				}
-
-				/* Move to the next space for the pin description. */
-				++ptPinDescCnt;
-				if( ptPinDescCnt>=ptPinDescEnd )
-				{
-					uprintf("Error: too many pin descriptions!\n");
-					iResult = -1;
+				case PINTYPE_GPIO:
+				case PINTYPE_PIO:
+				case PINTYPE_MMIO:
+				case PINTYPE_HIFPIO:
+				case PINTYPE_RDYRUN:
+				case PINTYPE_RSTOUT:
+				case PINTYPE_XMIO:
+					iResult = 0;
 					break;
+				}
+				if( iResult!=0 )
+				{
+					uprintf("Error: invalid pin type: %d.\n", tPinType);
+				}
+				else
+				{
+					/* Get the index of the pin. */
+					uiPinIndex = (unsigned int)get_dword(&tPtr);
+
+					/* Copy the name. */
+					memset(ptPinDesc->apcName, 0, MAX_PINDESCRIPTION_NAME);
+					strncpy(ptPinDesc->apcName, (const char*)pucNameStart, MAX_PINDESCRIPTION_NAME);
+
+					ptPinDesc->tType = tPinType;
+					ptPinDesc->uiIndex = uiPinIndex;
+
+					if( s_ulVerbosity!=0 )
+					{
+						print_pin(ulPinCnt, ptPinDesc);
+					}
+
+					/* Move to the next space for the pin description. */
+					++ulPinCnt;
+					if( ulPinCnt>=MAX_PINS_UNDER_TEST )
+					{
+						uprintf("Error: too many pin descriptions!\n");
+						iResult = -1;
+						break;
+					}
 				}
 			}
 		}
@@ -259,7 +219,7 @@ static int parse_pin_description(const unsigned char *pucDefinition, unsigned lo
 	if( iResult==0 )
 	{
 		/* Save the new number of pins in the definition. */
-		ulPinsUnderTest = (unsigned long)(ptPinDescCnt - atPinsUnderTest);
+		ulPinsUnderTest = ulPinCnt;
 	}
 
 	return iResult;

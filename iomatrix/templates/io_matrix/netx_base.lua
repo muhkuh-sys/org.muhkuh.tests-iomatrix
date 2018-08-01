@@ -330,10 +330,6 @@ function IoMatrix_netx_base:add_pin(strID, strKnownName, uiDefaultValue, uiFlags
   self:__chunk_add_dword(aucCompiledPins, tPin.type)
   -- Add the index.
   self:__chunk_add_dword(aucCompiledPins, tPin.index)
-  -- Add the default value.
-  self:__chunk_add_dword(aucCompiledPins, uiDefaultValue)
-  -- Add the flags.
-  self:__chunk_add_dword(aucCompiledPins, uiFlags)
 
   -- Count the defined pins.
   self.uiCurrentPinIndex = self.uiCurrentPinIndex + 1
