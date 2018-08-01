@@ -30,14 +30,26 @@ end
 
 
 IoMatrix_netx90_mpw.atKnownPins = {
-  ['MMIO0'] = { type=2, index=0 },
-  ['MMIO1'] = { type=2, index=1 },
-  ['MMIO2'] = { type=2, index=2 },
-  ['MMIO3'] = { type=2, index=3 },
-  ['MMIO4'] = { type=2, index=4 },
-  ['MMIO5'] = { type=2, index=5 },
-  ['MMIO6'] = { type=2, index=6 },
-  ['MMIO7'] = { type=2, index=7 }
+  ['MMIO0'] = { type=${PINTYPE_MMIO}, index=0 },
+  ['MMIO1'] = { type=${PINTYPE_MMIO}, index=1 },
+  ['MMIO2'] = { type=${PINTYPE_MMIO}, index=2 },
+  ['MMIO3'] = { type=${PINTYPE_MMIO}, index=3 },
+  ['MMIO4'] = { type=${PINTYPE_MMIO}, index=4 },
+  ['MMIO5'] = { type=${PINTYPE_MMIO}, index=5 },
+  ['MMIO6'] = { type=${PINTYPE_MMIO}, index=6 },
+  ['MMIO7'] = { type=${PINTYPE_MMIO}, index=7 },
+  ['XM0_IO0'] = { type=${PINTYPE_XMIO}, index=0 },
+  ['XM0_IO1'] = { type=${PINTYPE_XMIO}, index=1 },
+  ['XM0_IO2'] = { type=${PINTYPE_XMIO}, index=2 },
+  ['XM0_IO3'] = { type=${PINTYPE_XMIO}, index=3 },
+  ['XM0_IO4'] = { type=${PINTYPE_XMIO}, index=4 },
+  ['XM0_IO5'] = { type=${PINTYPE_XMIO}, index=5 },
+  ['XM1_IO0'] = { type=${PINTYPE_XMIO}, index=6 },
+  ['XM1_IO1'] = { type=${PINTYPE_XMIO}, index=7 },
+  ['XM1_IO2'] = { type=${PINTYPE_XMIO}, index=8 },
+  ['XM1_IO3'] = { type=${PINTYPE_XMIO}, index=9 },
+  ['XM1_IO4'] = { type=${PINTYPE_XMIO}, index=10 },
+  ['XM1_IO5'] = { type=${PINTYPE_XMIO}, index=11 }
 }
 
 

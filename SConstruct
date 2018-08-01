@@ -75,8 +75,8 @@ Import(
     'IOMATRIX_NETX90_MPW',
     'IOMATRIX_NETX56',
     'IOMATRIX_NETX10',
-    'LUA_IO_MATRIX',
-    'LUA_NETX_BASE'
+    'LUA_NETX_BASE',
+    'LUA_NETX90_MPW'
 )
 
 
@@ -134,12 +134,12 @@ tArcList.AddFiles('netx/',
     IOMATRIX_NETX56,
     IOMATRIX_NETX10)
 tArcList.AddFiles('lua/',
-    LUA_IO_MATRIX)
+    'iomatrix/templates/io_matrix.lua')
 tArcList.AddFiles('lua/io_matrix',
     'iomatrix/templates/io_matrix/ftdi_2232h.lua',
     'iomatrix/templates/io_matrix/ftdi.lua',
-    'iomatrix/templates/io_matrix/netx90_mpw.lua',
     LUA_NETX_BASE,
+    LUA_NETX90_MPW,
     'iomatrix/templates/io_matrix/netx.lua'
 )
 #tArcList.AddFiles('templates/',
@@ -181,10 +181,10 @@ atFiles = {
     'targets/testbench/netx/iomatrix_netx500.bin': IOMATRIX_NETX500,
 
     # Copy all LUA scripts.
-    'targets/testbench/lua/io_matrix.lua': LUA_IO_MATRIX,
+    'targets/testbench/lua/io_matrix.lua': 'iomatrix/templates/io_matrix.lua',
     'targets/testbench/lua/io_matrix/ftdi_2232h.lua': 'iomatrix/templates/io_matrix/ftdi_2232h.lua',
     'targets/testbench/lua/io_matrix/ftdi.lua': 'iomatrix/templates/io_matrix/ftdi.lua',
-    'targets/testbench/lua/io_matrix/netx90_mpw.lua': 'iomatrix/templates/io_matrix/netx90_mpw.lua',
+    'targets/testbench/lua/io_matrix/netx90_mpw.lua': LUA_NETX90_MPW,
     'targets/testbench/lua/io_matrix/netx_base.lua': LUA_NETX_BASE,
     'targets/testbench/lua/io_matrix/netx.lua': 'iomatrix/templates/io_matrix/netx.lua'
 }
