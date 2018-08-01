@@ -39,13 +39,13 @@ function IoMatrix:_init(tLog)
   self.PINTYPE_RDYRUN        = ${PINTYPE_RDYRUN}
   self.PINTYPE_RSTOUT        = ${PINTYPE_RSTOUT}
 
-  self.PINFLAG_I             = ${PINFLAG_I}
-  self.PINFLAG_O             = ${PINFLAG_O}
-  self.PINFLAG_Z             = ${PINFLAG_Z}
-  self.PINFLAG_IOZ           = ${PINFLAG_IOZ}
+  self.PINFLAG_I    = 1
+  self.PINFLAG_O    = 2
+  self.PINFLAG_Z    = 4
+  self.PINFLAG_IOZ  = 7
 
-  self.FAMILY_NETX   = 1
-  self.FAMILY_FTDI   = 2
+  self.FAMILY_NETX  = 1
+  self.FAMILY_FTDI  = 2
 
   self.atPins = nil
 
@@ -220,7 +220,7 @@ function IoMatrix:__test_pin(atNetworks, tNetworkUnderTest, tPinUnderTest, ucVal
   local fOk = true
 
   -- Does the pin have output capabilities?
-  if bit.band(tPinUnderTest.flags, ${PINFLAG_O})==0 then
+  if bit.band(tPinUnderTest.flags, self.PINFLAG_O)==0 then
     self.tLog.debug('Not testing pin "%s": it has no output capabilities.', tPinUnderTest.id)
     fOk = false
   else
@@ -228,12 +228,12 @@ function IoMatrix:__test_pin(atNetworks, tNetworkUnderTest, tPinUnderTest, ucVal
     local uiInputCnt = 0
     for _, tOtherPin in ipairs(tNetworkUnderTest) do
       if tOtherPin~=tPinUnderTest then
-        if bit.band(tOtherPin.flags, ${PINFLAG_IOZ})==${PINFLAG_O} then
+        if bit.band(tOtherPin.flags, self.PINFLAG_IOZ)==self.PINFLAG_O then
           self.tLog.debug('Not testing pin "%s": the connected pin "%s" is output-only.', tPinUnderTest.id, tOtherPin.id)
           fOk = false
           break
         end
-        if bit.band(tPinUnderTest.flags, ${PINFLAG_I})~=0 then
+        if bit.band(tPinUnderTest.flags, self.PINFLAG_I)~=0 then
           uiInputCnt = uiInputCnt + 1
         end
       end
