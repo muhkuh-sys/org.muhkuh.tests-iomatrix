@@ -53,8 +53,8 @@ end
 
 
 
-function IoMatrix:add_netx(tPlugin, fnInit, fnDeinit)
-  self.netx:add_netx_device(tPlugin, fnInit, fnDeinit)
+function IoMatrix:add_netx(tPlugin, fnInit, fnDeinit, ulVerbose, fnCallbackProgress, fnCallbackMessage)
+  self.netx:add_netx_device(tPlugin, fnInit, fnDeinit, ulVerbose, fnCallbackProgress, fnCallbackMessage)
 end
 
 
