@@ -31,14 +31,6 @@ function IoMatrix:_init(tLog)
   ---------------------------------------------------------------------------
   --                          Definitions                                  --
   ---------------------------------------------------------------------------
-
-  self.PINTYPE_GPIO          = ${PINTYPE_GPIO}
-  self.PINTYPE_PIO           = ${PINTYPE_PIO}
-  self.PINTYPE_MMIO          = ${PINTYPE_MMIO}
-  self.PINTYPE_HIFPIO        = ${PINTYPE_HIFPIO}
-  self.PINTYPE_RDYRUN        = ${PINTYPE_RDYRUN}
-  self.PINTYPE_RSTOUT        = ${PINTYPE_RSTOUT}
-
   self.PINFLAG_I    = 1
   self.PINFLAG_O    = 2
   self.PINFLAG_Z    = 4
