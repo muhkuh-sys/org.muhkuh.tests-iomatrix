@@ -103,7 +103,8 @@ Export('IOMATRIX_NETX500', 'IOMATRIX_NETX90_MPW', 'IOMATRIX_NETX56', 'IOMATRIX_N
 # This extracts symbols and enumeration values from the ELF file and inserts
 # them into the LUA script.
 #
-LUA_IOMATRIX = atEnv.NETX56.GccSymbolTemplate('targets/lua/io_matrix.lua', elf_netx56_t, GCCSYMBOLTEMPLATE_TEMPLATE=File('templates/io_matrix.lua'))
-Export('LUA_IOMATRIX')
+LUA_IO_MATRIX = atEnv.NETX56.GccSymbolTemplate('targets/lua/io_matrix.lua', elf_netx56_t, GCCSYMBOLTEMPLATE_TEMPLATE=File('templates/io_matrix.lua'))
+LUA_NETX_BASE = atEnv.NETX56.GccSymbolTemplate('targets/lua/io_matrix/netx_base.lua', elf_netx56_t, GCCSYMBOLTEMPLATE_TEMPLATE=File('templates/io_matrix/netx_base.lua'))
+Export('LUA_IO_MATRIX', 'LUA_NETX_BASE')
 
 

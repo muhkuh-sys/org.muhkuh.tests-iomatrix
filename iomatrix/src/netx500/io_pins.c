@@ -75,7 +75,7 @@ static void initialize_unit_configuration(UNITCONFIGURATION_T *ptUnitCfg)
 
 
 
-static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc, UNITCONFIGURATION_T *ptUnitCfg)
+static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDesc, UNITCONFIGURATION_T *ptUnitCfg)
 {
 	int iResult;
 	const PINDESCRIPTION_T *ptPinDescCnt;
@@ -193,7 +193,7 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, size_t 
 
 
 
-int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc)
+int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDesc)
 {
 	int iResult;
 	HOSTDEF(ptAsicCtrlArea);
@@ -233,7 +233,7 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc)
 		if( (tUnitCfg.aulHifPio[0]|tUnitCfg.aulHifPio[1])!=0 )
 		{
 			/* Switch the interface to PIO. */
-	                ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+	                ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
 	                ptAsicCtrlArea->ulIo_config &= ~HOSTMSK(io_config_if_select_n);
 
 			/* enable output mode */
@@ -337,12 +337,12 @@ static int set_gpio(unsigned int uiIndex, PINSTATUS_T tValue)
 
 
 
-static int get_gpio(unsigned int uiIndex, unsigned int *puiValue)
+static int get_gpio(unsigned int uiIndex, unsigned char *pucData)
 {
 	int iResult;
 	HOSTDEF(ptGpioArea);
 	unsigned long ulValue;
-	unsigned int uiValue;
+	unsigned char ucData;
 
 	/* Be pessimistic... */
 	iResult = -1;
@@ -355,13 +355,13 @@ static int get_gpio(unsigned int uiIndex, unsigned int *puiValue)
 		ulValue &= 1U << uiIndex;
 		if( ulValue==0 )
 		{
-			uiValue = 0;
+			ucData = 0;
 		}
 		else
 		{
-			uiValue = 1;
+			ucData = 1;
 		}
-		*puiValue = uiValue;
+		*pucData = ucData;
 	}
 
 	return iResult;
@@ -425,12 +425,12 @@ static int set_pio(unsigned int uiIndex, PINSTATUS_T tValue)
 
 
 
-static int get_pio(unsigned int uiIndex, unsigned int *puiValue)
+static int get_pio(unsigned int uiIndex, unsigned char *pucData)
 {
 	int iResult;
 	HOSTDEF(ptPioArea);
 	unsigned long ulValue;
-	unsigned int uiValue;
+	unsigned char ucData;
 
 	/* Be pessimistic... */
 	iResult = -1;
@@ -442,13 +442,13 @@ static int get_pio(unsigned int uiIndex, unsigned int *puiValue)
 		ulValue &= 1U << uiIndex;
 		if (ulValue == 0)
 		{
-			uiValue = 0;
+			ucData = 0;
 		}
 		else
 		{
-			uiValue = 1;
+			ucData = 1;
 		}
-		*puiValue = uiValue;
+		*pucData = ucData;
 	}
 
 	return iResult;
@@ -517,13 +517,13 @@ static int set_rdyrun(unsigned int uiIndex, PINSTATUS_T tValue)
 
 
 
-static int get_rdyrun(unsigned int uiIndex, unsigned int *puiValue)
+static int get_rdyrun(unsigned int uiIndex, unsigned char *pucData)
 {
 	int iResult;
 	HOSTDEF(ptNetxControlledGlobalRegisterBlock1Area);
 	unsigned long ulMaskIn;
 	unsigned long ulValue;
-	unsigned int uiValue;
+	unsigned char ucData;
 
 	/* Be pessimistic... */
 	iResult = -1;
@@ -545,13 +545,13 @@ static int get_rdyrun(unsigned int uiIndex, unsigned int *puiValue)
 		ulValue &= ulMaskIn;
 		if( ulValue==0 )
 		{
-			uiValue = 0;
+			ucData = 0;
 		}
 		else
 		{
-			uiValue = 1;
+			ucData = 1;
 		}
-		*puiValue = uiValue;
+		*pucData = ucData;
 	}
 
 	return iResult;
@@ -610,7 +610,7 @@ static int set_rstout(unsigned int uiIndex, PINSTATUS_T tValue)
 
 
 
-static int get_rstout(unsigned int uiIndex __attribute__((unused)), unsigned int *puiValue __attribute__((unused)))
+static int get_rstout(unsigned int uiIndex __attribute__((unused)), unsigned char *pucData __attribute__((unused)))
 {
 	int iResult;
 
@@ -671,7 +671,7 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 }
 
 
-int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned int *puiValue)
+int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 {
 	int iResult;
 	unsigned int uiIndex;
@@ -682,7 +682,7 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned int *puiValue)
 	{
 	case PINTYPE_GPIO:
 		uiIndex = ptPinDescription->uiIndex;
-		iResult = get_gpio(uiIndex, puiValue);
+		iResult = get_gpio(uiIndex, pucData);
 		break;
 
 	case PINTYPE_HIFPIO:
@@ -695,17 +695,17 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned int *puiValue)
 
 	case PINTYPE_PIO:
 		uiIndex = ptPinDescription->uiIndex;
-		iResult = get_pio(uiIndex, puiValue);
+		iResult = get_pio(uiIndex, pucData);
 		break;
 
 	case PINTYPE_RDYRUN:
 		uiIndex = ptPinDescription->uiIndex;
-		iResult = get_rdyrun(uiIndex, puiValue);
+		iResult = get_rdyrun(uiIndex, pucData);
 		break;
 
 	case PINTYPE_RSTOUT:
 		uiIndex = ptPinDescription->uiIndex;
-		iResult = get_rstout(uiIndex, puiValue);
+		iResult = get_rstout(uiIndex, pucData);
 		break;
 
 	case PINTYPE_XMIO:

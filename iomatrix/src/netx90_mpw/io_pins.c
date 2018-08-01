@@ -48,7 +48,7 @@ static void initialize_unit_configuration(UNITCONFIGURATION_T *ptUnitCfg)
 
 
 
-static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc, UNITCONFIGURATION_T *ptUnitCfg)
+static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDesc, UNITCONFIGURATION_T *ptUnitCfg)
 {
 	HOSTDEF(ptAsicCtrlArea);
 	int iResult;
@@ -185,7 +185,7 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, size_t 
 
 
 
-int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc)
+int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDesc)
 {
 	int iResult;
 	HOSTDEF(ptAsicCtrlArea);
@@ -215,7 +215,7 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc)
 			/* Only do this if the RDY pin is really used. */
 			if( (tUnitCfg.aulHifPio[1]&HOSTMSK(hif_pio_oe1_hif_rdy))!=0 )
 			{
-				/* The RDY pin is special. The PIO funcion must
+				/* The RDY pin is special. The PIO function must
 				 * be enabled with a bit in the hif_io_cfg register
 				 * and the DPM clock must be enabled.
 				 */
@@ -223,12 +223,12 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc)
 
 				ulClockEnable  = ptAsicCtrlArea->asClock_enable[0].ulEnable;
 				ulClockEnable |= HOSTMSK(clock_enable0_dpm);
-				ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+				ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
 				ptAsicCtrlArea->asClock_enable[0].ulEnable = ulClockEnable;
 			}
 
 			ulValue |= 3 << HOSTSRT(hif_io_cfg_hif_mi_cfg);
-			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
 			ptHifIoCtrlArea->ulHif_io_cfg = ulValue;
 
 			ulValue  = 1 << HOSTSRT(hif_pio_cfg_in_ctrl);
@@ -243,7 +243,7 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc)
 		{
 			for(iCnt=0; iCnt<8; ++iCnt)
 			{
-				ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+				ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
 				ptMmioCtrlArea->aulMmio_cfg[iCnt] = MMIO_CFG_PIO;
 			}
 		}
@@ -268,7 +268,7 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc)
 			/* Disable the reset out driver. */
 			ulValue  = ptAsicCtrlArea->ulReset_ctrl;
 			ulValue &= ~(HOSTMSK(reset_ctrl_EN_RES_REQ_OUT) | HOSTMSK(reset_ctrl_RES_REQ_OUT));
-			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
 			ptAsicCtrlArea->ulReset_ctrl = ulValue;
 		}
 	}
@@ -368,12 +368,12 @@ static int set_hifpio(unsigned int uiIndex, PINSTATUS_T tValue)
 }
 
 
-static int get_hifpio(unsigned int uiIndex, unsigned int *puiValue)
+static int get_hifpio(unsigned int uiIndex, unsigned char *pucData)
 {
 	HOSTDEF(ptHifIoCtrlArea);
 	unsigned long aulMsk[2];
 	unsigned long aulValue[2];
-	unsigned int uiValue;
+	unsigned char ucData;
 	int iResult;
 
 
@@ -408,14 +408,14 @@ static int get_hifpio(unsigned int uiIndex, unsigned int *puiValue)
 
 		if( (aulValue[0]|aulValue[1])==0 )
 		{
-			uiValue = 0;
+			ucData = 0;
 		}
 		else
 		{
-			uiValue = 1;
+			ucData = 1;
 		}
 
-		*puiValue = uiValue;
+		*pucData = ucData;
 	}
 
 	return iResult;
@@ -435,25 +435,25 @@ static int set_mmiopio(unsigned int uiIndex, PINSTATUS_T tValue)
 	/* check the index */
 	if( uiIndex<8 )
 	{
-		iResult = -1;
-		
+		ulValue = ((unsigned long)MMIO_CFG_PIO) << HOSTSRT(mmio0_cfg_mmio_sel);
 		switch( tValue )
 		{
 		case PINSTATUS_HIGHZ:
 			/* Set PIO mode, clear the output enable bit. */
-			ulValue = HOSTMSK(mmio0_cfg_mmio_sel);
 			iResult = 0;
 			break;
 
 		case PINSTATUS_OUTPUT0:
 			/* Set PIO mode, set the output enable bit and the output bit to 0. */
-			ulValue = HOSTMSK(mmio0_cfg_mmio_sel) | HOSTMSK(mmio0_cfg_pio_oe);
+			ulValue |= 0U << HOSTSRT(mmio0_cfg_pio_out);
+			ulValue |= HOSTMSK(mmio0_cfg_pio_oe);
 			iResult = 0;
 			break;
 
 		case PINSTATUS_OUTPUT1:
 			/* Set PIO mode, set the output enable bit and the output bit to 1. */
-			ulValue = HOSTMSK(mmio0_cfg_mmio_sel) | HOSTMSK(mmio0_cfg_pio_oe) | HOSTMSK(mmio0_cfg_pio_out);
+			ulValue |= 1U << HOSTSRT(mmio0_cfg_pio_out);
+			ulValue |= HOSTMSK(mmio0_cfg_pio_oe);
 			iResult = 0;
 			break;
 		}
@@ -461,21 +461,29 @@ static int set_mmiopio(unsigned int uiIndex, PINSTATUS_T tValue)
 		/* reconfigure the MMIO */
 		if( iResult==0 )
 		{
-			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
 			ptMmioCtrlArea->aulMmio_cfg[uiIndex] = ulValue;
 		}
+		else
+		{
+			uprintf("Invalid pin status: %d\n", tValue);
+		}
+	}
+	else
+	{
+		uprintf("Invalid MMIO index: %d\n", uiIndex);
 	}
 
 	return iResult;
 }
 
 
-static int get_mmiopio(unsigned int uiIndex, unsigned int *puiValue)
+static int get_mmiopio(unsigned int uiIndex, unsigned char *pucData)
 {
 	int iResult;
 	HOSTDEF(ptMmioCtrlArea);
 	unsigned long ulValue;
-	unsigned int uiValue;
+	unsigned char ucData;
 
 	/* assume failure */
 	iResult = -1;
@@ -483,19 +491,22 @@ static int get_mmiopio(unsigned int uiIndex, unsigned int *puiValue)
 	/* check the index */
 	if( uiIndex<8 )
 	{
-		ulValue = ptMmioCtrlArea->aulMmio_cfg[uiIndex];
-		ulValue &= HOSTMSK(mmio0_cfg_status_in_ro);
+		ulValue = ptMmioCtrlArea->ulMmio_in_line_status0;
+		ulValue &= 1U << uiIndex;
 		if (ulValue == 0)
 		{
-			uiValue = 0;
+			ucData = 0;
 		}
 		else
 		{
-			uiValue = 1;
+			ucData = 1;
 		}
-		*puiValue = uiValue;
-
+		*pucData = ucData;
 		iResult = 0;
+	}
+	else
+	{
+		uprintf("Invalid MMIO index: %d\n", uiIndex);
 	}
 
 	return iResult;
@@ -563,12 +574,12 @@ static int set_rdyrun(unsigned int uiIndex, PINSTATUS_T tValue)
 }
 
 
-static int get_rdyrun(unsigned int uiIndex, unsigned int *puiValue)
+static int get_rdyrun(unsigned int uiIndex, unsigned char *pucData)
 {
 	int iResult;
 	HOSTDEF(ptAsicCtrlArea);
 	unsigned long ulValue;
-	unsigned int uiValue;
+	unsigned char ucData;
 
 
 	/* assume failure */
@@ -589,13 +600,13 @@ static int get_rdyrun(unsigned int uiIndex, unsigned int *puiValue)
 
 		if (ulValue == 0)
 		{
-			uiValue = 0;
+			ucData = 0;
 		}
 		else
 		{
-			uiValue = 1;
+			ucData = 1;
 		}
-		*puiValue = uiValue;
+		*pucData = ucData;
 	}
 
 	return iResult;
@@ -648,7 +659,7 @@ static int set_rstout(unsigned int uiIndex, PINSTATUS_T tValue)
 
 		if( iResult==0 )
 		{
-			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
 			ptAsicCtrlArea->ulReset_ctrl = ulValue;
 		}
 	}
@@ -657,7 +668,7 @@ static int set_rstout(unsigned int uiIndex, PINSTATUS_T tValue)
 }
 
 
-static int get_rstout(unsigned int uiIndex __attribute__ ((unused)), unsigned int *puiValue __attribute__ ((unused)))
+static int get_rstout(unsigned int uiIndex __attribute__ ((unused)), unsigned char *pucData __attribute__ ((unused)))
 {
 	/* The RstOut pin is output only. */
 	uprintf("The RSTOUT pin can not be used as an input!\n");
@@ -713,7 +724,7 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 }
 
 
-int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned int *puiValue)
+int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 {
 	int iResult;
 	unsigned int uiIndex;
@@ -728,12 +739,12 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned int *puiValue)
 
 	case PINTYPE_HIFPIO:
 		uiIndex = ptPinDescription->uiIndex;
-		iResult = get_hifpio(uiIndex, puiValue);
+		iResult = get_hifpio(uiIndex, pucData);
 		break;
 
 	case PINTYPE_MMIO:
 		uiIndex = ptPinDescription->uiIndex;
-		iResult = get_mmiopio(uiIndex, puiValue);
+		iResult = get_mmiopio(uiIndex, pucData);
 		break;
 
 	case PINTYPE_PIO:
@@ -742,12 +753,12 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned int *puiValue)
 
 	case PINTYPE_RDYRUN:
 		uiIndex = ptPinDescription->uiIndex;
-		iResult = get_rdyrun(uiIndex, puiValue);
+		iResult = get_rdyrun(uiIndex, pucData);
 		break;
 
 	case PINTYPE_RSTOUT:
 		uiIndex = ptPinDescription->uiIndex;
-		iResult = get_rstout(uiIndex, puiValue);
+		iResult = get_rstout(uiIndex, pucData);
 		break;
 
 	case PINTYPE_XMIO:

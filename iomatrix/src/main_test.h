@@ -26,12 +26,16 @@
 #define __MAIN_TEST_H__
 
 
+#define MAX_PINS_UNDER_TEST 128
+
+
 typedef enum IOMATRIX_COMMAND_ENUM
 {
 	IOMATRIX_COMMAND_Parse_Pin_Description    = 0,
-	IOMATRIX_COMMAND_Run_Matrix_Test          = 1,
-	IOMATRIX_COMMAND_Set_Pin                  = 2,
-	IOMATRIX_COMMAND_Get_Pin                  = 3
+	IOMATRIX_COMMAND_Set_Pin                  = 1,
+	IOMATRIX_COMMAND_Get_Pin                  = 2,
+	IOMATRIX_COMMAND_Set_All_Pins             = 3,
+	IOMATRIX_COMMAND_Get_All_Pins             = 4
 } IOMATRIX_COMMAND_T;
 
 
@@ -42,15 +46,6 @@ typedef struct IOMATRIX_PARAMETER_PARSE_PIN_DESCRIPTION_STRUCT
 	unsigned long ulPinDefinitionSize;               /* The size of the pin definition in bytes. */
 	void *pvPinDescription;                          /* Here the pointer to the created pin description is returned. Pass this to all other commands. */
 } IOMATRIX_PARAMETER_PARSE_PIN_DESCRIPTION_T;
-
-
-
-typedef struct IOMATRIX_PARAMETER_RUN_MATRIX_TEST_STRUCT
-{
-	void *pvPinDescription;                          /* A handle of the pin description. */
-	const unsigned char *pucNetlistDefinitionStart;  /* The start of the net list definition. */
-	unsigned long ulNetlistDefinitionSize;           /* The size of the net list definition in bytes. */
-} IOMATRIX_PARAMETER_RUN_MATRIX_TEST_T;
 
 
 
@@ -67,8 +62,24 @@ typedef struct IOMATRIX_PARAMETER_GET_PIN_STRUCT
 {
 	void *pvPinDescription;                          /* A handle of the pin description. */
 	unsigned long ulPinIndex;                        /* The 0-based index of the pin. */
-	unsigned long ulValue;                           /* The value of the pin. */
+	unsigned char ucValue;                           /* The value of the pin. */
 } IOMATRIX_PARAMETER_GET_PIN_T;
+
+
+
+typedef struct IOMATRIX_PARAMETER_SET_ALL_PINS_STRUCT
+{
+	void *pvPinDescription;                          /* A handle of the pin description. */
+	unsigned char aucStatus[MAX_PINS_UNDER_TEST];    /* The new status for all pins. */
+} IOMATRIX_PARAMETER_SET_ALL_PINS_T;
+
+
+
+typedef struct IOMATRIX_PARAMETER_GET_ALL_PINS_STRUCT
+{
+	void *pvPinDescription;                          /* A handle of the pin description. */
+	unsigned char aucValue[MAX_PINS_UNDER_TEST];     /* The status of all pins. */
+} IOMATRIX_PARAMETER_GET_ALL_PINS_T;
 
 
 
@@ -79,9 +90,10 @@ typedef struct IOMATRIX_PARAMETER_STRUCT
 	union IOMATRIX_PARAMETERS_UNION
 	{
 		IOMATRIX_PARAMETER_PARSE_PIN_DESCRIPTION_T tParsePinDescription;
-		IOMATRIX_PARAMETER_RUN_MATRIX_TEST_T tRunMatrixTest;
 		IOMATRIX_PARAMETER_SET_PIN_T tSetPin;
 		IOMATRIX_PARAMETER_GET_PIN_T tGetPin;
+		IOMATRIX_PARAMETER_SET_ALL_PINS_T tSetAllPins;
+		IOMATRIX_PARAMETER_GET_ALL_PINS_T tGetAllPins;
 	} uParameter;
 } IOMATRIX_PARAMETER_T;
 

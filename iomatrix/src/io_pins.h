@@ -75,9 +75,9 @@ typedef struct PINDESCRIPTION_STRUCT
 } PINDESCRIPTION_T;
 
 
-int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, size_t sizMaxPinDesc);
+int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDesc);
 int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue);
-int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned int *puiValue);
+int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucValue);
 
 #endif  /* __IO_PINS_H__ */
 

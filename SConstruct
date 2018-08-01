@@ -58,23 +58,29 @@ env_cortexM4.CreateCompilerEnv('NETX90_MPW_APP', ['arch=armv7', 'thumb'], ['arch
 SConscript('platform/SConscript')
 
 
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 #
 # Get the source code version from the VCS.
 #
 atEnv.DEFAULT.Version('targets/version/version.h', 'templates/version.h')
 
 
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 #
 # Build all sub-projects.
 #
 SConscript('iomatrix/SConscript')
-Import('IOMATRIX_NETX500', 'IOMATRIX_NETX90_MPW', 'IOMATRIX_NETX56', 'IOMATRIX_NETX10')
-Import('LUA_IOMATRIX')
+Import(
+    'IOMATRIX_NETX500',
+    'IOMATRIX_NETX90_MPW',
+    'IOMATRIX_NETX56',
+    'IOMATRIX_NETX10',
+    'LUA_IO_MATRIX',
+    'LUA_NETX_BASE'
+)
 
 
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 #
 # Build the documentation.
 #
@@ -83,29 +89,30 @@ Import('LUA_IOMATRIX')
 aAttribs = atEnv.DEFAULT['ASCIIDOC_ATTRIBUTES']
 # Add some custom attributes.
 aAttribs.update(dict({
-	# Use ASCIIMath formulas.
-	'asciimath': True,
-	
-	# Embed images into the HTML file as data URIs.
-	'data-uri': True,
-	
-	# Use icons instead of text for markers and callouts.
-	'icons': True,
-	
-	# Use numbers in the table of contents.
-	'numbered': True,
-	
-	# Generate a scrollable table of contents on the left of the text.
-	'toc2': True,
-	
-	# Use 4 levels in the table of contents.
-	'toclevels': 4
-#	
-#	--attribute="iconsdir=${ASCIIDOC_PATH}/images/icons" --attribute="source-highlighter=pygments" --attribute="pygmentize=${PYGMENTS}"
+    # Use ASCIIMath formulas.
+    'asciimath': True,
+
+    # Embed images into the HTML file as data URIs.
+    'data-uri': True,
+
+    # Use icons instead of text for markers and callouts.
+    'icons': True,
+
+    # Use numbers in the table of contents.
+    'numbered': True,
+
+    # Generate a scrollable table of contents on the left of the text.
+    'toc2': True,
+
+    # Use 4 levels in the table of contents.
+    'toclevels': 4
 }))
-
-tDoc = atEnv.DEFAULT.Asciidoc('targets/doc/org.muhkuh.tests-iomatrix.html', 'doc/org.muhkuh.tests-iomatrix.asciidoc', ASCIIDOC_BACKEND='html5', ASCIIDOC_ATTRIBUTES=aAttribs)
-
+tDoc = atEnv.DEFAULT.Asciidoc(
+    'targets/doc/org.muhkuh.tests-iomatrix.html',
+    'doc/org.muhkuh.tests-iomatrix.asciidoc',
+    ASCIIDOC_BACKEND='html5',
+    ASCIIDOC_ATTRIBUTES=aAttribs
+)
 
 #----------------------------------------------------------------------------
 #
@@ -122,21 +129,28 @@ aArtifactGroupReverse.reverse()
 strArtifactId = 'iomatrix'
 tArcList = atEnv.DEFAULT.ArchiveList('zip')
 tArcList.AddFiles('netx/',
-	IOMATRIX_NETX500,
-	IOMATRIX_NETX90_MPW,
-	IOMATRIX_NETX56,
-	IOMATRIX_NETX10)
+    IOMATRIX_NETX500,
+    IOMATRIX_NETX90_MPW,
+    IOMATRIX_NETX56,
+    IOMATRIX_NETX10)
 tArcList.AddFiles('lua/',
-        LUA_IOMATRIX)
+    LUA_IO_MATRIX)
+tArcList.AddFiles('lua/io_matrix',
+    'iomatrix/templates/io_matrix/ftdi_2232h.lua',
+    'iomatrix/templates/io_matrix/ftdi.lua',
+    'iomatrix/templates/io_matrix/netx90_mpw.lua',
+    LUA_NETX_BASE,
+    'iomatrix/templates/io_matrix/netx.lua'
+)
 #tArcList.AddFiles('templates/',
-#        'lua/attributes_template.lua',
-#        'lua/ramtest_template.lua',
-#        'lua/test.lua',
-#        'lua/timing_phase_test_template.lua')
+#    'lua/attributes_template.lua',
+#    'lua/ramtest_template.lua',
+#    'lua/test.lua',
+#    'lua/timing_phase_test_template.lua')
 tArcList.AddFiles('doc/',
-        tDoc)
+    tDoc)
 tArcList.AddFiles('',
-        'ivy/org.muhkuh.tests.iomatrix/install.xml')
+    'ivy/org.muhkuh.tests.iomatrix/install.xml')
 
 strArtifactPath = 'targets/ivy/repository/%s/%s/%s' % ('/'.join(aArtifactGroupReverse),strArtifactId,PROJECT_VERSION)
 tArc = atEnv.DEFAULT.Archive(os.path.join(strArtifactPath, '%s-%s.zip' % (strArtifactId,PROJECT_VERSION)), None, ARCHIVE_CONTENTS=tArcList)
@@ -159,13 +173,20 @@ Command('targets/ivy/ivy.xml', tIvy,  Copy("$TARGET", "$SOURCE"))
 # Make a local demo installation.
 #
 # Copy all binary binaries.
-Command('targets/testbench/netx/iomatrix_netx10.bin',  IOMATRIX_NETX10,  Copy("$TARGET", "$SOURCE"))
-#Command('targets/testbench/netx/iomatrix_netx50.bin',  iomatrix_netx50,  Copy("$TARGET", "$SOURCE"))
-Command('targets/testbench/netx/iomatrix_netx56.bin',  IOMATRIX_NETX56,  Copy("$TARGET", "$SOURCE"))
-Command('targets/testbench/netx/iomatrix_netx90_mpw.bin',  IOMATRIX_NETX90_MPW,  Copy("$TARGET", "$SOURCE"))
-Command('targets/testbench/netx/iomatrix_netx500.bin', IOMATRIX_NETX500, Copy("$TARGET", "$SOURCE"))
+atFiles = {
+    'targets/testbench/netx/iomatrix_netx10.bin': IOMATRIX_NETX10,
+#    'targets/testbench/netx/iomatrix_netx50.bin': iomatrix_netx50,
+    'targets/testbench/netx/iomatrix_netx56.bin': IOMATRIX_NETX56,
+    'targets/testbench/netx/iomatrix_netx90_mpw.bin': IOMATRIX_NETX90_MPW,
+    'targets/testbench/netx/iomatrix_netx500.bin': IOMATRIX_NETX500,
 
-# Copy all LUA scripts.
-Command('targets/testbench/lua/io_matrix.lua',  LUA_IOMATRIX, Copy("$TARGET", "$SOURCE"))
-#Command('targets/testbench/ramtest_MEM_IS42S32800B.lua',  'lua/ramtest_MEM_IS42S32800B.lua', Copy("$TARGET", "$SOURCE"))
-#Command('targets/testbench/ramtest_MEM_MT48LC2M32.lua',   'lua/ramtest_MEM_MT48LC2M32.lua',  Copy("$TARGET", "$SOURCE"))
+    # Copy all LUA scripts.
+    'targets/testbench/lua/io_matrix.lua': LUA_IO_MATRIX,
+    'targets/testbench/lua/io_matrix/ftdi_2232h.lua': 'iomatrix/templates/io_matrix/ftdi_2232h.lua',
+    'targets/testbench/lua/io_matrix/ftdi.lua': 'iomatrix/templates/io_matrix/ftdi.lua',
+    'targets/testbench/lua/io_matrix/netx90_mpw.lua': 'iomatrix/templates/io_matrix/netx90_mpw.lua',
+    'targets/testbench/lua/io_matrix/netx_base.lua': LUA_NETX_BASE,
+    'targets/testbench/lua/io_matrix/netx.lua': 'iomatrix/templates/io_matrix/netx.lua'
+}
+for tDst, tSrc in atFiles.iteritems():
+    Command(tDst, tSrc, Copy("$TARGET", "$SOURCE"))
