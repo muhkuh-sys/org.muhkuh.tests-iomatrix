@@ -51,8 +51,12 @@ static const PINTYPE_PRINT_T atPintypePrint[] =
 	{ PINTYPE_PIO,    "PIO" },
 	{ PINTYPE_MMIO,   "MMIO" },
 	{ PINTYPE_HIFPIO, "HIFPIO" },
-	{ PINTYPE_RSTOUT, "RSTOUT" }
+	{ PINTYPE_RDYRUN, "RDYRUN" },
+	{ PINTYPE_RSTOUT, "RSTOUT" },
+	{ PINTYPE_XMIO,   "XMIO" }
 };
+
+
 
 static void print_pin(unsigned long ulIndex, const PINDESCRIPTION_T *ptPinDesc)
 {
