@@ -44,22 +44,22 @@ end
 
 
 function IoMatrix_FTDI:__print_list_entry(fnLog, tListEntry)
-  fnLog(strLogLevel, '  Bus: %d', tListEntry:get_bus_number())
-  fnLog(strLogLevel, '  Port number: %d', tListEntry:get_port_number())
+  fnLog('  Bus: %d', tListEntry:get_bus_number())
+  fnLog('  Port number: %d', tListEntry:get_port_number())
 
-  fnLog(strLogLevel, '  Port Numbers:')
+  fnLog('  Port Numbers:')
   local tPN, strError = tListEntry:get_port_numbers()
   if tPN==nil then
-    fnLog(strLogLevel, '    Failed to get the port numbers:', strError)
+    fnLog('    Failed to get the port numbers:', strError)
   else
     for uiCnt, uiPort in ipairs(tPN) do
-      fnLog(strLogLevel, '    %d: 0x%02x', uiCnt, uiPort)
+      fnLog('    %d: 0x%02x', uiCnt, uiPort)
     end
   end
 
-  fnLog(strLogLevel, '  Manufacturer: %s', tListEntry:get_manufacturer())
-  fnLog(strLogLevel, '  Description: %s', tListEntry:get_description())
-  fnLog(strLogLevel, '  Serial: %s', tListEntry:get_serial())
+  fnLog('  Manufacturer: %s', tListEntry:get_manufacturer())
+  fnLog('  Description: %s', tListEntry:get_description())
+  fnLog('  Serial: %s', tListEntry:get_serial())
 end
 
 
