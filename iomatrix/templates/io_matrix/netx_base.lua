@@ -43,21 +43,9 @@ function IoMatrix_netx_base:_init(tLog, fnInit, fnDeinit, ulVerbose, fnCallbackP
   self.IOMATRIX_VERSION_MICRO  = ${VERSION_MICRO}
   self.IOMATRIX_VERSION_VCS    = ${VERSION_VCS}
 
-  self.PINTYPE_GPIO          = ${PINTYPE_GPIO}
-  self.PINTYPE_PIO           = ${PINTYPE_PIO}
-  self.PINTYPE_MMIO          = ${PINTYPE_MMIO}
-  self.PINTYPE_HIFPIO        = ${PINTYPE_HIFPIO}
-  self.PINTYPE_RDYRUN        = ${PINTYPE_RDYRUN}
-  self.PINTYPE_RSTOUT        = ${PINTYPE_RSTOUT}
-
   self.PINSTATUS_HIGHZ       = ${PINSTATUS_HIGHZ}
   self.PINSTATUS_OUTPUT0     = ${PINSTATUS_OUTPUT0}
   self.PINSTATUS_OUTPUT1     = ${PINSTATUS_OUTPUT1}
-
-  self.PINFLAG_I             = ${PINFLAG_I}
-  self.PINFLAG_O             = ${PINFLAG_O}
-  self.PINFLAG_Z             = ${PINFLAG_Z}
-  self.PINFLAG_IOZ           = ${PINFLAG_IOZ}
 
   self.HEADER_MAGIC          = 0x686f6f6d
 
