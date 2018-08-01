@@ -318,7 +318,8 @@ function IoMatrix_netx_base:add_pin(strID, strKnownName, uiDefaultValue, uiFlags
   -- Look up the known pin name.
   local tPin = self.atKnownPins[strKnownName]
   if tPin==nil then
-    error('Pin "%s" has an unknown name: "%s".', strID, strKnownName)
+    self.tLog.error('Pin "%s" has an unknown name: "%s".', strID, strKnownName)
+    error('Unknown pin name.')
   end
 
   local aucCompiledPins = self.aucCompiledPins
