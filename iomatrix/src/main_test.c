@@ -224,6 +224,8 @@ static int parse_pin_description(const unsigned char *pucDefinition, unsigned lo
 	{
 		/* Save the new number of pins in the definition. */
 		ulPinsUnderTest = ulPinCnt;
+
+		iResult = iopins_configure(atPinsUnderTest, MAX_PINS_UNDER_TEST);
 	}
 
 	return iResult;
