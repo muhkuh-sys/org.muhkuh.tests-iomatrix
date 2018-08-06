@@ -118,54 +118,45 @@ tDoc = atEnv.DEFAULT.Asciidoc(
 #
 # Build the artifacts.
 #
+strGroup = 'org.muhkuh.tests'
+strModule = 'iomatrix'
 
-aArtifactServer = ('nexus@netx01', 'muhkuh', 'muhkuh_snapshots')
-strArtifactGroup = 'tests.muhkuh.org'
+# Split the group by dots.
+aGroup = strGroup.split('.')
+# Build the path for all artifacts.
+strModulePath = 'targets/jonchki/repository/%s/%s/%s' % ('/'.join(aGroup), strModule, PROJECT_VERSION)
 
-aArtifactGroupReverse = strArtifactGroup.split('.')
-aArtifactGroupReverse.reverse()
+# Set the name of the artifact.
+strArtifact0 = 'lua5.1-iomatrix'
 
-
-strArtifactId = 'iomatrix'
-tArcList = atEnv.DEFAULT.ArchiveList('zip')
-tArcList.AddFiles('netx/',
+tArcList0 = atEnv.DEFAULT.ArchiveList('zip')
+tArcList0.AddFiles('netx/',
     IOMATRIX_NETX500,
     IOMATRIX_NETX90_MPW,
     IOMATRIX_NETX56,
     IOMATRIX_NETX10)
-tArcList.AddFiles('lua/',
-    'iomatrix/templates/io_matrix.lua')
-tArcList.AddFiles('lua/io_matrix',
+tArcList0.AddFiles('lua/',
+    'iomatrix/templates/io_matrix.lua',
+    'lua/test_class_iomatrix.lua')
+tArcList0.AddFiles('lua/io_matrix',
     'iomatrix/templates/io_matrix/ftdi_2232h.lua',
     'iomatrix/templates/io_matrix/ftdi.lua',
     LUA_NETX_BASE,
     LUA_NETX90_MPW,
-    'iomatrix/templates/io_matrix/netx.lua'
-)
-#tArcList.AddFiles('templates/',
-#    'lua/attributes_template.lua',
-#    'lua/ramtest_template.lua',
-#    'lua/test.lua',
-#    'lua/timing_phase_test_template.lua')
-tArcList.AddFiles('doc/',
+    'iomatrix/templates/io_matrix/netx.lua')
+tArcList0.AddFiles('templates',
+    'lua/test.lua')
+tArcList0.AddFiles('doc/',
     tDoc)
-tArcList.AddFiles('',
-    'ivy/org.muhkuh.tests.iomatrix/install.xml')
+tArcList0.AddFiles('',
+    'installer/jonchki/install.lua',
+    'installer/jonchki/install_testcase.lua')
 
-strArtifactPath = 'targets/ivy/repository/%s/%s/%s' % ('/'.join(aArtifactGroupReverse),strArtifactId,PROJECT_VERSION)
-tArc = atEnv.DEFAULT.Archive(os.path.join(strArtifactPath, '%s-%s.zip' % (strArtifactId,PROJECT_VERSION)), None, ARCHIVE_CONTENTS=tArcList)
-tIvy = atEnv.DEFAULT.Version(os.path.join(strArtifactPath, 'ivy-%s.xml' % PROJECT_VERSION), 'ivy/%s.%s/ivy.xml' % ('.'.join(aArtifactGroupReverse),strArtifactId))
-tPom = atEnv.DEFAULT.ArtifactVersion(os.path.join(strArtifactPath, '%s-%s.pom' % (strArtifactId,PROJECT_VERSION)), 'ivy/%s.%s/pom.xml' % ('.'.join(aArtifactGroupReverse),strArtifactId))
-
-
-# Build the artifact list for the deploy operation to bintray.
-atEnv.DEFAULT.AddArtifact(tArc, aArtifactServer, strArtifactGroup, strArtifactId, PROJECT_VERSION, 'zip')
-atEnv.DEFAULT.AddArtifact(tIvy, aArtifactServer, strArtifactGroup, strArtifactId, PROJECT_VERSION, 'ivy')
-tArtifacts = atEnv.DEFAULT.Artifact('targets/artifacts.xml', None)
-
-# Copy the artifacts to a fixed filename to allow a deploy to github.
-Command('targets/ivy/%s.zip' % strArtifactId,  tArc,  Copy("$TARGET", "$SOURCE"))
-Command('targets/ivy/ivy.xml', tIvy,  Copy("$TARGET", "$SOURCE"))
+tArtifact0 = atEnv.DEFAULT.Archive(os.path.join(strModulePath, '%s-%s.zip' % (strArtifact0, PROJECT_VERSION)), None, ARCHIVE_CONTENTS = tArcList0)
+tArtifact0Hash = atEnv.DEFAULT.Hash('%s.hash' % tArtifact0[0].get_path(), tArtifact0[0].get_path(), HASH_ALGORITHM='md5,sha1,sha224,sha256,sha384,sha512', HASH_TEMPLATE='${ID_UC}:${HASH}\n')
+tConfiguration0 = atEnv.DEFAULT.Version(os.path.join(strModulePath, '%s-%s.xml' % (strArtifact0, PROJECT_VERSION)), 'installer/jonchki/%s.xml' % strModule)
+tConfiguration0Hash = atEnv.DEFAULT.Hash('%s.hash' % tConfiguration0[0].get_path(), tConfiguration0[0].get_path(), HASH_ALGORITHM='md5,sha1,sha224,sha256,sha384,sha512', HASH_TEMPLATE='${ID_UC}:${HASH}\n')
+tArtifact0Pom = atEnv.DEFAULT.ArtifactVersion(os.path.join(strModulePath, '%s-%s.pom' % (strArtifact0, PROJECT_VERSION)), 'installer/jonchki/pom.xml')
 
 
 #----------------------------------------------------------------------------
@@ -174,19 +165,19 @@ Command('targets/ivy/ivy.xml', tIvy,  Copy("$TARGET", "$SOURCE"))
 #
 # Copy all binary binaries.
 atFiles = {
-    'targets/testbench/netx/iomatrix_netx10.bin': IOMATRIX_NETX10,
-#    'targets/testbench/netx/iomatrix_netx50.bin': iomatrix_netx50,
-    'targets/testbench/netx/iomatrix_netx56.bin': IOMATRIX_NETX56,
-    'targets/testbench/netx/iomatrix_netx90_mpw.bin': IOMATRIX_NETX90_MPW,
-    'targets/testbench/netx/iomatrix_netx500.bin': IOMATRIX_NETX500,
+    'targets/testbench/netx/iomatrix_netx10.bin':      IOMATRIX_NETX10,
+#    'targets/testbench/netx/iomatrix_netx50.bin':     iomatrix_netx50,
+    'targets/testbench/netx/iomatrix_netx56.bin':      IOMATRIX_NETX56,
+    'targets/testbench/netx/iomatrix_netx90_mpw.bin':  IOMATRIX_NETX90_MPW,
+    'targets/testbench/netx/iomatrix_netx500.bin':     IOMATRIX_NETX500,
 
     # Copy all LUA scripts.
-    'targets/testbench/lua/io_matrix.lua': 'iomatrix/templates/io_matrix.lua',
-    'targets/testbench/lua/io_matrix/ftdi_2232h.lua': 'iomatrix/templates/io_matrix/ftdi_2232h.lua',
-    'targets/testbench/lua/io_matrix/ftdi.lua': 'iomatrix/templates/io_matrix/ftdi.lua',
-    'targets/testbench/lua/io_matrix/netx90_mpw.lua': LUA_NETX90_MPW,
-    'targets/testbench/lua/io_matrix/netx_base.lua': LUA_NETX_BASE,
-    'targets/testbench/lua/io_matrix/netx.lua': 'iomatrix/templates/io_matrix/netx.lua'
+    'targets/testbench/lua/io_matrix.lua':             'iomatrix/templates/io_matrix.lua',
+    'targets/testbench/lua/io_matrix/ftdi_2232h.lua':  'iomatrix/templates/io_matrix/ftdi_2232h.lua',
+    'targets/testbench/lua/io_matrix/ftdi.lua':        'iomatrix/templates/io_matrix/ftdi.lua',
+    'targets/testbench/lua/io_matrix/netx90_mpw.lua':  LUA_NETX90_MPW,
+    'targets/testbench/lua/io_matrix/netx_base.lua':   LUA_NETX_BASE,
+    'targets/testbench/lua/io_matrix/netx.lua':        'iomatrix/templates/io_matrix/netx.lua'
 }
 for tDst, tSrc in atFiles.iteritems():
     Command(tDst, tSrc, Copy("$TARGET", "$SOURCE"))
