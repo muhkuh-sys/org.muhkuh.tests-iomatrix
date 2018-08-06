@@ -75,7 +75,7 @@ end
 
 
 
-function IoMatrix_FTDI:__build_ftdi_index(tList, ulModuleIndexMask, ulModuleIndexSrt)
+function IoMatrix_FTDI:__build_ftdi_index(tList, ulModuleIndexMask, ulModuleIndexShift)
   -- Loop over all devices and...
   --  1) Get the FTDI serial.
   --  2) Get the location for all devices as strings.
@@ -99,7 +99,7 @@ function IoMatrix_FTDI:__build_ftdi_index(tList, ulModuleIndexMask, ulModuleInde
 
       local ulModuleIndex
       -- Look for the module index only if the bit position is specified.
-      if ulModuleIndexMask~=nil and ulModuleIndexSrt~=nil then
+      if ulModuleIndexMask~=nil and ulModuleIndexShift~=nil then
         local tFtdi = self.cFTDI2232H(self.tLog)
         local tResult = tFtdi:open(tListEntry)
         if tResult==true then
@@ -110,7 +110,7 @@ function IoMatrix_FTDI:__build_ftdi_index(tList, ulModuleIndexMask, ulModuleInde
           else
             local ulPins = tResult
             self.tLog.debug('Input data: 0x%s', self.bit.tohex(ulPins))
-            ulModuleIndex = self.bit.rshift(self.bit.band(ulPins, ulModuleIndexMask), ulModuleIndexSrt)
+            ulModuleIndex = self.bit.rshift(self.bit.band(ulPins, ulModuleIndexMask), ulModuleIndexShift)
             self.tLog.debug('Found module index %d.', ulModuleIndex)
           end
         
@@ -202,7 +202,7 @@ function IoMatrix_FTDI:add_ftdi_devices(atAttributes)
   local usUSBVendor = atAttributes.usUSBVendor
   local usUSBProduct = atAttributes.usUSBProduct
   local ulModuleIndexMask = atAttributes.ulModuleIndexMask
-  local ulModuleIndexSrt = atAttributes.ulModuleIndexSrt
+  local ulModuleIndexShift = atAttributes.ulModuleIndexShift
 
   -- Scan for all devices.
   local tList = self.tContext:usb_find_all(usUSBVendor, usUSBProduct)
@@ -217,7 +217,7 @@ function IoMatrix_FTDI:add_ftdi_devices(atAttributes)
   self.tLog.debug('-----------------------------------------------------------------------')
 
   -- Collect information about all FTDI devices.
-  local atAllDevices = self:__build_ftdi_index(tList, ulModuleIndexMask, ulModuleIndexSrt)
+  local atAllDevices = self:__build_ftdi_index(tList, ulModuleIndexMask, ulModuleIndexShift)
   if #atAllDevices==0 then
     self.tLog.debug('No devices found.')
   else
