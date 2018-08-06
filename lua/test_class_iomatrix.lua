@@ -154,10 +154,7 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
 
     local auiPort
     local strPort = atAttributes['port']
-    if strPort==nil then
-      fOk = nil
-      aLxpAttr.tLog.error('Error in line %d, col %d: missing attribute "product".', iPosLine, iPosColumn)
-    else
+    if strPort~=nil then
       -- Split the string by comma.
       local atPort = aLxpAttr.pl.stringx.split(strPort, ',')
       -- Loop over all elements and convert them to numbers.
