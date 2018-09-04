@@ -29,13 +29,14 @@ function IoMatrix_netx:_init(tLog)
 
   local romloader = require 'romloader'
   self.__atAsicTypToClass = {
-    [romloader.ROMLOADER_CHIPTYP_NETX50]     = 'io_matrix.netx_base',
-    [romloader.ROMLOADER_CHIPTYP_NETX100]    = 'io_matrix.netx_base',
-    [romloader.ROMLOADER_CHIPTYP_NETX500]    = 'io_matrix.netx_base',
-    [romloader.ROMLOADER_CHIPTYP_NETX10]     = 'io_matrix.netx_base',
-    [romloader.ROMLOADER_CHIPTYP_NETX56]     = 'io_matrix.netx_base',
-    [romloader.ROMLOADER_CHIPTYP_NETX56B]    = 'io_matrix.netx_base',
-    [romloader.ROMLOADER_CHIPTYP_NETX90_MPW] = 'io_matrix.netx90_mpw'
+    [romloader.ROMLOADER_CHIPTYP_NETX50]        = 'io_matrix.netx_base',
+    [romloader.ROMLOADER_CHIPTYP_NETX100]       = 'io_matrix.netx_base',
+    [romloader.ROMLOADER_CHIPTYP_NETX500]       = 'io_matrix.netx_base',
+    [romloader.ROMLOADER_CHIPTYP_NETX10]        = 'io_matrix.netx_base',
+    [romloader.ROMLOADER_CHIPTYP_NETX56]        = 'io_matrix.netx_base',
+    [romloader.ROMLOADER_CHIPTYP_NETX56B]       = 'io_matrix.netx_base',
+    [romloader.ROMLOADER_CHIPTYP_NETX90_MPW]    = 'io_matrix.netx90_mpw',
+    [romloader.ROMLOADER_CHIPTYP_NETX4000_FULL] = 'io_matrix.netx4000'
   }
 end
 

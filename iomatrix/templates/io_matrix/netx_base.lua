@@ -75,13 +75,14 @@ function IoMatrix_netx_base:_init(tLog, fnInit, fnDeinit, ulVerbose, fnCallbackP
   self.atOutBuffer = {}
 
   self.__atAsicTypToName = {
-    [romloader.ROMLOADER_CHIPTYP_NETX50]     = '50',
-    [romloader.ROMLOADER_CHIPTYP_NETX100]    = '500',
-    [romloader.ROMLOADER_CHIPTYP_NETX500]    = '500',
-    [romloader.ROMLOADER_CHIPTYP_NETX10]     = '10',
-    [romloader.ROMLOADER_CHIPTYP_NETX56]     = '56',
-    [romloader.ROMLOADER_CHIPTYP_NETX56B]    = '56',
-    [romloader.ROMLOADER_CHIPTYP_NETX90_MPW] = '90_mpw'
+    [romloader.ROMLOADER_CHIPTYP_NETX50]        = '50',
+    [romloader.ROMLOADER_CHIPTYP_NETX100]       = '500',
+    [romloader.ROMLOADER_CHIPTYP_NETX500]       = '500',
+    [romloader.ROMLOADER_CHIPTYP_NETX10]        = '10',
+    [romloader.ROMLOADER_CHIPTYP_NETX56]        = '56',
+    [romloader.ROMLOADER_CHIPTYP_NETX56B]       = '56',
+    [romloader.ROMLOADER_CHIPTYP_NETX90_MPW]    = '90_mpw',
+    [romloader.ROMLOADER_CHIPTYP_NETX4000_FULL] = '4000'
   }
 
   -----------------------------------------------------------------------------
@@ -175,7 +176,7 @@ function IoMatrix_netx_base:initialize(tPlugin, strPattern)
   -- Try to load the binary.
   local strData, strMsg = self.pl.utils.readfile(strBinaryName, true)
   if not strData then
-    error('Failed to load binary "%s": ', strBinaryName, strMsg)
+    error(string.format('Failed to load binary "%s": %s', strBinaryName, strMsg))
   end
 
   -- Check the magic cookie.
