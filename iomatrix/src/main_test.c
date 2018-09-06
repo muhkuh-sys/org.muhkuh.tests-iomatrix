@@ -328,8 +328,22 @@ static int set_all_pins(const IOMATRIX_PARAMETER_SET_ALL_PINS_T *ptParameter)
 		case PINSTATUS_OUTPUT0:
 		case PINSTATUS_OUTPUT1:
 			/* Set the pin to the requested state. */
-			iResult = iopins_set(ptPinDescription, tStatus);
+			iResult = 0;
 			break;
+		}
+		if( iResult!=0 )
+		{
+			uprintf("The pin has an invalid status of 0x%08x: ", tStatus);
+			print_pin(ulPinCnt, ptPinDescription);
+		}
+		else
+		{
+			iResult = iopins_set(ptPinDescription, tStatus);
+			if( iResult!=0 )
+			{
+				uprintf("Failed to set the pin: ");
+				print_pin(ulPinCnt, ptPinDescription);
+			}
 		}
 
 		if( iResult!=0 )
@@ -371,6 +385,8 @@ static int get_all_pins(IOMATRIX_PARAMETER_GET_ALL_PINS_T *ptParameter)
 		iResult = iopins_get(ptPinDescription, pucValue);
 		if( iResult!=0 )
 		{
+			uprintf("Failed to get the pin: ");
+			print_pin(ulPinCnt, ptPinDescription);
 			break;
 		}
 
