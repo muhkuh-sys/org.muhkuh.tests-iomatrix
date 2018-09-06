@@ -49,6 +49,10 @@ sources_netx90_mpw = """
 	src/netx90_mpw/io_pins.c
 """
 
+sources_netx90 = """
+	src/netx90/io_pins.c
+"""
+
 sources_netx500 = """
 	src/netx500/io_pins.c
 """
@@ -84,6 +88,13 @@ src_netx90_mpw_t = env_netx90_mpw_t.SetBuildPath('targets/netx90_mpw', 'src', so
 elf_netx90_mpw_t = env_netx90_mpw_t.Elf('targets/netx90_mpw/iomatrix_netx90_mpw.elf', src_netx90_mpw_t + env_netx90_mpw_t['PLATFORM_LIBRARY'])
 IOMATRIX_NETX90_MPW = env_netx90_mpw_t.ObjCopy('targets/netx90_mpw/iomatrix_netx90_mpw.bin', elf_netx90_mpw_t)
 
+env_netx90_t = atEnv.NETX90.Clone()
+env_netx90_t.Replace(LDFILE = 'src/netx90/netx90.ld')
+env_netx90_t.Append(CPPPATH = aCppPath)
+src_netx90_t = env_netx90_t.SetBuildPath('targets/netx90', 'src', sources_common + sources_netx90)
+elf_netx90_t = env_netx90_t.Elf('targets/netx90/iomatrix_netx90.elf', src_netx90_t + env_netx90_t['PLATFORM_LIBRARY'])
+IOMATRIX_NETX90 = env_netx90_t.ObjCopy('targets/netx90/iomatrix_netx90.bin', elf_netx90_t)
+
 env_netx56_t = atEnv.NETX56.Clone()
 env_netx56_t.Replace(LDFILE = 'src/netx56/netx56.ld')
 env_netx56_t.Append(CPPPATH = aCppPath)
@@ -105,7 +116,7 @@ src_netx10_t = env_netx10_t.SetBuildPath('targets/netx10', 'src', sources_common
 elf_netx10_t = env_netx10_t.Elf('targets/netx10/iomatrix_netx10.elf', src_netx10_t + env_netx10_t['PLATFORM_LIBRARY'])
 IOMATRIX_NETX10 = env_netx10_t.ObjCopy('targets/netx10/iomatrix_netx10.bin', elf_netx10_t)
 
-Export('IOMATRIX_NETX4000', 'IOMATRIX_NETX500', 'IOMATRIX_NETX90_MPW', 'IOMATRIX_NETX56', 'IOMATRIX_NETX10')
+Export('IOMATRIX_NETX4000', 'IOMATRIX_NETX500', 'IOMATRIX_NETX90', 'IOMATRIX_NETX90_MPW', 'IOMATRIX_NETX56', 'IOMATRIX_NETX10')
 
 
 #----------------------------------------------------------------------------
@@ -116,7 +127,8 @@ Export('IOMATRIX_NETX4000', 'IOMATRIX_NETX500', 'IOMATRIX_NETX90_MPW', 'IOMATRIX
 #
 LUA_NETX_BASE = atEnv.NETX56.GccSymbolTemplate('targets/lua/io_matrix/netx_base.lua', elf_netx56_t, GCCSYMBOLTEMPLATE_TEMPLATE=File('templates/io_matrix/netx_base.lua'))
 LUA_NETX90_MPW = atEnv.NETX56.GccSymbolTemplate('targets/lua/io_matrix/netx90_mpw.lua', elf_netx56_t, GCCSYMBOLTEMPLATE_TEMPLATE=File('templates/io_matrix/netx90_mpw.lua'))
+LUA_NETX90 = atEnv.NETX56.GccSymbolTemplate('targets/lua/io_matrix/netx90.lua', elf_netx56_t, GCCSYMBOLTEMPLATE_TEMPLATE=File('templates/io_matrix/netx90.lua'))
 LUA_NETX4000 = atEnv.NETX56.GccSymbolTemplate('targets/lua/io_matrix/netx4000.lua', elf_netx56_t, GCCSYMBOLTEMPLATE_TEMPLATE=File('templates/io_matrix/netx4000.lua'))
-Export('LUA_NETX_BASE', 'LUA_NETX4000', 'LUA_NETX90_MPW')
+Export('LUA_NETX_BASE', 'LUA_NETX4000', 'LUA_NETX90', 'LUA_NETX90_MPW')
 
 

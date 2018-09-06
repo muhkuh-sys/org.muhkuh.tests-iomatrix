@@ -82,7 +82,8 @@ function IoMatrix_netx_base:_init(tLog, fnInit, fnDeinit, ulVerbose, fnCallbackP
     [romloader.ROMLOADER_CHIPTYP_NETX56]        = '56',
     [romloader.ROMLOADER_CHIPTYP_NETX56B]       = '56',
     [romloader.ROMLOADER_CHIPTYP_NETX90_MPW]    = '90_mpw',
-    [romloader.ROMLOADER_CHIPTYP_NETX4000_FULL] = '4000'
+    [romloader.ROMLOADER_CHIPTYP_NETX4000_FULL] = '4000',
+    [romloader.ROMLOADER_CHIPTYP_NETX90]        = '90',
   }
 
   -----------------------------------------------------------------------------

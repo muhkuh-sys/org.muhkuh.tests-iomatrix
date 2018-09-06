@@ -36,7 +36,8 @@ function IoMatrix_netx:_init(tLog)
     [romloader.ROMLOADER_CHIPTYP_NETX56]        = 'io_matrix.netx_base',
     [romloader.ROMLOADER_CHIPTYP_NETX56B]       = 'io_matrix.netx_base',
     [romloader.ROMLOADER_CHIPTYP_NETX90_MPW]    = 'io_matrix.netx90_mpw',
-    [romloader.ROMLOADER_CHIPTYP_NETX4000_FULL] = 'io_matrix.netx4000'
+    [romloader.ROMLOADER_CHIPTYP_NETX4000_FULL] = 'io_matrix.netx4000',
+    [romloader.ROMLOADER_CHIPTYP_NETX90]        = 'io_matrix.netx90'
   }
 end
 

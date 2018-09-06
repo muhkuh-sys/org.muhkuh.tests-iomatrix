@@ -49,7 +49,7 @@ env_cortexR7.CreateCompilerEnv('NETX4000', ['arch=armv7', 'thumb'], ['arch=armv7
 # Create a build environment for the Cortex-M4 based netX chips.
 env_cortexM4 = atEnv.DEFAULT.CreateEnvironment(['gcc-arm-none-eabi-4.9', 'asciidoc'])
 env_cortexM4.CreateCompilerEnv('NETX90_MPW', ['arch=armv7', 'thumb'], ['arch=armv7e-m', 'thumb'])
-env_cortexM4.CreateCompilerEnv('NETX90_MPW_APP', ['arch=armv7', 'thumb'], ['arch=armv7e-m', 'thumb'])
+env_cortexM4.CreateCompilerEnv('NETX90', ['arch=armv7', 'thumb'], ['arch=armv7e-m', 'thumb'])
 
 
 #----------------------------------------------------------------------------
@@ -74,11 +74,13 @@ SConscript('iomatrix/SConscript')
 Import(
     'IOMATRIX_NETX4000',
     'IOMATRIX_NETX500',
+    'IOMATRIX_NETX90',
     'IOMATRIX_NETX90_MPW',
     'IOMATRIX_NETX56',
     'IOMATRIX_NETX10',
     'LUA_NETX_BASE',
     'LUA_NETX4000',
+    'LUA_NETX90',
     'LUA_NETX90_MPW'
 )
 
@@ -136,6 +138,7 @@ tArcList0 = atEnv.DEFAULT.ArchiveList('zip')
 tArcList0.AddFiles('netx/',
     IOMATRIX_NETX4000,
     IOMATRIX_NETX500,
+    IOMATRIX_NETX90,
     IOMATRIX_NETX90_MPW,
     IOMATRIX_NETX56,
     IOMATRIX_NETX10)
@@ -147,6 +150,7 @@ tArcList0.AddFiles('lua/io_matrix',
     'iomatrix/templates/io_matrix/ftdi.lua',
     LUA_NETX_BASE,
     LUA_NETX4000,
+    LUA_NETX90,
     LUA_NETX90_MPW,
     'iomatrix/templates/io_matrix/netx.lua')
 tArcList0.AddFiles('templates',
@@ -174,6 +178,7 @@ atFiles = {
 #    'targets/testbench/netx/iomatrix_netx50.bin':     iomatrix_netx50,
     'targets/testbench/netx/iomatrix_netx56.bin':      IOMATRIX_NETX56,
     'targets/testbench/netx/iomatrix_netx90_mpw.bin':  IOMATRIX_NETX90_MPW,
+    'targets/testbench/netx/iomatrix_netx90.bin':      IOMATRIX_NETX90,
     'targets/testbench/netx/iomatrix_netx500.bin':     IOMATRIX_NETX500,
     'targets/testbench/netx/iomatrix_netx4000.bin':    IOMATRIX_NETX4000,
 
@@ -182,6 +187,7 @@ atFiles = {
     'targets/testbench/lua/io_matrix/ftdi_2232h.lua':  'iomatrix/templates/io_matrix/ftdi_2232h.lua',
     'targets/testbench/lua/io_matrix/ftdi.lua':        'iomatrix/templates/io_matrix/ftdi.lua',
     'targets/testbench/lua/io_matrix/netx4000.lua':    LUA_NETX4000,
+    'targets/testbench/lua/io_matrix/netx90.lua':      LUA_NETX90,
     'targets/testbench/lua/io_matrix/netx90_mpw.lua':  LUA_NETX90_MPW,
     'targets/testbench/lua/io_matrix/netx_base.lua':   LUA_NETX_BASE,
     'targets/testbench/lua/io_matrix/netx.lua':        'iomatrix/templates/io_matrix/netx.lua'
