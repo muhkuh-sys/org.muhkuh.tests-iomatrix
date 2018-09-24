@@ -178,6 +178,7 @@ static int parse_pin_description(const unsigned char *pucDefinition, unsigned lo
 				{
 				case PINTYPE_GPIO:
 				case PINTYPE_PIO:
+				case PINTYPE_MLED:
 				case PINTYPE_MMIO:
 				case PINTYPE_HIFPIO:
 				case PINTYPE_RDYRUN:

@@ -88,6 +88,10 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 				
 				break;
 
+			case PINTYPE_MLED:
+				/* The netX10 has no MLED pins. */
+				break;
+
 			case PINTYPE_MMIO:
 				/* The pin index must be 0..31 .*/
 				uiIndex = ptPinDescCnt->uiIndex;
@@ -798,6 +802,10 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 		iResult = -1;
 		break;
 
+	case PINTYPE_MLED:
+		/* The netX10 has no MLED pins. */
+		break;
+
 	case PINTYPE_MMIO:
 		uiIndex = ptPinDescription->uiIndex;
 		iResult = set_mmio(uiIndex, tValue);
@@ -845,6 +853,10 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 	case PINTYPE_PIO:
 		uprintf("The pin type PIO is not supported on this platform!\n");
 		iResult = -1;
+		break;
+
+	case PINTYPE_MLED:
+		/* The netX10 has no MLED pins. */
 		break;
 
 	case PINTYPE_MMIO:

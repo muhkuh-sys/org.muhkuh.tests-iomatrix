@@ -118,6 +118,10 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 				}
 				break;
 
+			case PINTYPE_MLED:
+				/* The netX56 has no MLED pins. */
+				break;
+
 			case PINTYPE_MMIO:
 				uiIndex = ptPinDescCnt->uiIndex;
 				if( uiIndex<32 )
@@ -695,6 +699,10 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 		iResult = set_hifpio(uiIndex, tValue);
 		break;
 
+	case PINTYPE_MLED:
+		/* The netX56 has no MLED pins. */
+		break;
+
 	case PINTYPE_MMIO:
 		uiIndex = ptPinDescription->uiIndex;
 		iResult = set_mmiopio(uiIndex, tValue);
@@ -739,6 +747,10 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 	case PINTYPE_HIFPIO:
 		uiIndex = ptPinDescription->uiIndex;
 		iResult = get_hifpio(uiIndex, pucData);
+		break;
+
+	case PINTYPE_MLED:
+		/* The netX56 has no MLED pins. */
 		break;
 
 	case PINTYPE_MMIO:

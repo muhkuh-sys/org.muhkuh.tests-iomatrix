@@ -131,6 +131,10 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 				}
 				break;
 
+			case PINTYPE_MLED:
+				/* The netX500 has no MLED pins. */
+				break;
+
 			case PINTYPE_MMIO:
 				uprintf("The pin %s has the type MMIO. This is not available on the netX500/100!", ptPinDescCnt->apcName);
 				break;
@@ -643,6 +647,10 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 		/* Not yet... */
 		break;
 
+	case PINTYPE_MLED:
+		/* The netX500 has no MLED pins. */
+		break;
+
 	case PINTYPE_MMIO:
 		/* Not available! */
 		break;
@@ -687,6 +695,10 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 
 	case PINTYPE_HIFPIO:
 		/* Not yet... */
+		break;
+
+	case PINTYPE_MLED:
+		/* The netX500 has no MLED pins. */
 		break;
 
 	case PINTYPE_MMIO:

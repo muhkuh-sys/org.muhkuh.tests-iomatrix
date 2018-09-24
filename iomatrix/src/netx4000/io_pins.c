@@ -129,6 +129,10 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 				}
 				break;
 
+			case PINTYPE_MLED:
+				/* Not yet... */
+				break;
+
 			case PINTYPE_MMIO:
 				if( uiIndex<107 )
 				{
@@ -730,6 +734,10 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 		iResult = set_hifpio(uiIndex, tValue);
 		break;
 
+	case PINTYPE_MLED:
+		/* Not yet... */
+		break;
+
 	case PINTYPE_MMIO:
 		iResult = set_mmiopio(uiIndex, tValue);
 		break;
@@ -779,6 +787,10 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 
 	case PINTYPE_HIFPIO:
 		iResult = get_hifpio(uiIndex, pucData);
+		break;
+
+	case PINTYPE_MLED:
+		/* Not yet... */
 		break;
 
 	case PINTYPE_MMIO:

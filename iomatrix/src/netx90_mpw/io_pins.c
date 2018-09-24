@@ -126,6 +126,18 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 				}
 				break;
 
+			case PINTYPE_MLED:
+				if( uiIndex<8 )
+				{
+					ptUnitCfg->ulMled |= 1U<<uiIndex;
+					iResult = 0;
+				}
+				else
+				{
+					uprintf("The pin %s has an invalid index of %d!", ptPinDescCnt->apcName, uiIndex);
+				}
+				break;
+
 			case PINTYPE_MMIO:
 				if( uiIndex<8 )
 				{
@@ -392,6 +404,7 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDe
 	int iResult;
 	HOSTDEF(ptAsicCtrlArea);
 	HOSTDEF(ptHifIoCtrlArea);
+	HOSTDEF(ptMledCtrlComArea);
 	HOSTDEF(ptMmioCtrlArea);
 	UNITCONFIGURATION_T tUnitCfg;
 	unsigned long ulValue;
@@ -435,6 +448,27 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDe
 
 			ulValue  = 1 << HOSTSRT(hif_pio_cfg_in_ctrl);
 			ptHifIoCtrlArea->ulHif_pio_cfg = ulValue;
+		}
+
+		/*
+		 * MLED
+		 */
+		if( tUnitCfg.ulMled!=0 )
+		{
+			for(iCnt=0; iCnt<8; ++iCnt)
+			{
+				ulValue = 0;
+				if( (tUnitCfg.ulMled & (1U << iCnt))!=0 )
+				{
+					/* Use the line register. */
+					ulValue = 2;
+				}
+				ptMledCtrlComArea->aulMled_ctrl_output_sel[iCnt] = ulValue;
+			}
+
+			ulValue  = HOSTDFLT(mled_ctrl_cfg);
+			ulValue |= HOSTMSK(mled_ctrl_cfg_enable);
+			ptMledCtrlComArea->ulMled_ctrl_cfg = ulValue;
 		}
 
 		/*
@@ -634,6 +668,73 @@ static int get_hifpio(unsigned int uiIndex, unsigned char *pucData)
 
 	return iResult;
 }
+
+
+
+static int set_mled(unsigned int uiIndex, PINSTATUS_T tValue)
+{
+	int iResult;
+	HOSTDEF(ptMledCtrlComArea);
+	unsigned long ulMask;
+	unsigned long ulValue;
+
+
+	/* Be pessimistic. */
+	iResult = -1;
+
+	if( uiIndex<8 )
+	{
+		ulMask = 1U << uiIndex;
+
+		/* Set the bit in the line register. */
+		ulValue  = ptMledCtrlComArea->ulMled_ctrl_line0;
+		switch(tValue)
+		{
+		case PINSTATUS_HIGHZ:
+			/* MLED pins can not be set to Z. */
+			uprintf("Trying to set an MLED pin to Z, which is not possible.\n");
+			break;
+
+		case PINSTATUS_OUTPUT0:
+			ulValue &= ~ulMask;
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT1:
+			ulValue |= ulMask;
+			iResult = 0;
+			break;
+		}
+		if( iResult==0 )
+		{
+			ptMledCtrlComArea->ulMled_ctrl_line0 = ulValue;
+		}
+	}
+	else
+	{
+		uprintf("Invalid index for MLED pins: %d, but only 0-7 possible.\n");
+	}
+
+	return iResult;
+}
+
+
+
+static int get_mled(unsigned int uiIndex, unsigned char *pucData __attribute__((unused)))
+{
+	if( uiIndex<8 )
+	{
+		/* MLED pins are output only. */
+		uprintf("Trying to get an MLED pin, which is read-only.\n");
+	}
+	else
+	{
+		uprintf("Invalid index for MLED pins: %d, but only 0-7 possible. And a 'get' would not work with MLED pins anyway.\n");
+	}
+
+	return -1;
+}
+
 
 
 static int set_mmiopio(unsigned int uiIndex, PINSTATUS_T tValue)
@@ -1113,6 +1214,10 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 		iResult = set_hifpio(uiIndex, tValue);
 		break;
 
+	case PINTYPE_MLED:
+		iResult = set_mled(uiIndex, tValue);
+		break;
+
 	case PINTYPE_MMIO:
 		iResult = set_mmiopio(uiIndex, tValue);
 		break;
@@ -1162,6 +1267,10 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 
 	case PINTYPE_HIFPIO:
 		iResult = get_hifpio(uiIndex, pucData);
+		break;
+
+	case PINTYPE_MLED:
+		iResult = get_mled(uiIndex, pucData);
 		break;
 
 	case PINTYPE_MMIO:
