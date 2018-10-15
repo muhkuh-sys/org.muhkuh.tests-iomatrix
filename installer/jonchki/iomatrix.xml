@@ -19,5 +19,6 @@
 		<dependency group="com.github.stevedonovan" module="penlight" artifact="penlight" version="1.5.4"/>
 		<dependency group="com.github.moteus" module="lua-log" artifact="lua-log" version="0.1.6"/>
 		<dependency group="uk.co.matthewwild" module="luaexpat" artifact="lua5.1-luaexpat" version="1.3.0"/>
+		<dependency group="org.muhkuh.lua" module="luaftdi" artifact="lua5.1-luaftdi" version="1.0"/>
 	</dependencies>
 </jonchki-artifact>
