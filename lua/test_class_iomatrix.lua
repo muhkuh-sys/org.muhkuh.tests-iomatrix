@@ -1,25 +1,19 @@
 local class = require 'pl.class'
-local TestClassIoMatrix = class()
+local TestClass = require 'test_class'
+local TestClassIoMatrix = class(TestClass)
 
 
-function TestClassIoMatrix:_init(strTestName)
+function TestClassIoMatrix:_init(strTestName, uiTestCase, tLogWriter, strLogLevel)
+  self:super(strTestName, uiTestCase, tLogWriter, strLogLevel)
+
   self.bit = require 'bit'
   self.io_matrix = require 'io_matrix'
   self.lxp = require 'lxp'
-  self.parameters = require 'parameters'
-  self.pl = require'pl.import_into'()
 
-  self.CFG_strTestName = strTestName
-
-  self.CFG_aParameterDefinitions = {
-    {
-      name="definition",
-      default=nil,
-      help="The file name of the XML test definition.",
-      mandatory=true,
-      validate=nil,
-      constrains=nil
-    }
+  local P = self.P
+  self:__parameter {
+    P:P('definition', 'The file name of the XML test definition.'):
+      required(true)
   }
 
   self.atDevicesNetx = nil
@@ -452,6 +446,9 @@ end
 
 
 function TestClassIoMatrix:run(aParameters, tLog)
+  local atParameter = self.atParameter
+  local tLog = self.tLog
+
   ----------------------------------------------------------------------
   --
   -- Parse the parameters and collect all options.
@@ -459,9 +456,10 @@ function TestClassIoMatrix:run(aParameters, tLog)
   local tIoMatrix = self.io_matrix(tLog)
 
   -- Read the test definition file.
-  local strFileName = self.pl.path.exists(aParameters['definition'])
+  local strParameterFileName = atParameter['definition']:get()
+  local strFileName = self.pl.path.exists(strParameterFileName)
   if strFileName==nil then
-    tLog.error('The test definition file "%s" does not exist.', aParameters['definition'])
+    tLog.error('The test definition file "%s" does not exist.', strParameterFileName)
     error('Failed to load the test definition.')
   end
 
