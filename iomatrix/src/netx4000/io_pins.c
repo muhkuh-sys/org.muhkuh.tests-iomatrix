@@ -632,6 +632,8 @@ static int get_rdyrun(unsigned int uiIndex, unsigned char *pucData)
 			ucData = 1;
 		}
 		*pucData = ucData;
+
+		iResult = 0;
 	}
 
 	return iResult;
