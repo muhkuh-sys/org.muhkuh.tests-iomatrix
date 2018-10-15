@@ -30,6 +30,15 @@ end
 
 
 IoMatrix_netx90_mpw.atKnownPins = {
+  ['MLED0'] = { type=${PINTYPE_MLED}, index=0 },
+  ['MLED1'] = { type=${PINTYPE_MLED}, index=1 },
+  ['MLED2'] = { type=${PINTYPE_MLED}, index=2 },
+  ['MLED3'] = { type=${PINTYPE_MLED}, index=3 },
+  ['MLED4'] = { type=${PINTYPE_MLED}, index=4 },
+  ['MLED5'] = { type=${PINTYPE_MLED}, index=5 },
+  ['MLED6'] = { type=${PINTYPE_MLED}, index=6 },
+  ['MLED7'] = { type=${PINTYPE_MLED}, index=7 },
+
   ['MMIO0'] = { type=${PINTYPE_MMIO}, index=0 },
   ['MMIO1'] = { type=${PINTYPE_MMIO}, index=1 },
   ['MMIO2'] = { type=${PINTYPE_MMIO}, index=2 },
@@ -38,6 +47,7 @@ IoMatrix_netx90_mpw.atKnownPins = {
   ['MMIO5'] = { type=${PINTYPE_MMIO}, index=5 },
   ['MMIO6'] = { type=${PINTYPE_MMIO}, index=6 },
   ['MMIO7'] = { type=${PINTYPE_MMIO}, index=7 },
+
   ['XM0_IO0'] = { type=${PINTYPE_XMIO}, index=0 },
   ['XM0_IO1'] = { type=${PINTYPE_XMIO}, index=1 },
   ['XM0_IO2'] = { type=${PINTYPE_XMIO}, index=2 },
@@ -49,7 +59,10 @@ IoMatrix_netx90_mpw.atKnownPins = {
   ['XM1_IO2'] = { type=${PINTYPE_XMIO}, index=8 },
   ['XM1_IO3'] = { type=${PINTYPE_XMIO}, index=9 },
   ['XM1_IO4'] = { type=${PINTYPE_XMIO}, index=10 },
-  ['XM1_IO5'] = { type=${PINTYPE_XMIO}, index=11 }
+  ['XM1_IO5'] = { type=${PINTYPE_XMIO}, index=11 },
+
+  ['RDY'] = { type=${PINTYPE_RDYRUN}, index=0 },
+  ['RUN'] = { type=${PINTYPE_RDYRUN}, index=1 }
 }
 
 
