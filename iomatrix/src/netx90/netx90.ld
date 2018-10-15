@@ -86,13 +86,13 @@ SECTIONS
 		stack_top = . ;
 	} >INTRAM
 
-/*
+
 	.serialvectors ORIGIN(IOVECTORS) (NOLOAD) :
 	{
 		PROVIDE ( tSerialVectors = . );
 		. = . + 0x10;
 	} >IOVECTORS
-*/
+
 
 	/* Stabs debugging sections.  */
 	.stab          0 : { *(.stab) }
