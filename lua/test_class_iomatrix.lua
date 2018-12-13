@@ -491,6 +491,7 @@ function TestClassIoMatrix:run(aParameters, tLog)
   tIoMatrix:parse_pin_description(self.atPins)
 
   local uiErrorCounter = tIoMatrix:matrix_test(self.atMatrix)
+  tIoMatrix:close()
   if uiErrorCounter~=0 then
     tLog.error('%d errors occured.', uiErrorCounter)
     error('The test failed.')

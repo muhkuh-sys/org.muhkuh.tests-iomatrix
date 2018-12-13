@@ -297,7 +297,10 @@ end
 
 
 function IoMatrix_FTDI:close()
-  -- No need to close something.
+  -- Close all FTDI devices.
+  for _, tDev in pairs(self.atDevices) do
+    tDev:close()
+  end
 end
 
 
