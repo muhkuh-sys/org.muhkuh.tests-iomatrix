@@ -173,6 +173,10 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 					uprintf("The pin %s has an invalid index of %d!", ptPinDescCnt->apcName, uiIndex);
 				}
 				break;
+
+			case PINTYPE_RAPGPIO:
+				/* The netX10 has no RAPGPIOs. */
+				break;
 			}
 
 			if( iResult!=0 )
@@ -830,6 +834,10 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 		uiIndex = ptPinDescription->uiIndex;
 		iResult = set_xmio(uiIndex, tValue);
 		break;
+
+	case PINTYPE_RAPGPIO:
+		uprintf("The pin type RAPGPIO is not supported on this platform!\n");
+		break;
 	}
 
 	return iResult;
@@ -882,6 +890,10 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 	case PINTYPE_XMIO:
 		uiIndex = ptPinDescription->uiIndex;
 		iResult = get_xmio(uiIndex, pucData);
+		break;
+
+	case PINTYPE_RAPGPIO:
+		uprintf("The pin type RAPGPIO is not supported on this platform!\n");
 		break;
 	}
 

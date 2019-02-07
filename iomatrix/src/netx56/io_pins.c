@@ -173,6 +173,11 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 			case PINTYPE_XMIO:
 				/* Not yet... */
 				break;
+
+			case PINTYPE_RAPGPIO:
+				/* The netX56 has no RAPGPIOS. */
+				uprintf("The pin type RAPGPIO is not supported on this platform!\n");
+				break;
 			}
 
 			if( iResult!=0 )
@@ -725,6 +730,10 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 	case PINTYPE_XMIO:
 		/* Not yet... */
 		break;
+
+	case PINTYPE_RAPGPIO:
+		uprintf("The pin type RAPGPIO is not supported on this platform!\n");
+		break;
 	}
 
 	return iResult;
@@ -774,6 +783,10 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 
 	case PINTYPE_XMIO:
 		/* Not yet... */
+		break;
+
+	case PINTYPE_RAPGPIO:
+		uprintf("The pin type RAPGPIO is not supported on this platform!\n");
 		break;
 	}
 

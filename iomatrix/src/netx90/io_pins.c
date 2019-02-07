@@ -195,6 +195,10 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 					uprintf("The pin %s has an invalid index of %d!", ptPinDescCnt->apcName, uiIndex);
 				}
 				break;
+
+			case PINTYPE_RAPGPIO:
+				uprintf("The pin type RAPGPIO is not supported on this platform!\n");
+				break;
 			}
 
 			if( iResult!=0 )
@@ -1246,6 +1250,10 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 			iResult = set_xm1io(uiIndex-6U, tValue);
 		}
 		break;
+
+	case PINTYPE_RAPGPIO:
+		uprintf("The pin type RAPGPIO is not supported on this platform!\n");
+		break;
 	}
 
 	return iResult;
@@ -1300,6 +1308,10 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 		{
 			iResult = get_xm1io(uiIndex-6U, pucData);
 		}
+		break;
+
+	case PINTYPE_RAPGPIO:
+		uprintf("The pin type RAPGPIO is not supported on this platform!\n");
 		break;
 	}
 

@@ -59,6 +59,7 @@ sources_netx500 = """
 
 sources_netx4000 = """
 	src/netx4000/io_pins.c
+	src/netx4000/portcontrol.c
 """
 
 #----------------------------------------------------------------------------
