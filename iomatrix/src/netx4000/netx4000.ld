@@ -58,7 +58,7 @@ SECTIONS
 	.parameter ALIGN(0x0100) :
 	{
 		parameter_start_address = . ;
-		. = . + 0x0100;
+		. = . + 0x1000;
 		parameter_end_address = . ;
 	} >CODE
 
