@@ -113,6 +113,10 @@ function IoMatrix:parse_pin_description(atPinDescription)
 end
 
 
+function IoMatrix:get_continuous_status_match(atPinDescription, ulNumberOfPatternsToTest)
+  self.netx:get_continuous_status_match(atPinDescription, ulNumberOfPatternsToTest)
+end
+
 
 function IoMatrix:setZ()
   self.netx:setZ()

@@ -83,7 +83,11 @@ function IoMatrix_netx:add_pin(strID, uiIndex, strKnownName, uiDefaultValue, uiF
   return tNetx:add_pin(strID, strKnownName, uiDefaultValue, uiFlags)
 end
 
-
+function IoMatrix_netx:get_continuous_status_match(tStateList, ulNumberOfPatternsToTest)
+  for _, tDev in pairs(self.atDevices) do
+    tDev:get_continuous_status_match(tStateList, ulNumberOfPatternsToTest)
+  end
+end
 
 function IoMatrix_netx:parse_pins()
   for _, tDev in pairs(self.atDevices) do

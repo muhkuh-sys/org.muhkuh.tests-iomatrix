@@ -399,6 +399,110 @@ static int get_all_pins(IOMATRIX_PARAMETER_GET_ALL_PINS_T *ptParameter)
 }
 
 
+/*-------------------------------------------------------------------------*/
+
+static int get_continuous_status_match(IOMATRIX_PARAMETER_GET_CONTINUOUS_STATUS_MATCH_T *ptParameter)
+{
+	unsigned long ulListLength;
+	unsigned long ulListLengthTemp;
+
+	unsigned long ulListCnt;
+	unsigned long ulPinCnt;
+
+	unsigned long ulPinMax;
+
+	unsigned char ucValueExpect;
+	unsigned char ucValue;
+
+	/* Pattern */
+	unsigned char aucPatternList[ulPinsUnderTest];
+	unsigned char aucPatternPin[ulPinsUnderTest];
+
+	const PINDESCRIPTION_T *ptPinDescription;
+	int iResult;
+
+
+	/* Be optimistic */
+	iResult = 0;
+
+	/* Get length of List */
+	ulPinMax = ulPinsUnderTest;
+	ulListLength = (ptParameter->ulNumberOfPatternsToTest*ulPinMax);
+
+
+	/* Temp var for checking if ulPinsUnderTest is a multiple of the length of the list */
+	ulListLengthTemp = 0;
+
+	/* Check if the count of ulPinMax is a multiple of count of tStateList (List of test pattern)*/
+	while (ulListLengthTemp < ulListLength)
+	{
+		/* Increase ulListLengthTemp every loop cycle by ulPinsUnderTest */
+		ulListLengthTemp += ulPinsUnderTest;
+
+		if(ulListLengthTemp == ulListLength)
+		{
+			uprintf("Check, Number of patterns to test is a multiple of ulPinsUnderTest\n");
+		}
+		else if(ulListLengthTemp > ulListLength)
+		{
+			/* Something wrong */
+			uprintf("Error: Pin count: %d not fit with list test entries: %d \n", ulPinsUnderTest, ulListLength);
+			iResult = -1;
+			break;
+		}
+	}
+
+	ulListCnt = 0;
+	ulPinCnt = 0;
+	ucValueExpect = 0;
+
+	/* Decode all test states */
+	while (ulListCnt < ulListLength)
+	{
+		while(1)
+		{
+			ulPinCnt = 0;
+
+			while ( ulPinCnt < ulPinsUnderTest)
+			{
+				ucValueExpect = ptParameter->aucList[ulListCnt] - 48; /* numbers starts at 48 in asci-table */
+
+				/* Get the pointer to the pin description. */
+				ptPinDescription  = atPinsUnderTest;
+				ptPinDescription += ulPinCnt;
+
+				/* Get the pin value. */
+				iResult = iopins_get(ptPinDescription, &ucValue);
+				if( iResult!=0 )
+				{
+					uprintf("Failed to get the pin: ");
+					print_pin(ulPinCnt, ptPinDescription);
+					break;
+				}
+
+				aucPatternList[ulPinCnt] = ucValueExpect;
+				aucPatternPin[ulPinCnt] = (int)ucValue;
+
+				++ulPinCnt;
+				++ulListCnt;
+			}
+
+			if(memcmp(aucPatternList, aucPatternPin, ulPinsUnderTest) == 0)
+			{
+				uprintf("pucPatternList == pucPatternPin true\n");
+				break;
+			}
+			else
+			{
+				//uprintf("pucPatternList == pucPatternPin false\n");
+				ulListCnt -= ulPinsUnderTest;
+			}
+		}
+	}
+
+	return iResult;
+}
+
 
 /*-------------------------------------------------------------------------*/
 
@@ -512,8 +616,21 @@ TEST_RESULT_T test(IOMATRIX_PARAMETER_T *ptTestParams)
 			iResult = get_all_pins(&(ptTestParams->uParameter.tGetAllPins));
 		}
 		break;
-	}
+	case IOMATRIX_COMMAND_Get_Continuous_Status_Match:
+		if( s_ulVerbosity!=0 )
+		{
+			uprintf("Mode: Continuous pin status\n");
+		}
 
+		if( ptTestParams->uParameter.tGetContinuousStatusMatch.pvPinDescription != (void*)atPinsUnderTest )
+		{
+			uprintf("Error: the pin description handle is invalid!\n");
+		}
+		else
+		{
+			iResult = get_continuous_status_match(&(ptTestParams->uParameter.tGetContinuousStatusMatch));
+		}
+	}
 
 	if( iResult==0 )
 	{

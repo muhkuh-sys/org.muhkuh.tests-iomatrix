@@ -49,11 +49,12 @@ function IoMatrix_netx_base:_init(tLog, fnInit, fnDeinit, ulVerbose, fnCallbackP
 
   self.HEADER_MAGIC          = 0x686f6f6d
 
-  self.IOMATRIX_COMMAND_Parse_Pin_Description    = ${IOMATRIX_COMMAND_Parse_Pin_Description}
-  self.IOMATRIX_COMMAND_Set_Pin                  = ${IOMATRIX_COMMAND_Set_Pin}
-  self.IOMATRIX_COMMAND_Get_Pin                  = ${IOMATRIX_COMMAND_Get_Pin}
-  self.IOMATRIX_COMMAND_Set_All_Pins             = ${IOMATRIX_COMMAND_Set_All_Pins}
-  self.IOMATRIX_COMMAND_Get_All_Pins             = ${IOMATRIX_COMMAND_Get_All_Pins}
+  self.IOMATRIX_COMMAND_Parse_Pin_Description       = ${IOMATRIX_COMMAND_Parse_Pin_Description}
+  self.IOMATRIX_COMMAND_Set_Pin                     = ${IOMATRIX_COMMAND_Set_Pin}
+  self.IOMATRIX_COMMAND_Get_Pin                     = ${IOMATRIX_COMMAND_Get_Pin}
+  self.IOMATRIX_COMMAND_Set_All_Pins                = ${IOMATRIX_COMMAND_Set_All_Pins}
+  self.IOMATRIX_COMMAND_Get_All_Pins                = ${IOMATRIX_COMMAND_Get_All_Pins}
+  self.IOMATRIX_COMMAND_Get_Continuous_Status_Match = ${IOMATRIX_COMMAND_Get_Continuous_Status_Match}
 
   self.strPinStatusZ = string.char(self.PINSTATUS_HIGHZ)
   self.strPinStatus0 = string.char(self.PINSTATUS_OUTPUT0)
@@ -424,6 +425,58 @@ function IoMatrix_netx_base:parse_pins()
   self.tLog.debug('pin desc handle: %08x', self.hPinDescription)
 end
 
+
+-- No need of passing arguments because netx_base is the base class of netx 
+function IoMatrix_netx_base:get_continuous_status_match(tStateList, ulNumberOfPatternsToTest)
+  local strList = ""  -- List with all test patterns
+  local ulCount = 0   -- Variable to count number of table entries
+ 
+  -- Here write data into one string
+  -- Go over the table and concat all entries of test patterns
+  for _, tValue in ipairs(tStateList) do
+  strList = strList .. tValue
+  end
+  
+  self.tLog.debug('strList of Testpattern: %s', strList)
+  
+  -- Last check if number if test pins and count of test patterns fit
+  for Index, Value in pairs( tStateList ) do
+    ulCount = ulCount + 1
+  end
+  
+  self.tLog.debug('ulCount: %d', ulCount)
+  self.tLog.debug('ulNumberOfPatternsToTest: %d', ulNumberOfPatternsToTest)
+  
+  if ulCount ~= ulNumberOfPatternsToTest then
+    
+    error('Error: Pattern count of list does not fit with handover variable ulNumberOfPatternsToTest')
+  end
+  
+  -- Collect the parameter for the header
+  self:__write_header{
+    self.ulVerbose,                                     -- Verbose mode.
+    self.IOMATRIX_COMMAND_Get_Continuous_Status_Match,  -- The command code.
+    self.hPinDescription,                               -- Pin description handle
+    ulNumberOfPatternsToTest,                           -- Count of Pins in List to test
+    strList                                             -- Sequence of pin status
+  }
+  
+  -- Call the netX program
+  self.tLog.debug('__/Output of get_continuous_status_match Test/________________________________')
+  self.tPlugin:call(self.ulExecutionAddress, self.ulParameterStartAddress, self.fnCallbackMessage, 0)
+  self.tLog.debug('______________________________________________________________________________')
+  
+  -- Get the result
+  local ulResult = self.tPlugin:read_data32(self.ulParameterStartAddress)
+  if ulResult~=0 then
+    error('Error: Failed to get continous status match')
+  else
+    tResult = true
+  end
+  
+  self.tLog.debug('Leaving netx_base get_continuous_status_match function')
+  return tResult
+end
 
 
 function IoMatrix_netx_base:set_all_pins_raw(strRawPinStates)
