@@ -241,7 +241,8 @@ end
 function IoMatrix_FTDI:add_pin(strID, uiIndex, strKnownName, uiDefaultValue, uiFlags)
   local tDev = self.atDevices[uiIndex]
   if tDev==nil then
-    error('No FTDI device with index %d exists.', uiIndex)
+    self.tLog.error('No FTDI device with index %d exists.', uiIndex)
+    error('FTDI index not found.')
   end
   return tDev:add_pin(strID, strKnownName, uiDefaultValue, uiFlags)
 end
