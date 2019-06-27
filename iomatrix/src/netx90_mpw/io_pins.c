@@ -484,7 +484,7 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDe
 			for(iCnt=0; iCnt<8; ++iCnt)
 			{
 				ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
-				ptMmioCtrlArea->aulMmio_cfg[iCnt] = MMIO_CFG_PIO;
+				ptMmioCtrlArea->aulMmio_cfg[iCnt] = HOSTMMIO(PIO);
 			}
 		}
 
@@ -754,7 +754,7 @@ static int set_mmiopio(unsigned int uiIndex, PINSTATUS_T tValue)
 	/* check the index */
 	if( uiIndex<8 )
 	{
-		ulValue = ((unsigned long)MMIO_CFG_PIO) << HOSTSRT(mmio0_cfg_mmio_sel);
+		ulValue = ((unsigned long)HOSTMMIO(PIO)) << HOSTSRT(mmio0_cfg_mmio_sel);
 		switch( tValue )
 		{
 		case PINSTATUS_HIGHZ:

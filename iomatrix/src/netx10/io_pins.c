@@ -251,7 +251,7 @@ static int iopins_configure_mmio(UNITCONFIGURATION_T *ptUnitCfg)
 			if( ulValue!=0 )
 			{
 				ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
-				ptMmioCtrlArea->aulMmio_cfg[uiCnt] = MMIO_CFG_PIO;
+				ptMmioCtrlArea->aulMmio_cfg[uiCnt] = HOSTMMIO(PIO);
 			}
 		}
 	}
