@@ -465,7 +465,7 @@ static int get_continuous_status_match(IOMATRIX_PARAMETER_GET_CONTINUOUS_STATUS_
 
 			while ( ulPinCnt < ulPinsUnderTest)
 			{
-				ucValueExpect = ptParameter->aucList[ulListCnt] - 48; /* numbers starts at 48 in asci-table */
+				ucValueExpect = (unsigned char)(ptParameter->aucList[ulListCnt] - 48U); /* numbers starts at 48 in asci-table */
 
 				/* Get the pointer to the pin description. */
 				ptPinDescription  = atPinsUnderTest;
