@@ -57,9 +57,9 @@ function IoMatrix_FTDI:__print_list_entry(fnLog, tListEntry)
     end
   end
 
-  fnLog('  Manufacturer: %s', tListEntry:get_manufacturer())
-  fnLog('  Description: %s', tListEntry:get_description())
-  fnLog('  Serial: %s', tListEntry:get_serial())
+  fnLog('  Manufacturer: %s', tostring(tListEntry:get_manufacturer()))
+  fnLog('  Description: %s', tostring(tListEntry:get_description()))
+  fnLog('  Serial: %s', tostring(tListEntry:get_serial()))
 end
 
 
