@@ -87,13 +87,15 @@ function IoMatrix:parse_pin_description(atPinDescription)
 
     -- Does the ID already exist?
     if self.atPins[strID]~=nil then
-      error('The pin "%s" already exists.', strID)
+      self.tLog.error('The pin "%s" already exists.', strID)
+      error("Pin already exists.")
     end
 
     -- Get the distributor fot the family.
     local tDistrib = self.atFamily2Distributor[tFamily]
     if tFamily==nil then
-      error('Invalid family: %s.', tostring(tFamily))
+      self.tLog.error('Invalid pin family: %s.', tostring(tFamily))
+      error("Invalid pin family.")
     end
 
     -- Pass the pin to the distributor.
