@@ -26,6 +26,7 @@
 
 typedef struct UNITCONFIGURATION_STRUCT
 {
+	unsigned long ulGpio;
 	unsigned long ulComIo;
 	unsigned long aulHifPio[2];
 	unsigned long ulMled;
@@ -38,6 +39,7 @@ typedef struct UNITCONFIGURATION_STRUCT
 
 static void initialize_unit_configuration(UNITCONFIGURATION_T *ptUnitCfg)
 {
+	ptUnitCfg->ulGpio       = 0;
 	ptUnitCfg->ulComIo      = 0;
 	ptUnitCfg->aulHifPio[0] = 0;
 	ptUnitCfg->aulHifPio[1] = 0;
@@ -80,9 +82,16 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 			switch( ptPinDescCnt->tType )
 			{
 			case PINTYPE_GPIO:
-				/* The GPIO pins on the netX90 are only available on MMIOs.
-				 * Use MMIOs instead.
-				 */
+				/* On the COM side GPIO 8-11 are available. */
+				if( uiIndex>7 && uiIndex<12 )
+				{
+					ptUnitCfg->ulGpio |= 1U << uiIndex;
+					iResult = 0;
+				}
+				else
+				{
+					uprintf("The pin %s has an invalid index of %d!", ptPinDescCnt->apcName, uiIndex);
+				}
 				break;
 
 			case PINTYPE_HIFPIO:
@@ -403,6 +412,89 @@ static int configure_xm1io(unsigned long ulPins)
 
 
 
+static int configure_gpio(unsigned long ulPins)
+{
+	HOSTDEF(ptAsicCtrlArea);
+	HOSTDEF(ptGpioComArea);
+	unsigned long ulValue;
+	unsigned long ulIoConfig;
+	unsigned long ulIoMask;
+	int iResult;
+
+
+	iResult = 0;
+
+	/* Get the values for GPIO 8-11. */
+	ulIoConfig = 0;
+	ulIoMask = 0;
+	if( (ulPins&(1U<<8U))!=0U )
+	{
+		/* GPIO8 is used. */
+		ulIoConfig |= HOSTMSK(io_config2_sel_gpio8);
+		ulIoConfig |= HOSTMSK(io_config2_sel_gpio8_wm);
+		ulIoMask = HOSTMSK(io_config2_mask_sel_gpio8);
+
+		/* Set the GPIO to input.
+		 * In the GPIO_COM module, this is GPIO0.
+		 */
+		ptGpioComArea->aulGpio_cfg[0] = 0U;
+	}
+	if( (ulPins&(1U<<9U))!=0U )
+	{
+		/* GPIO9 is used. */
+		ulIoConfig |= HOSTMSK(io_config2_sel_gpio9);
+		ulIoConfig |= HOSTMSK(io_config2_sel_gpio9_wm);
+		ulIoMask = HOSTMSK(io_config2_mask_sel_gpio9);
+
+		/* Set the GPIO to input.
+		 * In the GPIO_COM module, this is GPIO1.
+		 */
+		ptGpioComArea->aulGpio_cfg[1] = 0U;
+	}
+	if( (ulPins&(1U<<10U))!=0U )
+	{
+		/* GPIO10 is used. */
+		ulIoConfig |= HOSTMSK(io_config2_sel_gpio10);
+		ulIoConfig |= HOSTMSK(io_config2_sel_gpio10_wm);
+		ulIoMask = HOSTMSK(io_config2_mask_sel_gpio10);
+
+		/* Set the GPIO to input.
+		 * In the GPIO_COM module, this is GPIO2.
+		 */
+		ptGpioComArea->aulGpio_cfg[2] = 0U;
+	}
+	if( (ulPins&(1U<<11U))!=0U )
+	{
+		/* GPIO11 is used. */
+		ulIoConfig |= HOSTMSK(io_config2_sel_gpio11);
+		ulIoConfig |= HOSTMSK(io_config2_sel_gpio11_wm);
+		ulIoMask = HOSTMSK(io_config2_mask_sel_gpio11);
+
+		/* Set the GPIO to input.
+		 * In the GPIO_COM module, this is GPIO3.
+		 */
+		ptGpioComArea->aulGpio_cfg[3] = 0U;
+	}
+
+	/* Can the pins be enabled? */
+	ulValue  = ptAsicCtrlArea->asIo_config[2].ulMask;
+	ulValue &= ulIoMask;
+	if( ulValue!=ulIoMask )
+	{
+		uprintf("Not all GPIO pins can be enabled!\n");
+		iResult = -1;
+	}
+	else
+	{
+		ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
+		ptAsicCtrlArea->asIo_config[2].ulConfig = ulIoConfig;
+	}
+
+	return iResult;
+}
+
+
+
 int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDesc)
 {
 	int iResult;
@@ -421,6 +513,14 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDe
 	iResult = collect_unit_configuration(ptPinDesc, sizMaxPinDesc, &tUnitCfg);
 	if( iResult==0 )
 	{
+		/*
+		 * GPIO
+		 */
+		if( tUnitCfg.ulGpio!=0 )
+		{
+			configure_gpio(tUnitCfg.ulGpio);
+		}
+
 		/*
 		 *  HIFPIO
 		 */
@@ -531,6 +631,83 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDe
 
 
 /*---------------------------------------------------------------------------*/
+
+
+static int set_gpio(unsigned int uiIndex, PINSTATUS_T tValue)
+{
+	HOSTDEF(ptGpioComArea);
+	int iResult;
+	unsigned long ulValue;
+
+
+	/* assume failure */
+	iResult = -1;
+
+	/* check the index */
+	if( uiIndex>7U && uiIndex<12U )
+	{
+		switch( tValue )
+		{
+		case PINSTATUS_HIGHZ:
+			/* Clear the output enable bit for the pin. */
+			ulValue = 0;
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT0:
+			/* Set the output enable bit and the output bit to 0. */
+			ulValue = 4U;
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT1:
+			/* Set the output enable bit and the output bit to 1. */
+			ulValue = 5U;
+			iResult = 0;
+			break;
+		}
+
+		if( iResult==0 )
+		{
+			ptGpioComArea->aulGpio_cfg[uiIndex-8] = ulValue;
+		}
+	}
+
+	return iResult;
+}
+
+
+
+static int get_gpio(unsigned int uiIndex, unsigned char *pucData)
+{
+	HOSTDEF(ptGpioComArea);
+	int iResult;
+	unsigned long ulValue;
+	unsigned char ucData;
+
+
+	/* assume failure */
+	iResult = -1;
+
+	/* check the index */
+	if( uiIndex>7U && uiIndex<12U )
+	{
+		ulValue  = ptGpioComArea->ulGpio_in;
+		ulValue &= 1U << (uiIndex-8U);
+		if( ulValue==0 )
+		{
+			ucData = 0;
+		}
+		else
+		{
+			ucData = 1;
+		}
+		*pucData = ucData;
+	}
+
+	return iResult;
+}
+
 
 
 static int set_hifpio(unsigned int uiIndex, PINSTATUS_T tValue)
@@ -1198,6 +1375,8 @@ static int get_xm1io(unsigned int uiIndex, unsigned char *pucData)
 }
 
 
+
+
 /*---------------------------------------------------------------------------*/
 
 
@@ -1213,7 +1392,7 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 	switch( ptPinDescription->tType )
 	{
 	case PINTYPE_GPIO:
-		/* Not yet... */
+		iResult = set_gpio(uiIndex, tValue);
 		break;
 
 	case PINTYPE_HIFPIO:
@@ -1272,7 +1451,7 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 	switch( ptPinDescription->tType )
 	{
 	case PINTYPE_GPIO:
-		/* Not yet... */
+		iResult = get_gpio(uiIndex, pucData);
 		break;
 
 	case PINTYPE_HIFPIO:
@@ -1317,4 +1496,3 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 
 	return iResult;
 }
-
