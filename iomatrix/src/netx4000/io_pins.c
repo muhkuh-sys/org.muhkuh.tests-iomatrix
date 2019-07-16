@@ -1219,4 +1219,3 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 
 	return iResult;
 }
-
