@@ -113,7 +113,7 @@ function IoMatrix_FTDI:__build_ftdi_index(tList, ulModuleIndexMask, ulModuleInde
             ulModuleIndex = self.bit.rshift(self.bit.band(ulPins, ulModuleIndexMask), ulModuleIndexShift)
             self.tLog.debug('Found module index %d.', ulModuleIndex)
           end
-        
+
           tFtdi:close()
         end
       end
@@ -146,6 +146,10 @@ function IoMatrix_FTDI:__find_ftdi_devices(atAllDevices, atDeviceAttr)
     -- Get the required serial or nil.
     local strSerial = tDeviceAttr.serial
     local ulModuleIndex = tDeviceAttr.moduleidx
+    local aucPinMask = tDeviceAttr.pinmask
+    if aucPinMask~=nil then
+      self.tLog.debug('Pin mask: %s', table.concat(aucPinMask, ', '))
+    end
 
     -- Search the complete list of devices.
     local tFoundDevice
@@ -181,7 +185,7 @@ function IoMatrix_FTDI:__find_ftdi_devices(atAllDevices, atDeviceAttr)
       break
     else
       local tFtdi = self.cFTDI2232H(self.tLog)
-      local tResult = tFtdi:open(tFoundDevice.tListEntry)
+      local tResult = tFtdi:open(tFoundDevice.tListEntry, aucPinMask)
       if tResult==nil then
         self.tLog.error('Failed to open the device [%s].', tFoundDevice.strPrettyPortNumbers)
         tAllOk = false

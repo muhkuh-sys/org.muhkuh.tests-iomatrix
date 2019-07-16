@@ -11,6 +11,8 @@ function Ftdi2232H:_init(tLog)
   self.tContextA = nil
   self.tContextB = nil
 
+  self.aucPinMask = nil
+
   self.atBuffer = {
     r = 0,
     w = 0,
@@ -24,7 +26,12 @@ end
 
 
 
-function Ftdi2232H:open(tListEntry)
+function Ftdi2232H:open(tListEntry, aucPinMask)
+  if aucPinMask==nil then
+    aucPinMask = { 0xff, 0xff, 0xff, 0xff }
+  end
+  self.aucPinMask = aucPinMask
+
   -- Create a context for interface A and B.
   local tContextA = self.luaftdi.Context()
   local tContextB = self.luaftdi.Context()
@@ -62,7 +69,7 @@ function Ftdi2232H:open(tListEntry)
             else
               self.tContextA = tContextA
               self.tContextB = tContextB
-              
+
               tResult = true
             end
           end
@@ -142,22 +149,36 @@ end
 function Ftdi2232H:__write_pins(uiOe, uiOut)
   local luaftdi = self.luaftdi
   local bit = self.bit
+  local aucPinMask = self.aucPinMask
+
+--  print(string.format('%08x %08x %02x %02x %02x %02x', uiOe, uiOut, aucPinMask[1], aucPinMask[2], aucPinMask[3], aucPinMask[4]))
 
   -- Construct the MPSSE sequence for interface A and B.
-  self.tContextA:write_data(
-    string.char(
-      luaftdi.SET_BITS_LOW, bit.band(uiOut, 0xff), bit.band(uiOe, 0xff),
-      luaftdi.SET_BITS_HIGH, bit.band(bit.rshift(uiOut, 8), 0xff), bit.band(bit.rshift(uiOe, 8), 0xff),
-      luaftdi.SEND_IMMEDIATE
-    )
-  )
-  self.tContextB:write_data(
-    string.char(
-      luaftdi.SET_BITS_LOW, bit.band(bit.rshift(uiOut, 16), 0xff), bit.band(bit.rshift(uiOe, 16), 0xff),
-      luaftdi.SET_BITS_HIGH, bit.band(bit.rshift(uiOut, 24), 0xff), bit.band(bit.rshift(uiOe, 24), 0xff),
-      luaftdi.SEND_IMMEDIATE
-    )
-  )
+  if bit.bor(aucPinMask[1], aucPinMask[2])~=0x00 then
+    local aucCmd = {}
+    if aucPinMask[1]~=0x00 then
+      table.insert(aucCmd, string.char(luaftdi.SET_BITS_LOW, bit.band(uiOut, 0xff), bit.band(uiOe, 0xff)))
+    end
+    if aucPinMask[2]~=0x00 then
+      table.insert(aucCmd, string.char(luaftdi.SET_BITS_HIGH, bit.band(bit.rshift(uiOut, 8), 0xff), bit.band(bit.rshift(uiOe, 8), 0xff)))
+    end
+    table.insert(aucCmd, string.char(luaftdi.SEND_IMMEDIATE))
+
+    self.tContextA:write_data(table.concat(aucCmd))
+  end
+
+  if bit.bor(aucPinMask[3], aucPinMask[4])~=0x00 then
+    local aucCmd = {}
+    if aucPinMask[3]~=0x00 then
+      table.insert(aucCmd, string.char(luaftdi.SET_BITS_LOW, bit.band(bit.rshift(uiOut, 16), 0xff), bit.band(bit.rshift(uiOe, 16), 0xff)))
+    end
+    if aucPinMask[4]~=0x00 then
+      table.insert(aucCmd, string.char(luaftdi.SET_BITS_HIGH, bit.band(bit.rshift(uiOut, 24), 0xff), bit.band(bit.rshift(uiOe, 24), 0xff)))
+    end
+    table.insert(aucCmd, string.char(luaftdi.SEND_IMMEDIATE))
+
+    self.tContextB:write_data(table.concat(aucCmd))
+  end
 end
 
 

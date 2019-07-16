@@ -177,16 +177,44 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
       end
     end
 
+    local aucPinMask
+    local strPinMask = atAttributes['pinMask']
+    if strPinMask~=nil then
+      -- The pin mask must be one or more HEX bytes.
+      -- This means the number of digits must be a multiple of 2.
+      local sizPinMask = string.len(strPinMask)
+      if string.match(strPinMask, '^%x+$')==nil then
+        fOk = nil
+        aLxpAttr.tLog.error('Error in line %d, col %d: the attribute "pinMask" are no valid HEX dump: %s.', iPosLine, iPosColumn, strPinMask)
+      elseif math.fmod(sizPinMask, 2)~=0 then
+        fOk = nil
+        aLxpAttr.tLog.error('Error in line %d, col %d: the number of HEX digits in the attribute "pinMask" must be a multiple of 2. Here it is %d.', iPosLine, iPosColumn, sizPinMask)
+      else
+        aucPinMask = {}
+        for uiCnt=1, sizPinMask, 2 do
+          local strData = string.sub(strPinMask, uiCnt, uiCnt+1)
+          local ucData = tonumber(strData, 16)
+          if ucData==nil then
+            fOk = nil
+            aLxpAttr.tLog.error('Error in line %d, col %d: the attribute "pinMask" has an invalid HEX digit at offset %d: %s', iPosLine, iPosColumn, uiCnt, strData)
+            break
+          end
+          table.insert(aucPinMask, ucData)
+        end
+      end
+    end
+
     if fOk~=true then
       aLxpAttr.tResult = nil
     elseif auiPort==nil and strSerial==nil and uiModuleIndex==nil then
       aLxpAttr.tResult = nil
-      aLxpAttr.tLog.error('Error in line %d, col %d: attribute "moduleIndex" is no number: "%s".', iPosLine, iPosColumn, strModuleIndex)
+      aLxpAttr.tLog.error('Error in line %d, col %d: No way to identify device as no port, serial or moduleIndex specified.', iPosLine, iPosColumn)
     else
       local atDevice = {
         port = auiPort,
         serial = strSerial,
-        moduleidx = uiModuleIndex
+        moduleidx = uiModuleIndex,
+        pinmask = aucPinMask
       }
       table.insert(aLxpAttr.tCurrentFTDIDevice, atDevice)
     end
