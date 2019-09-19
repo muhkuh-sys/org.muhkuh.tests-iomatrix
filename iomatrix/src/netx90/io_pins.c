@@ -703,6 +703,7 @@ static int get_gpio(unsigned int uiIndex, unsigned char *pucData)
 			ucData = 1;
 		}
 		*pucData = ucData;
+		iResult = 0;
 	}
 
 	return iResult;
