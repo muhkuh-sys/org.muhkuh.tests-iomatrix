@@ -30,6 +30,11 @@ end
 
 
 IoMatrix_netx90.atKnownPins = {
+  ['GPIO8']  = { type=${PINTYPE_GPIO}, index=8 },
+  ['GPIO9']  = { type=${PINTYPE_GPIO}, index=9 },
+  ['GPIO10'] = { type=${PINTYPE_GPIO}, index=10 },
+  ['GPIO11'] = { type=${PINTYPE_GPIO}, index=11 },
+
   ['HIF_D0']    = { type=${PINTYPE_HIFPIO}, index=0 },
   ['HIF_D1']    = { type=${PINTYPE_HIFPIO}, index=1 },
   ['HIF_D2']    = { type=${PINTYPE_HIFPIO}, index=2 },
