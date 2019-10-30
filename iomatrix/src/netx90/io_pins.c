@@ -261,20 +261,28 @@ static int configure_xm0io(unsigned long ulPins)
 			ulValue = HOSTMSK(clock_enable0_xmac0) | HOSTMSK(clock_enable0_xc_misc);
 			if( (ptAsicCtrlArea->asClock_enable[0].ulEnable & ulValue)!=ulValue )
 			{
+				uprintf("Enabling XC0 clocks...\n");
+
 				/* Enable the XMAC0 and XC_MISC clock. */
 				ulValue  = ptAsicCtrlArea->asClock_enable[0].ulEnable;
 				ulValue |= HOSTMSK(clock_enable0_xmac0);
+				ulValue |= HOSTMSK(clock_enable0_xmac0_wm);
 				ulValue |= HOSTMSK(clock_enable0_xc_misc);
+				ulValue |= HOSTMSK(clock_enable0_xc_misc_wm);
 				ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
 				ptAsicCtrlArea->asClock_enable[0].ulEnable = ulValue;
-
-				/* Stop the unit. */
-				ulValue  = HOSTMSK(xc_start_stop_ctrl_xc0_stop_rpu0);
-				ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_tpu0);
-				ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_rpec0);
-				ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_tpec0);
-				ptXcStartStopArea->ulXc_start_stop_ctrl = ulValue;
 			}
+			else
+			{
+				uprintf("The XC0 clocks are already enabled.\n");
+			}
+
+			/* Stop the unit. */
+			ulValue  = HOSTMSK(xc_start_stop_ctrl_xc0_stop_rpu0);
+			ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_tpu0);
+			ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_rpec0);
+			ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_tpec0);
+			ptXcStartStopArea->ulXc_start_stop_ctrl = ulValue;
 
 			/* Using these pins is not a good idea if XMAC0 is running. */
 			uprintf("ulXc_hold_status: 0x%08x\n", ptXcStartStopArea->ulXc_hold_status);
@@ -355,20 +363,28 @@ static int configure_xm1io(unsigned long ulPins)
 			ulValue = HOSTMSK(clock_enable0_xmac1) | HOSTMSK(clock_enable0_xc_misc);
 			if( (ptAsicCtrlArea->asClock_enable[0].ulEnable & ulValue)!=ulValue )
 			{
+				uprintf("Enabling XC1 clocks...\n");
+
 				/* Enable the XMAC0 and XC_MISC clock. */
 				ulValue  = ptAsicCtrlArea->asClock_enable[0].ulEnable;
 				ulValue |= HOSTMSK(clock_enable0_xmac1);
+				ulValue |= HOSTMSK(clock_enable0_xmac1_wm);
 				ulValue |= HOSTMSK(clock_enable0_xc_misc);
+				ulValue |= HOSTMSK(clock_enable0_xc_misc_wm);
 				ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
 				ptAsicCtrlArea->asClock_enable[0].ulEnable = ulValue;
-
-				/* Stop the unit. */
-				ulValue  = HOSTMSK(xc_start_stop_ctrl_xc0_stop_rpu1);
-				ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_tpu1);
-				ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_rpec1);
-				ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_tpec1);
-				ptXcStartStopArea->ulXc_start_stop_ctrl = ulValue;
 			}
+			else
+			{
+				uprintf("The XC1 clocks are already enabled.\n");
+			}
+
+			/* Stop the unit. */
+			ulValue  = HOSTMSK(xc_start_stop_ctrl_xc0_stop_rpu1);
+			ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_tpu1);
+			ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_rpec1);
+			ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_tpec1);
+			ptXcStartStopArea->ulXc_start_stop_ctrl = ulValue;
 
 			/* Using these pins is not a good idea if XMAC1 is running. */
 			uprintf("ulXc_hold_status: 0x%08x\n", ptXcStartStopArea->ulXc_hold_status);
