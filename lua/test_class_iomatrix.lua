@@ -499,7 +499,7 @@ function TestClassIoMatrix:run(aParameters, tLog)
   for _, tNetxDevice in ipairs(self.atDevicesNetx) do
     local tPlugin
     if tNetxDevice.plugin=='COMMON' then
-      tPlugin = tester.getCommonPlugin()
+      tPlugin = tester:getCommonPlugin()
       if not tPlugin then
         error("No plugin selected, nothing to do!")
       end
