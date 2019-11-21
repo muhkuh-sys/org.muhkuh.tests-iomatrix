@@ -47,6 +47,7 @@ typedef struct PINTYPE_PRINT_STRUCT
 
 static const PINTYPE_PRINT_T atPintypePrint[] =
 {
+	{ PINTYPE_APPPIO, "APPPIO" },
 	{ PINTYPE_GPIO,   "GPIO" },
 	{ PINTYPE_PIO,    "PIO" },
 	{ PINTYPE_MMIO,   "MMIO" },
@@ -185,6 +186,7 @@ static int parse_pin_description(const unsigned char *pucDefinition, unsigned lo
 				case PINTYPE_RSTOUT:
 				case PINTYPE_XMIO:
 				case PINTYPE_RAPGPIO:
+				case PINTYPE_APPPIO:
 					iResult = 0;
 					break;
 				}
@@ -616,6 +618,7 @@ TEST_RESULT_T test(IOMATRIX_PARAMETER_T *ptTestParams)
 			iResult = get_all_pins(&(ptTestParams->uParameter.tGetAllPins));
 		}
 		break;
+
 	case IOMATRIX_COMMAND_Get_Continuous_Status_Match:
 		if( s_ulVerbosity!=0 )
 		{
@@ -630,6 +633,7 @@ TEST_RESULT_T test(IOMATRIX_PARAMETER_T *ptTestParams)
 		{
 			iResult = get_continuous_status_match(&(ptTestParams->uParameter.tGetContinuousStatusMatch));
 		}
+		break;
 	}
 
 	if( iResult==0 )

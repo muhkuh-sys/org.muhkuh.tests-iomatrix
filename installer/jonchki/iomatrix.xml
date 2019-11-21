@@ -14,6 +14,7 @@
 		</description>
 	</info>
 	<dependencies>
+		<build-dependency group="org.muhkuh.lua" module="netx90_app_bridge" artifact="netx90_app_bridge" version="1.0.0"/>
 		<dependency group="org.muhkuh.tools" module="muhkuh_base_cli" artifact="lua5.1-muhkuh_base_cli" version="2.4"/>
 		<dependency group="uk.co.matthewwild" module="luaexpat" artifact="lua5.1-luaexpat" version="1.3.0"/>
 		<dependency group="org.muhkuh.lua" module="luaftdi" artifact="lua5.1-luaftdi" version="1.0"/>

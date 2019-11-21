@@ -1,0 +1,40 @@
+#! /bin/bash
+set -e
+
+JONCHKI_VERSION=0.0.5.1
+JONCHKI_VERBOSE=info
+
+# Get the path to this script. Found here: https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+	DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+	SOURCE="$(readlink "$SOURCE")"
+	[[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+PRJ_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
+
+BUILD_DIR=${PRJ_DIR}/targets
+mkdir -p ${BUILD_DIR}
+mkdir -p ${BUILD_DIR}/build_requirements
+
+
+# Install jonchki.
+python2.7 jonchki/jonchkihere.py --jonchki-version ${JONCHKI_VERSION} --local-archives ${PRJ_DIR}/jonchki/local_archives ${PRJ_DIR}/targets
+if [ -f ${PRJ_DIR}/targets/.jonchki.cmd ]; then
+	JONCHKI=$(<${PRJ_DIR}/targets/.jonchki.cmd)
+fi
+if [ "${JONCHKI}" == "" ]; then
+	echo "Failed to extract the jonchki command from the jonchkihere output."
+	exit 1
+fi
+
+
+# Get the build requirements.
+pushd ${BUILD_DIR}/build_requirements
+rm -f iomatrix.xml
+sed -e 's/${PROJECT_VERSION}/0/g' -e 's/${PROJECT_VERSION_VCS}/0/g' ${PRJ_DIR}/installer/jonchki/iomatrix.xml >iomatrix.xml
+${JONCHKI} install-dependencies --verbose ${JONCHKI_VERBOSE} --syscfg ${PRJ_DIR}/jonchki/jonchkisys.cfg --prjcfg ${PRJ_DIR}/jonchki/jonchkicfg.xml ${JONCHKI_SYSTEM} --build-dependencies iomatrix.xml
+popd
+
+python2.7 mbs/mbs

@@ -25,6 +25,7 @@ MEMORY
 	ASSERT_EMPTY(rwx): ORIGIN = 0x00000000, LENGTH = 0
 	INTRAM(rwx):       ORIGIN = 0x00024000, LENGTH = 0x0001c000
 	IOVECTORS(rw):     ORIGIN = 0x2009FFF0, LENGTH = 0x00000010
+	DPM(rw):           ORIGIN = 0x200c0000, LENGTH = 0x00008000
 }
 
 
@@ -92,6 +93,11 @@ SECTIONS
 		PROVIDE ( tSerialVectors = . );
 		. = . + 0x10;
 	} >IOVECTORS
+
+	.dpm (NOLOAD) :
+	{
+		*(.dpm)
+	} >DPM
 
 
 	/* Stabs debugging sections.  */

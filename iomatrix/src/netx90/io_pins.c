@@ -20,6 +20,7 @@
 
 #include "io_pins.h"
 
+#include "app_bridge.h"
 #include "netx_io_areas.h"
 #include "uprintf.h"
 
@@ -31,6 +32,7 @@ typedef struct UNITCONFIGURATION_STRUCT
 	unsigned long aulHifPio[2];
 	unsigned long ulMled;
 	unsigned long ulMmio;
+	unsigned long ulPioApp;
 	unsigned long ulRdyRun;
 	unsigned long ulRstOut;
 	unsigned long aulXmio[2];
@@ -45,11 +47,18 @@ static void initialize_unit_configuration(UNITCONFIGURATION_T *ptUnitCfg)
 	ptUnitCfg->aulHifPio[1] = 0;
 	ptUnitCfg->ulMled       = 0;
 	ptUnitCfg->ulMmio       = 0;
+	ptUnitCfg->ulPioApp     = 0;
 	ptUnitCfg->ulRdyRun     = 0;
 	ptUnitCfg->ulRstOut     = 0;
 	ptUnitCfg->aulXmio[0]   = 0;
 	ptUnitCfg->aulXmio[1]   = 0;
 }
+
+
+
+/* Local copies of remote registers. */
+static unsigned long s_ulAppPio_Oe;
+static unsigned long s_ulAppPio_Out;
 
 
 
@@ -207,6 +216,19 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 
 			case PINTYPE_RAPGPIO:
 				uprintf("The pin type RAPGPIO is not supported on this platform!\n");
+				break;
+
+			case PINTYPE_APPPIO:
+				/* The netX90 has 32 APP PIOs. */
+				if( uiIndex<32 )
+				{
+					ptUnitCfg->ulPioApp |= 1U << uiIndex;
+					iResult = 0;
+				}
+				else
+				{
+					uprintf("The pin %s has an invalid index of %d!", ptPinDescCnt->apcName, uiIndex);
+				}
 				break;
 			}
 
@@ -511,6 +533,62 @@ static int configure_gpio(unsigned long ulPins)
 
 
 
+static int configure_apppio(unsigned long ulPins)
+{
+	HOSTDEF(ptAsicCtrlArea);
+	int iResult;
+	unsigned long ulConfig9;
+	unsigned long ulConfig10;
+	unsigned long ulMasked9;
+	unsigned long ulMasked10;
+
+
+	s_ulAppPio_Oe = 0;
+	s_ulAppPio_Out = 0;
+
+	/* Set all pins to input. */
+	iResult = app_bridge_write_register(Adr_NX90_pio_app_pio_oe, 0x00000000);
+	if( iResult!=0 )
+	{
+		uprintf("Failed to write to the APP bridge: %d\n", iResult);
+	}
+	else
+	{
+		iResult = app_bridge_write_register(Adr_NX90_pio_app_pio_out, 0x00000000);
+		if( iResult!=0 )
+		{
+			uprintf("Failed to write to the APP bridge: %d\n", iResult);
+		}
+		else
+		{
+			ulConfig9  =  ulPins & 0x0000ffffU;
+			ulConfig10 = (ulPins & 0xffff0000U) >> 16U;
+
+			ulMasked9  = ptAsicCtrlArea->asIo_config[9].ulMask & ulConfig9;
+			ulMasked10 = ptAsicCtrlArea->asIo_config[10].ulMask & ulConfig10;
+
+			/* Can the pins be enabled? */
+			if( (ulMasked9!=ulConfig9) || (ulMasked10!=ulConfig10) )
+			{
+				uprintf("Not all PIOAPP pins can be enabled!\n");
+				iResult = -1;
+			}
+			else
+			{
+				ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
+				ptAsicCtrlArea->asIo_config[9].ulConfig = ulConfig9 | 0xffff0000U;
+
+				ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
+				ptAsicCtrlArea->asIo_config[10].ulConfig = ulConfig10 | 0xffff0000U;
+			}
+		}
+	}
+
+	return iResult;
+}
+
+
+
 int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDesc)
 {
 	int iResult;
@@ -523,7 +601,11 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDe
 	unsigned long ulValue;
 	unsigned long ulClockEnable;
 	int iCnt;
+	int iAppBridgeIsInitialized;
 
+
+	/* The APP bridge is not initialized yet. */
+	iAppBridgeIsInitialized = 0;
 
 	initialize_unit_configuration(&tUnitCfg);
 	iResult = collect_unit_configuration(ptPinDesc, sizMaxPinDesc, &tUnitCfg);
@@ -639,6 +721,26 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDe
 		if( tUnitCfg.aulXmio[1]!=0 )
 		{
 			iResult = configure_xm1io(tUnitCfg.aulXmio[1]);
+		}
+
+		/*
+		 * APP PIOs
+		 */
+		if( tUnitCfg.ulPioApp!=0 )
+		{
+			if( iAppBridgeIsInitialized==0 )
+			{
+				iResult = app_bridge_init();
+				if( iResult!=0 )
+				{
+					uprintf("Failed to initialize the APP bridge: %d\n", iResult);
+				}
+				else
+				{
+					iAppBridgeIsInitialized = 1;
+					iResult = configure_apppio(tUnitCfg.ulPioApp);
+				}
+			}
 		}
 	}
 
@@ -1393,6 +1495,95 @@ static int get_xm1io(unsigned int uiIndex, unsigned char *pucData)
 
 
 
+static int set_apppio(unsigned int uiIndex, PINSTATUS_T tValue)
+{
+	int iResult;
+
+	/* Be pessimistic... */
+	iResult = -1;
+
+	/* check the index */
+	if( uiIndex<32U )
+	{
+		switch( tValue )
+		{
+		case PINSTATUS_HIGHZ:
+			/* Clear the output enable bit for the pin. */
+			s_ulAppPio_Oe &= ~(1U << uiIndex);
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT0:
+			/* Set the output enable bit and the output bit to 0. */
+			s_ulAppPio_Oe |= 1U << uiIndex;
+			s_ulAppPio_Out &= ~(1U << uiIndex);
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT1:
+			/* Set the output enable bit and the output bit to 1. */
+			s_ulAppPio_Oe |= 1U << uiIndex;
+			s_ulAppPio_Out |= 1U << uiIndex;
+			iResult = 0;
+			break;
+		}
+
+		if( iResult==0 )
+		{
+			/* Set all pins to input. */
+			iResult = app_bridge_write_register(Adr_NX90_pio_app_pio_oe, s_ulAppPio_Oe);
+			if( iResult!=0 )
+			{
+				uprintf("Failed to write to the APP bridge: %d\n", iResult);
+			}
+			else
+			{
+				iResult = app_bridge_write_register(Adr_NX90_pio_app_pio_out, s_ulAppPio_Out);
+			}
+		}
+	}
+
+	return iResult;
+
+}
+
+
+
+static int get_apppio(unsigned int uiIndex, unsigned char *pucData)
+{
+	int iResult;
+	unsigned long ulValue;
+	unsigned char ucData;
+
+
+	/* Be pessimistic... */
+	iResult = -1;
+
+	if( uiIndex<32 )
+	{
+		iResult = app_bridge_read_register(Adr_NX90_pio_app_pio_in, &ulValue);
+		if( iResult!=0 )
+		{
+			uprintf("Failed to read from the APP bridge: %d\n", iResult);
+		}
+		else
+		{
+			ulValue &= 1U << uiIndex;
+			if( ulValue==0 )
+			{
+				ucData = 0;
+			}
+			else
+			{
+				ucData = 1;
+			}
+			*pucData = ucData;
+		}
+	}
+
+	return iResult;
+}
+
 
 /*---------------------------------------------------------------------------*/
 
@@ -1449,6 +1640,13 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 
 	case PINTYPE_RAPGPIO:
 		uprintf("The pin type RAPGPIO is not supported on this platform!\n");
+		break;
+
+	case PINTYPE_APPPIO:
+		if( uiIndex<32 )
+		{
+			iResult = set_apppio(uiIndex, tValue);
+		}
 		break;
 	}
 
@@ -1508,6 +1706,13 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 
 	case PINTYPE_RAPGPIO:
 		uprintf("The pin type RAPGPIO is not supported on this platform!\n");
+		break;
+
+	case PINTYPE_APPPIO:
+		if( uiIndex<32 )
+		{
+			iResult = get_apppio(uiIndex, pucData);
+		}
 		break;
 	}
 

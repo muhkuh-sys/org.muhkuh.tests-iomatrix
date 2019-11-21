@@ -68,6 +68,9 @@ sources_netx4000 = """
 #
 aCppPath = ['src', '#platform/src', '#platform/src/lib', '#targets/version']
 
+strNetx90AppBridgeInclude = '#targets/build_requirements/jonchki/install/dev/include'
+tNetx90AppBridgeLibrary = File('#targets/build_requirements/jonchki/install/dev/lib/libnetx90_app_bridge_com.a')
+
 env_netx4000_t = atEnv.NETX4000.Clone()
 env_netx4000_t.Replace(LDFILE = 'src/netx4000/netx4000.ld')
 env_netx4000_t.Append(CPPPATH = aCppPath)
@@ -91,9 +94,9 @@ IOMATRIX_NETX90_MPW = env_netx90_mpw_t.ObjCopy('targets/netx90_mpw/iomatrix_netx
 
 env_netx90_t = atEnv.NETX90.Clone()
 env_netx90_t.Replace(LDFILE = 'src/netx90/netx90.ld')
-env_netx90_t.Append(CPPPATH = aCppPath)
+env_netx90_t.Append(CPPPATH = aCppPath + [strNetx90AppBridgeInclude])
 src_netx90_t = env_netx90_t.SetBuildPath('targets/netx90', 'src', sources_common + sources_netx90)
-elf_netx90_t = env_netx90_t.Elf('targets/netx90/iomatrix_netx90.elf', src_netx90_t + env_netx90_t['PLATFORM_LIBRARY'])
+elf_netx90_t = env_netx90_t.Elf('targets/netx90/iomatrix_netx90.elf', src_netx90_t + env_netx90_t['PLATFORM_LIBRARY'] + [tNetx90AppBridgeLibrary])
 IOMATRIX_NETX90 = env_netx90_t.ObjCopy('targets/netx90/iomatrix_netx90.bin', elf_netx90_t)
 
 env_netx56_t = atEnv.NETX56.Clone()
