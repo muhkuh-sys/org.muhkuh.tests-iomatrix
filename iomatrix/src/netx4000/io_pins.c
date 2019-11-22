@@ -379,6 +379,10 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 			case PINTYPE_APPPIO:
 				/* The netX4000 has no APPPIO pins. */
 				break;
+
+			case PINTYPE_IOLLEDM:
+				/* The netX4000 has no IOL bridge yet. */
+				break;
 			}
 
 			if( iResult!=0 )
@@ -1164,6 +1168,10 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 	case PINTYPE_APPPIO:
 		/* The netX4000 has no APP PIOs. */
 		break;
+
+	case PINTYPE_IOLLEDM:
+		/* The netX4000 has no IOL bridge yet. */
+		break;
 	}
 
 	return iResult;
@@ -1226,6 +1234,10 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 
 	case PINTYPE_APPPIO:
 		/* The netX4000 has no APP PIOs. */
+		break;
+
+	case PINTYPE_IOLLEDM:
+		/* The netX4000 has no IOL bridge yet. */
 		break;
 	}
 

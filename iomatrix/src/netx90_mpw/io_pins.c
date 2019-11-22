@@ -199,6 +199,14 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 			case PINTYPE_RAPGPIO:
 				uprintf("The pin type RAPGPIO is not supported on this platform!\n");
 				break;
+
+			case PINTYPE_APPPIO:
+				/* The netX90 MPW has no IOL bridge yet. */
+				break;
+
+			case PINTYPE_IOLLEDM:
+				/* The netX90 MPW has no IOL bridge yet. */
+				break;
 			}
 
 			if( iResult!=0 )
@@ -1252,6 +1260,14 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 	case PINTYPE_RAPGPIO:
 		uprintf("The pin type RAPGPIO is not supported on this platform!\n");
 		break;
+
+	case PINTYPE_APPPIO:
+		/* The netX90 MPW has no IOL bridge yet. */
+		break;
+
+	case PINTYPE_IOLLEDM:
+		/* The netX90 MPW has no IOL bridge yet. */
+		break;
 	}
 
 	return iResult;
@@ -1310,6 +1326,14 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 
 	case PINTYPE_RAPGPIO:
 		uprintf("The pin type RAPGPIO is not supported on this platform!\n");
+		break;
+
+	case PINTYPE_APPPIO:
+		/* The netX90 MPW has no IOL bridge yet. */
+		break;
+
+	case PINTYPE_IOLLEDM:
+		/* The netX90 MPW has no IOL bridge yet. */
 		break;
 	}
 

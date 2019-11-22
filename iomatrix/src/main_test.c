@@ -47,14 +47,15 @@ typedef struct PINTYPE_PRINT_STRUCT
 
 static const PINTYPE_PRINT_T atPintypePrint[] =
 {
-	{ PINTYPE_APPPIO, "APPPIO" },
-	{ PINTYPE_GPIO,   "GPIO" },
-	{ PINTYPE_PIO,    "PIO" },
-	{ PINTYPE_MMIO,   "MMIO" },
-	{ PINTYPE_HIFPIO, "HIFPIO" },
-	{ PINTYPE_RDYRUN, "RDYRUN" },
-	{ PINTYPE_RSTOUT, "RSTOUT" },
-	{ PINTYPE_XMIO,   "XMIO" }
+	{ PINTYPE_APPPIO,  "APPPIO" },
+	{ PINTYPE_GPIO,    "GPIO" },
+	{ PINTYPE_PIO,     "PIO" },
+	{ PINTYPE_MMIO,    "MMIO" },
+	{ PINTYPE_HIFPIO,  "HIFPIO" },
+	{ PINTYPE_IOLLEDM, "IOLLEDM" },
+	{ PINTYPE_RDYRUN,  "RDYRUN" },
+	{ PINTYPE_RSTOUT,  "RSTOUT" },
+	{ PINTYPE_XMIO,    "XMIO" }
 };
 
 
@@ -187,6 +188,7 @@ static int parse_pin_description(const unsigned char *pucDefinition, unsigned lo
 				case PINTYPE_XMIO:
 				case PINTYPE_RAPGPIO:
 				case PINTYPE_APPPIO:
+				case PINTYPE_IOLLEDM:
 					iResult = 0;
 					break;
 				}

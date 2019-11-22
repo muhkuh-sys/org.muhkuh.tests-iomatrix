@@ -20,9 +20,15 @@
 
 #include "io_pins.h"
 
+#include <string.h>
+
+#include "netIOL/netiol_regdef.h"
 #include "app_bridge.h"
 #include "netx_io_areas.h"
 #include "uprintf.h"
+
+
+#define MAX_NETIOL_NODES 4
 
 
 typedef struct UNITCONFIGURATION_STRUCT
@@ -30,6 +36,7 @@ typedef struct UNITCONFIGURATION_STRUCT
 	unsigned long ulGpio;
 	unsigned long ulComIo;
 	unsigned long aulHifPio[2];
+	unsigned long aulIolLedM[MAX_NETIOL_NODES];
 	unsigned long ulMled;
 	unsigned long ulMmio;
 	unsigned long ulPioApp;
@@ -41,17 +48,18 @@ typedef struct UNITCONFIGURATION_STRUCT
 
 static void initialize_unit_configuration(UNITCONFIGURATION_T *ptUnitCfg)
 {
-	ptUnitCfg->ulGpio       = 0;
-	ptUnitCfg->ulComIo      = 0;
-	ptUnitCfg->aulHifPio[0] = 0;
-	ptUnitCfg->aulHifPio[1] = 0;
-	ptUnitCfg->ulMled       = 0;
-	ptUnitCfg->ulMmio       = 0;
-	ptUnitCfg->ulPioApp     = 0;
-	ptUnitCfg->ulRdyRun     = 0;
-	ptUnitCfg->ulRstOut     = 0;
-	ptUnitCfg->aulXmio[0]   = 0;
-	ptUnitCfg->aulXmio[1]   = 0;
+	ptUnitCfg->ulGpio        = 0;
+	ptUnitCfg->ulComIo       = 0;
+	ptUnitCfg->aulHifPio[0]  = 0;
+	ptUnitCfg->aulHifPio[1]  = 0;
+	memset(ptUnitCfg->aulIolLedM, 0, MAX_NETIOL_NODES*sizeof(unsigned long));
+	ptUnitCfg->ulMled        = 0;
+	ptUnitCfg->ulMmio        = 0;
+	ptUnitCfg->ulPioApp      = 0;
+	ptUnitCfg->ulRdyRun      = 0;
+	ptUnitCfg->ulRstOut      = 0;
+	ptUnitCfg->aulXmio[0]    = 0;
+	ptUnitCfg->aulXmio[1]    = 0;
 }
 
 
@@ -60,6 +68,7 @@ static void initialize_unit_configuration(UNITCONFIGURATION_T *ptUnitCfg)
 static unsigned long s_ulAppPio_Oe;
 static unsigned long s_ulAppPio_Out;
 
+static unsigned long s_aulIolLedM[MAX_NETIOL_NODES];
 
 
 static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDesc, UNITCONFIGURATION_T *ptUnitCfg)
@@ -223,6 +232,19 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 				if( uiIndex<32 )
 				{
 					ptUnitCfg->ulPioApp |= 1U << uiIndex;
+					iResult = 0;
+				}
+				else
+				{
+					uprintf("The pin %s has an invalid index of %d!", ptPinDescCnt->apcName, uiIndex);
+				}
+				break;
+
+			case PINTYPE_IOLLEDM:
+				/* Each netIOL has 24 LEDs in the matrix. */
+				if( uiIndex<24*MAX_NETIOL_NODES )
+				{
+					ptUnitCfg->aulIolLedM[uiIndex/24] |= 1U << (uiIndex%24);
 					iResult = 0;
 				}
 				else
@@ -589,6 +611,124 @@ static int configure_apppio(unsigned long ulPins)
 
 
 
+static int configure_iolledm(unsigned long *pulPins)
+{
+	int iResult;
+	unsigned char ucNodeCnt;
+	unsigned long ulPins;
+	unsigned short usValue;
+
+
+	/* Be optimistic. */
+	iResult = 0;
+
+	memset(s_aulIolLedM, 0, MAX_NETIOL_NODES*sizeof(unsigned long));
+
+	for(ucNodeCnt=0; ucNodeCnt<MAX_NETIOL_NODES; ++ucNodeCnt)
+	{
+		/* Get the pins for the netIOL. */
+		ulPins = pulPins[ucNodeCnt];
+		if( ulPins!=0 )
+		{
+			/* Setup the IO multiplexer. */
+			usValue  =  0U << SRT_NIOL_asic_ctrl_io_config0_sel_uart_d;
+			usValue |=  0U << SRT_NIOL_asic_ctrl_io_config0_sel_spi;
+			usValue |=  1U << SRT_NIOL_asic_ctrl_io_config0_sel_hispi;
+			usValue |=  0U << SRT_NIOL_asic_ctrl_io_config0_sel_jtag;
+			usValue |= PW_VAL_NIOL_asic_ctrl_io_config0;
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_asic_ctrl_asic_ctrl_io_config0, usValue);
+
+			usValue  =  0U << SRT_NIOL_asic_ctrl_io_config1_sel_sync_out_p;
+			usValue |=  0U << SRT_NIOL_asic_ctrl_io_config1_sel_sync_in_p;
+			usValue |=  0U << SRT_NIOL_asic_ctrl_io_config1_sel_irq_ext_p;
+			usValue |= PW_VAL_NIOL_asic_ctrl_io_config1;
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_asic_ctrl_asic_ctrl_io_config1, usValue);
+
+			usValue  =  7U << SRT_NIOL_asic_ctrl_io_config2_sel_led_c;
+			usValue |= 15U << SRT_NIOL_asic_ctrl_io_config2_sel_led_r;
+			usValue |= PW_VAL_NIOL_asic_ctrl_io_config2;
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_asic_ctrl_asic_ctrl_io_config2, usValue);
+
+			usValue  =  0U << SRT_NIOL_asic_ctrl_io_config3_sel_adc_gpz;
+			usValue |=  0U << SRT_NIOL_asic_ctrl_io_config3_sel_adc_gpo0;
+			usValue |=  0U << SRT_NIOL_asic_ctrl_io_config3_sel_adc_gpo1;
+			usValue |=  0U << SRT_NIOL_asic_ctrl_io_config3_sel_adc_gpo2;
+			usValue |=  0U << SRT_NIOL_asic_ctrl_io_config3_sel_adc_gpo3;
+			usValue |= PW_VAL_NIOL_asic_ctrl_io_config3;
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_asic_ctrl_asic_ctrl_io_config3, usValue);
+
+			/* Set the PAD control register. */
+			usValue  = PW_VAL_NIOL_pad_ctrl_led_r0;
+			usValue |= MSK_NIOL_pad_ctrl_led_r0_ie;
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_pad_ctrl_pad_ctrl_led_r0, usValue);
+
+			usValue  = PW_VAL_NIOL_pad_ctrl_led_r1;
+			usValue |= MSK_NIOL_pad_ctrl_led_r1_ie;
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_pad_ctrl_pad_ctrl_led_r1, usValue);
+
+			usValue  = PW_VAL_NIOL_pad_ctrl_led_r2;
+			usValue |= MSK_NIOL_pad_ctrl_led_r2_ie;
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_pad_ctrl_pad_ctrl_led_r2, usValue);
+
+			usValue  = PW_VAL_NIOL_pad_ctrl_led_r3;
+			usValue |= MSK_NIOL_pad_ctrl_led_r3_ie;
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_pad_ctrl_pad_ctrl_led_r3, usValue);
+
+			usValue  = PW_VAL_NIOL_pad_ctrl_led_c0;
+			usValue |= MSK_NIOL_pad_ctrl_led_c0_ie;
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_pad_ctrl_pad_ctrl_led_c0, usValue);
+
+			usValue  = PW_VAL_NIOL_pad_ctrl_led_c1;
+			usValue |= MSK_NIOL_pad_ctrl_led_c1_ie;
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_pad_ctrl_pad_ctrl_led_c1, usValue);
+
+			usValue  = PW_VAL_NIOL_pad_ctrl_led_c2;
+			usValue |= MSK_NIOL_pad_ctrl_led_c2_ie;
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_pad_ctrl_pad_ctrl_led_c2, usValue);
+
+
+			/* Disable the LED matrix. */
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_ledm_ledm_cfg, DFLT_VAL_NIOL_ledm_cfg);
+
+			/* Set the configuration, but do not enable the module yet. */
+			usValue  =  1U << SRT_NIOL_ledm_cfg_precharge_en;
+			usValue |=  1U << SRT_NIOL_ledm_cfg_column_adaptive;
+			usValue |=  1U << SRT_NIOL_ledm_cfg_bipolar;
+			usValue |=  3U << SRT_NIOL_ledm_cfg_column_last;
+			usValue |=  0U << SRT_NIOL_ledm_cfg_en;
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_ledm_ledm_cfg, usValue);
+
+			/* Set the prescaler. */
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_ledm_ledm_prescaler, 1);
+
+			/* Set the LED matrix time 0. */
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_ledm_ledm_t0,  100);
+			/* Set the LED matrix time 1. */
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_ledm_ledm_t1,   25);
+			/* Set the LED matrix time 2. */
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_ledm_ledm_t2,   25);
+			/* Set the LED matrix time 3. */
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_ledm_ledm_t3, 4000);
+
+			/* Enable the LEDM module. */
+			usValue  =  1U << SRT_NIOL_ledm_cfg_precharge_en;
+			usValue |=  1U << SRT_NIOL_ledm_cfg_column_adaptive;
+			usValue |=  1U << SRT_NIOL_ledm_cfg_bipolar;
+			usValue |=  3U << SRT_NIOL_ledm_cfg_column_last;
+			usValue |=  1U << SRT_NIOL_ledm_cfg_en;
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_ledm_ledm_cfg, usValue);
+
+			/* Turn off all LEDs. */
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_ledm_ledm_led15_0_rld, 0x0000);
+			app_bridge_module_hispi_writeRegister16(ucNodeCnt, Adr_NIOL_ledm_ledm_led23_16_rld, 0x0000);
+		}
+	}
+
+	return iResult;
+}
+
+
+
 int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDesc)
 {
 	int iResult;
@@ -602,10 +742,12 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDe
 	unsigned long ulClockEnable;
 	int iCnt;
 	int iAppBridgeIsInitialized;
+	int iHiSpiModuleIsInitialized;
 
 
-	/* The APP bridge is not initialized yet. */
+	/* The APP bridge and the modules are not initialized yet. */
 	iAppBridgeIsInitialized = 0;
+	iHiSpiModuleIsInitialized = 0;
 
 	initialize_unit_configuration(&tUnitCfg);
 	iResult = collect_unit_configuration(ptPinDesc, sizMaxPinDesc, &tUnitCfg);
@@ -738,8 +880,66 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDe
 				else
 				{
 					iAppBridgeIsInitialized = 1;
-					iResult = configure_apppio(tUnitCfg.ulPioApp);
 				}
+			}
+			if( iResult==0 )
+			{
+				iResult = configure_apppio(tUnitCfg.ulPioApp);
+			}
+		}
+
+		/*
+		 * IOL LED matrix
+		 */
+		ulValue  = tUnitCfg.aulIolLedM[0];
+		ulValue |= tUnitCfg.aulIolLedM[1];
+		ulValue |= tUnitCfg.aulIolLedM[2];
+		ulValue |= tUnitCfg.aulIolLedM[3];
+		if( ulValue!=0 )
+		{
+			if( iAppBridgeIsInitialized==0 )
+			{
+				iResult = app_bridge_init();
+				if( iResult!=0 )
+				{
+					uprintf("Failed to initialize the APP bridge: %d\n", iResult);
+				}
+				else
+				{
+					iAppBridgeIsInitialized = 1;
+				}
+			}
+			if( iResult==0 && iHiSpiModuleIsInitialized==0 )
+			{
+				/* Get the number of netIOLs in use. */
+				ulValue = 4;
+				if( tUnitCfg.aulIolLedM[3]==0U )
+				{
+					ulValue = 3;
+					if( tUnitCfg.aulIolLedM[2]==0U )
+					{
+						ulValue = 2;
+						if( tUnitCfg.aulIolLedM[1]==0U )
+						{
+							ulValue = 1;
+						}
+					}
+				}
+
+				iResult = app_bridge_module_hispi_initialize(ulValue);
+				if( iResult!=0 )
+				{
+					uprintf("Failed to initialize the HiSPI module: %d\n", iResult);
+				}
+				else
+				{
+					iHiSpiModuleIsInitialized = 1;
+				}
+			}
+
+			if( iResult==0 )
+			{
+				iResult = configure_iolledm(tUnitCfg.aulIolLedM);
 			}
 		}
 	}
@@ -1585,6 +1785,66 @@ static int get_apppio(unsigned int uiIndex, unsigned char *pucData)
 }
 
 
+
+static int set_iolledm(unsigned int uiIndex, PINSTATUS_T tValue)
+{
+	int iResult;
+	unsigned char ucNetIolIndex;
+	unsigned int uiLedIndex;
+	unsigned long ulValue;
+	unsigned short usValue;
+
+
+	/* Be pessimistic... */
+	iResult = -1;
+
+	/* check the index */
+	if( uiIndex<24*MAX_NETIOL_NODES )
+	{
+		ucNetIolIndex = (unsigned char)(uiIndex / 24);
+		uiLedIndex = uiIndex % 24;
+
+		switch( tValue )
+		{
+		case PINSTATUS_HIGHZ:
+			uprintf("Trying to set a LEDM pin to input.\n");
+			break;
+
+		case PINSTATUS_OUTPUT0:
+			s_aulIolLedM[ucNetIolIndex] &= ~(1U << uiLedIndex);
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT1:
+			s_aulIolLedM[ucNetIolIndex] |= 1U << uiLedIndex;
+			iResult = 0;
+			break;
+		}
+
+		if( iResult==0 )
+		{
+			ulValue = s_aulIolLedM[ucNetIolIndex];
+			usValue = (unsigned short)(ulValue & 0x0000ffffU);
+			app_bridge_module_hispi_writeRegister16(ucNetIolIndex, Adr_NIOL_ledm_ledm_led15_0_rld, usValue);
+			usValue = (unsigned short)((ulValue >> 16) & 0x0000ffffU);
+			app_bridge_module_hispi_writeRegister16(ucNetIolIndex, Adr_NIOL_ledm_ledm_led23_16_rld, usValue);
+		}
+	}
+
+	return iResult;
+
+}
+
+
+
+static int get_iolledm(unsigned int uiIndex __attribute__((unused)), unsigned char *pucData __attribute__((unused)))
+{
+	/* The LEDM pins can not be read. */
+	uprintf("The LEDM pins can not be read.\n");
+	return -1;
+}
+
+
 /*---------------------------------------------------------------------------*/
 
 
@@ -1643,10 +1903,11 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 		break;
 
 	case PINTYPE_APPPIO:
-		if( uiIndex<32 )
-		{
-			iResult = set_apppio(uiIndex, tValue);
-		}
+		iResult = set_apppio(uiIndex, tValue);
+		break;
+
+	case PINTYPE_IOLLEDM:
+		iResult = set_iolledm(uiIndex, tValue);
 		break;
 	}
 
@@ -1709,10 +1970,11 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 		break;
 
 	case PINTYPE_APPPIO:
-		if( uiIndex<32 )
-		{
-			iResult = get_apppio(uiIndex, pucData);
-		}
+		iResult = get_apppio(uiIndex, pucData);
+		break;
+
+	case PINTYPE_IOLLEDM:
+		iResult = get_iolledm(uiIndex, pucData);
 		break;
 	}
 
