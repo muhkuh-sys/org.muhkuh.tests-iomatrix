@@ -99,7 +99,7 @@ function IoMatrix_netx_base:_init(tLog, fnInit, fnDeinit, ulVerbose, fnCallbackP
 
   local tCurrentSelf = self
   self.default_callback_progress = function(ulCnt, ulMax)
-    local fPercent = ulCnt * 100 / ulMax
+    local fPercent = math.floor(ulCnt * 100 / ulMax)
     local ulTime = os.time()
     if tCurrentSelf.ulProgressLastMax ~= ulMax
        or ulCnt == 0
