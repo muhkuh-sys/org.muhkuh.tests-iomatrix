@@ -20,7 +20,7 @@ mkdir -p ${BUILD_DIR}/build_requirements
 
 
 # Install jonchki.
-python2.7 jonchki/jonchkihere.py --jonchki-version ${JONCHKI_VERSION} --local-archives ${PRJ_DIR}/jonchki/local_archives ${PRJ_DIR}/targets
+python3 jonchki/jonchkihere.py --jonchki-version ${JONCHKI_VERSION} --local-archives ${PRJ_DIR}/jonchki/local_archives ${PRJ_DIR}/targets
 if [ -f ${PRJ_DIR}/targets/.jonchki.cmd ]; then
 	JONCHKI=$(<${PRJ_DIR}/targets/.jonchki.cmd)
 fi
@@ -37,4 +37,4 @@ sed -e 's/${PROJECT_VERSION}/0/g' -e 's/${PROJECT_VERSION_VCS}/0/g' ${PRJ_DIR}/i
 ${JONCHKI} install-dependencies --verbose ${JONCHKI_VERBOSE} --syscfg ${PRJ_DIR}/jonchki/jonchkisys.cfg --prjcfg ${PRJ_DIR}/jonchki/jonchkicfg.xml ${JONCHKI_SYSTEM} --build-dependencies iomatrix.xml
 popd
 
-python2.7 mbs/mbs
+python3 mbs/mbs

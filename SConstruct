@@ -192,5 +192,5 @@ atFiles = {
     'targets/testbench/lua/io_matrix/netx_base.lua':   LUA_NETX_BASE,
     'targets/testbench/lua/io_matrix/netx.lua':        'iomatrix/templates/io_matrix/netx.lua'
 }
-for tDst, tSrc in atFiles.iteritems():
+for tDst, tSrc in atFiles.items():
     Command(tDst, tSrc, Copy("$TARGET", "$SOURCE"))
