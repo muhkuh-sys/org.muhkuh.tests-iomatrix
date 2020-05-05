@@ -239,7 +239,9 @@ IoMatrix_netx90.atKnownPins = {
   ['XM1_IO5'] = { type=${PINTYPE_XMIO}, index=11 },
 
   ['RDY'] = { type=${PINTYPE_RDYRUN}, index=0 },
-  ['RUN'] = { type=${PINTYPE_RDYRUN}, index=1 }
+  ['RUN'] = { type=${PINTYPE_RDYRUN}, index=1 },
+
+  ['RST_OUT'] = { type=${PINTYPE_RSTOUT}, index=0 }
 }
 
 
