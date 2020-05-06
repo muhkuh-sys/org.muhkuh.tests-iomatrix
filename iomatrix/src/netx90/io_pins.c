@@ -359,6 +359,7 @@ static int configure_xm0io(unsigned long ulPins)
 				ulValue  = ptAsicCtrlArea->asIo_config[0].ulConfig;
 				ulValue &= ~HOSTMSK(io_config0_sel_xm0_io);
 				ulValue |= (ulPins << HOSTSRT(io_config0_sel_xm0_io)) & HOSTMSK(io_config0_sel_xm0_io);
+				ulValue |= HOSTMSK(io_config0_sel_xm0_io_wm);
 				ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
 				ptAsicCtrlArea->asIo_config[0].ulConfig = ulValue;
 			}
@@ -461,6 +462,7 @@ static int configure_xm1io(unsigned long ulPins)
 				ulValue  = ptAsicCtrlArea->asIo_config[1].ulConfig;
 				ulValue &= ~HOSTMSK(io_config1_sel_xm1_io);
 				ulValue |= (ulPins << HOSTSRT(io_config1_sel_xm1_io)) & HOSTMSK(io_config1_sel_xm1_io);
+				ulValue |= HOSTMSK(io_config1_sel_xm1_io_wm);
 				ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
 				ptAsicCtrlArea->asIo_config[1].ulConfig = ulValue;
 			}
