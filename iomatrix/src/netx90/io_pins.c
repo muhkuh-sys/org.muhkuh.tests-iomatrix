@@ -268,6 +268,448 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 
 
 
+static NX90_XMAC_AREA_T * const aptXmacArea[2] =
+{
+	(NX90_XMAC_AREA_T*) Addr_NX90_xc0_xmac0_regs,
+	(NX90_XMAC_AREA_T*) Addr_NX90_xc0_xmac1_regs
+};
+
+
+
+static NX90_XPEC_AREA_T * const aptRpecRegArea[2] =
+{
+	(NX90_XPEC_AREA_T*) Addr_NX90_xc0_rpec0_regs,
+	(NX90_XPEC_AREA_T*) Addr_NX90_xc0_rpec1_regs
+};
+
+
+
+static NX90_XPEC_AREA_T * const aptTpecRegArea[2] =
+{
+	(NX90_XPEC_AREA_T*) Addr_NX90_xc0_tpec0_regs,
+	(NX90_XPEC_AREA_T*) Addr_NX90_xc0_tpec1_regs
+};
+
+
+static unsigned long * const apulRpecPramArea[2] =
+{
+	(unsigned long*) Adr_NX90_xc0_rpec0_pram_ram_start,
+	(unsigned long*) Adr_NX90_xc0_rpec1_pram_ram_start
+};
+
+
+
+static unsigned long * const apulTpecPramArea[2] =
+{
+	(unsigned long*) Adr_NX90_xc0_tpec0_pram_ram_start,
+	(unsigned long*) Adr_NX90_xc0_tpec1_pram_ram_start
+};
+
+
+
+static const unsigned long XcCode_rpu_reset0[27] = {
+  0x00000064, /* program size */
+  0x00000000, /* trailing loads size */
+  0xff110000, /* start address */
+  0x01300001, 0xe15bde81, 0x01380001, 0xe15bde82, 0x0143fffd, 0xe15bde83, 0x0147fffd, 0xe15bde84,
+  0x01480001, 0xe15bde85, 0x0143fff9, 0xe15bde86, 0x014bfffd, 0xe15bde87, 0x01440001, 0xe15bde88,
+  0x0143fffd, 0xe15bde89, 0x01480001, 0xe15bde8a, 0x01380005, 0xe15bde8b, 0x01080000, 0x001fde8b,
+  /* trailing loads */
+};
+
+static const unsigned long XcCode_rpu_reset1[27] = {
+  0x00000064, /* program size */
+  0x00000000, /* trailing loads size */
+  0xff110800, /* start address */
+  0x01300001, 0xe15bde81, 0x01380001, 0xe15bde82, 0x0143fffd, 0xe15bde83, 0x0147fffd, 0xe15bde84,
+  0x01480001, 0xe15bde85, 0x0143fff9, 0xe15bde86, 0x014bfffd, 0xe15bde87, 0x01440001, 0xe15bde88,
+  0x0143fffd, 0xe15bde89, 0x01480001, 0xe15bde8a, 0x01380005, 0xe15bde8b, 0x01080000, 0x001fde8b,
+  /* trailing loads */
+};
+static const unsigned long XcCode_tpu_reset0[27] = {
+  0x00000064, /* program size */
+  0x00000000, /* trailing loads size */
+  0xff110400, /* start address */
+  0x014c0601, 0xe15bde81, 0x01540001, 0xe15bde82, 0x015ffffd, 0xe15bde83, 0x0163fffd, 0xe15bde84,
+  0x01640001, 0xe15bde85, 0x015ffff9, 0xe15bde86, 0x0167fffd, 0xe15bde87, 0x01600001, 0xe15bde88,
+  0x015ffffd, 0xe15bde89, 0x01640001, 0xe15bde8a, 0x01540005, 0xe15bde8b, 0x01080000, 0x001fde8b,
+  /* trailing loads */
+};
+
+static const unsigned long XcCode_tpu_reset1[27] = {
+  0x00000064, /* program size */
+  0x00000000, /* trailing loads size */
+  0xff110c00, /* start address */
+  0x014c0601, 0xe15bde81, 0x01540001, 0xe15bde82, 0x015ffffd, 0xe15bde83, 0x0163fffd, 0xe15bde84,
+  0x01640001, 0xe15bde85, 0x015ffff9, 0xe15bde86, 0x0167fffd, 0xe15bde87, 0x01600001, 0xe15bde88,
+  0x015ffffd, 0xe15bde89, 0x01640001, 0xe15bde8a, 0x01540005, 0xe15bde8b, 0x01080000, 0x001fde8b,
+  /* trailing loads */
+};
+
+
+static const unsigned long * const paulRpuResetCodes[2]=
+{
+	XcCode_rpu_reset0,
+	XcCode_rpu_reset1
+};
+
+static const unsigned long * const paulTpuResetCodes[2]=
+{
+	XcCode_tpu_reset0,
+	XcCode_tpu_reset1
+};
+
+
+static void NX90_XC_Load(const unsigned long* pulXcPrg)
+{
+	volatile unsigned long *pulDst, *pulDstCnt;
+	const unsigned long *pulSrcStart, *pulSrcCnt, *pulSrcEnd;
+	unsigned int uiElements;
+
+
+	/* Get the number of code elements. */
+	uiElements = pulXcPrg[0] / sizeof(unsigned long) - 1;
+
+	/* Get the pointer in the XC area. */
+	pulDst = (volatile unsigned long*) pulXcPrg[2];
+
+	/* Get source start and end pointer. */
+	pulSrcStart = pulXcPrg + 3;
+	pulSrcEnd = pulSrcStart + uiElements;
+
+	/* Copy the code to the XC RAM. */
+	pulSrcCnt = pulSrcStart;
+	pulDstCnt = pulDst;
+	while( pulSrcCnt<pulSrcEnd )
+	{
+		*pulDstCnt = *pulSrcCnt;
+		pulDstCnt++;
+		pulSrcCnt++;
+	}
+
+	/* Get the number of trailing loads. */
+	uiElements = pulXcPrg[1] / sizeof(unsigned long);
+
+	/* Get source start and end pointer. */
+	pulSrcCnt = pulXcPrg + 2 + pulXcPrg[0] / sizeof(unsigned long);
+	pulSrcEnd = pulSrcCnt + uiElements;
+
+	/* Write all trailing loads. */
+	while( pulSrcCnt<pulSrcEnd )
+	{
+		/* Get the destination address. */
+		pulDst = (volatile unsigned long*) *pulSrcCnt;
+		pulSrcCnt++;
+
+		/* write the data. */
+		*pulDst = *pulSrcCnt;
+		pulSrcCnt++;
+	}
+}
+
+
+
+static void NX90_XC_Reset(unsigned int uiPortNr)
+{
+	HOSTDEF(ptXcStartStopArea);
+	HOSTDEF(ptXpecIrqRegistersArea);
+	NX90_XMAC_AREA_T* ptXmac;
+	NX90_XPEC_AREA_T* ptRpec;
+	NX90_XPEC_AREA_T* ptTpec;
+	volatile unsigned long* pulRpecPram;
+	volatile unsigned long* pulTpecPram;
+	unsigned int uIdx;
+	unsigned long ulValue;
+
+
+	ptXmac      = aptXmacArea[uiPortNr];
+	ptRpec      = aptRpecRegArea[uiPortNr];
+	ptTpec      = aptTpecRegArea[uiPortNr];
+	pulRpecPram = apulRpecPramArea[uiPortNr];
+	pulTpecPram = apulTpecPramArea[uiPortNr];
+
+	/* Stop xPEC and xMAC */
+	if( uiPortNr==0 )
+	{
+		ulValue  = HOSTMSK(xc_start_stop_ctrl_xc0_stop_rpec0);
+		ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_tpec0);
+		ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_rpu0);
+		ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_tpu0);
+	}
+	else
+	{
+		ulValue  = HOSTMSK(xc_start_stop_ctrl_xc0_stop_rpec1);
+		ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_tpec1);
+		ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_rpu1);
+		ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_tpu1);
+	}
+	ptXcStartStopArea->ulXc_start_stop_ctrl = ulValue;
+
+	/* Clear output enable of TX as soon as possible. */
+	ptXmac->ulXmac_config_obu  = HOSTDFLT(xmac_config_obu);
+	/* Clear output enable of io0..5 as soon as possible. */
+	ptRpec->aulStatcfg[uiPortNr] = 0xffff0000;
+
+	if( uiPortNr==0 )
+	{
+		ulValue  = HOSTMSK(xpec_config_reset_urx_fifo0);
+		ulValue |= HOSTMSK(xpec_config_reset_utx_fifo0);
+	}
+	else
+	{
+		ulValue  = HOSTMSK(xpec_config_reset_urx_fifo1);
+		ulValue |= HOSTMSK(xpec_config_reset_utx_fifo1);
+	}
+	ptRpec->ulXpec_config = ulValue;
+
+	/* Load the rate multiplier reset code. */
+	NX90_XC_Load(paulRpuResetCodes[uiPortNr]);
+	NX90_XC_Load(paulTpuResetCodes[uiPortNr]);
+
+	/* Reset the PC of the RPU and TPU unit to 0 */
+	ptXmac->ulXmac_rpu_pc = 0;
+	ptXmac->ulXmac_tpu_pc = 0;
+
+	if( uiPortNr==0 )
+	{
+		ulValue  = HOSTMSK(xc_start_stop_ctrl_xc0_start_rpu0);
+		ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_start_tpu0);
+	}
+	else
+	{
+		ulValue  = HOSTMSK(xc_start_stop_ctrl_xc0_start_rpu1);
+		ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_start_tpu1);
+	}
+	ptXcStartStopArea->ulXc_start_stop_ctrl = ulValue;
+
+	/* !!!! ATTENTION: There must be enough time between starting xMAC and stopping xMAC to execute reset program */
+
+	pulRpecPram[0] = 0xC0000FFF;                                   /* Use the command wait b000000000000,b111111111111 at Address 0*/
+	pulTpecPram[0] = 0xC0000FFF;                                   /* Use the command wait b000000000000,b111111111111 at Address 0*/
+
+	ptRpec->ulXpec_pc = 0x7ff;                                     /* Reset the Program Counter to 0x7ff */
+	ptTpec->ulXpec_pc = 0x7ff;                                     /* Reset the Program Counter to 0x7ff */
+
+
+	/* let the XC run for at least 10 cycles */
+	if( uiPortNr==0 )
+	{
+		ulValue  = HOSTMSK(xc_start_stop_ctrl_xc0_start_rpec0);
+		ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_start_tpec0);
+	}
+	else
+	{
+		ulValue  = HOSTMSK(xc_start_stop_ctrl_xc0_start_rpec1);
+		ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_start_tpec1);
+	}
+	for(uIdx=0; uIdx<10; ++uIdx)
+	{
+		ptXcStartStopArea->ulXc_start_stop_ctrl = ulValue;
+	}
+
+	if( uiPortNr==0 )
+	{
+		ulValue  = HOSTMSK(xc_start_stop_ctrl_xc0_stop_rpec0);
+		ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_tpec0);
+	}
+	else
+	{
+		ulValue  = HOSTMSK(xc_start_stop_ctrl_xc0_stop_rpec1);
+		ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_tpec1);
+	}
+	ptXcStartStopArea->ulXc_start_stop_ctrl = ulValue;
+	ptRpec->ulXpec_pc     = 0x7ff;                                 /* Reset the Program Counter to 0x7ff */
+	ptTpec->ulXpec_pc     = 0x7ff;                                 /* Reset the Program Counter to 0x7ff */
+
+	/* reset all registers */
+	ptRpec->aulXpec_r[0]   = 0;
+	ptTpec->aulXpec_r[0]   = 0;
+	ptRpec->aulXpec_r[1]   = 0;
+	ptTpec->aulXpec_r[1]   = 0;
+	ptRpec->aulXpec_r[2]   = 0;
+	ptTpec->aulXpec_r[2]   = 0;
+	ptRpec->aulXpec_r[3]   = 0;
+	ptTpec->aulXpec_r[3]   = 0;
+	ptRpec->aulXpec_r[4]   = 0;
+	ptTpec->aulXpec_r[4]   = 0;
+	ptRpec->aulXpec_r[5]   = 0;
+	ptTpec->aulXpec_r[5]   = 0;
+	ptRpec->aulXpec_r[6]   = 0;
+	ptTpec->aulXpec_r[6]   = 0;
+	ptRpec->aulXpec_r[7]   = 0;
+	ptTpec->aulXpec_r[7]   = 0;
+
+	/* Note regarding stat_bits_shared: this register is used for XC instance crossover protocols, protocol has to clear this register when initializing */
+
+	ptRpec->ulRange_urtx_count = 0;
+	ptTpec->ulRange_urtx_count = 0;
+	ptRpec->ulRange45          = 0;
+	ptTpec->ulRange45          = 0;
+	ptRpec->ulRange67          = 0;
+	ptTpec->ulRange67          = 0;
+	ptRpec->ulUrx_count        = 0;
+	ptTpec->ulUrx_count        = 0;
+	ptRpec->ulUtx_count        = 0;
+	ptTpec->ulUtx_count        = 0;
+
+	/* Stop all Timers */
+	ptRpec->ulTimer4       = 0;
+	ptTpec->ulTimer4       = 0;
+	ptRpec->ulTimer5       = 0;
+	ptTpec->ulTimer5       = 0;
+	ptRpec->aulTimer[0]    = 0;
+	ptTpec->aulTimer[0]    = 0;
+	ptRpec->aulTimer[1]    = 0;
+	ptTpec->aulTimer[1]    = 0;
+	ptRpec->aulTimer[2]    = 0;
+	ptTpec->aulTimer[2]    = 0;
+	ptRpec->aulTimer[3]    = 0;
+	ptTpec->aulTimer[3]    = 0;
+
+	ptRpec->ulIrq          = 0xFFFF0000; /* Clear XPEC side IRQ request lines */
+	ptTpec->ulIrq          = 0xFFFF0000; /* Clear XPEC side IRQ request lines */
+
+	/* Reset events */
+	ptRpec->ulEc_maska     = 0x0000FFFF;
+	ptTpec->ulEc_maska     = 0x0000FFFF;
+	ptRpec->ulEc_maskb     = 0x0000FFFF;
+	ptTpec->ulEc_maskb     = 0x0000FFFF;
+	ptRpec->aulEc_mask[0]  = 0x0000FFFF;
+	ptTpec->aulEc_mask[0]  = 0x0000FFFF;
+	ptRpec->aulEc_mask[1]  = 0x0000FFFF;
+	ptTpec->aulEc_mask[1]  = 0x0000FFFF;
+	ptRpec->aulEc_mask[2]  = 0x0000FFFF;
+	ptTpec->aulEc_mask[2]  = 0x0000FFFF;
+	ptRpec->aulEc_mask[3]  = 0x0000FFFF;
+	ptTpec->aulEc_mask[3]  = 0x0000FFFF;
+	ptRpec->aulEc_mask[4]  = 0x0000FFFF;
+	ptTpec->aulEc_mask[4]  = 0x0000FFFF;
+	ptRpec->aulEc_mask[5]  = 0x0000FFFF;
+	ptTpec->aulEc_mask[5]  = 0x0000FFFF;
+	ptRpec->aulEc_mask[6]  = 0x0000FFFF;
+	ptTpec->aulEc_mask[6]  = 0x0000FFFF;
+	ptRpec->aulEc_mask[7]  = 0x0000FFFF;
+	ptTpec->aulEc_mask[7]  = 0x0000FFFF;
+	ptRpec->aulEc_mask[8]  = 0x0000FFFF;
+	ptTpec->aulEc_mask[8]  = 0x0000FFFF;
+	ptRpec->aulEc_mask[9]  = 0x0000FFFF;
+	ptTpec->aulEc_mask[9]  = 0x0000FFFF;
+
+	/* Reset shared registers. */
+	if( uiPortNr==0 )
+	{
+		/* Reset SR0-3. */
+		ptRpec->aulXpec_sr[0] = 0;
+		ptRpec->aulXpec_sr[1] = 0;
+		ptRpec->aulXpec_sr[2] = 0;
+		ptRpec->aulXpec_sr[3] = 0;
+
+		/* Reset SR8-11. */
+		ptRpec->aulXpec_sr[8] = 0;
+		ptRpec->aulXpec_sr[9] = 0;
+		ptRpec->aulXpec_sr[10] = 0;
+		ptRpec->aulXpec_sr[11] = 0;
+	}
+	else
+	{
+		/* Reset SR4-7. */
+		ptRpec->aulXpec_sr[4] = 0;
+		ptRpec->aulXpec_sr[5] = 0;
+		ptRpec->aulXpec_sr[6] = 0;
+		ptRpec->aulXpec_sr[7] = 0;
+
+		/* Reset SR12-15. */
+		ptRpec->aulXpec_sr[12] = 0;
+		ptRpec->aulXpec_sr[13] = 0;
+		ptRpec->aulXpec_sr[14] = 0;
+		ptRpec->aulXpec_sr[15] = 0;
+	}
+
+	ptRpec->ulDatach_wr_cfg = 0;
+	ptTpec->ulDatach_wr_cfg = 0;
+	ptRpec->ulDatach_rd_cfg = 0;
+	ptTpec->ulDatach_rd_cfg = 0;
+	ptRpec->ulSysch_addr    = 0;
+	ptTpec->ulSysch_addr    = 0;
+
+	/* confirm all interrupts from xPEC -> Select the specific XC instance and get IRQ */
+	ptXpecIrqRegistersArea->aulXc0_irq_xpec[uiPortNr] = 0x0000FFFF;
+
+	/* hold xMAC */
+	if( uiPortNr==0 )
+	{
+		ulValue  = HOSTMSK(xc_start_stop_ctrl_xc0_stop_rpu0);
+		ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_tpu0);
+	}
+	else
+	{
+		ulValue  = HOSTMSK(xc_start_stop_ctrl_xc0_stop_rpu1);
+		ulValue |= HOSTMSK(xc_start_stop_ctrl_xc0_stop_tpu1);
+	}
+	ptXcStartStopArea->ulXc_start_stop_ctrl = ulValue;
+
+	/* reset all xMAC registers to default values */
+	ptXmac->ulXmac_rx_hw               = 0;
+	ptXmac->ulXmac_rx_hw_count         = 0;
+	ptXmac->ulXmac_tx                  = 0;
+	ptXmac->ulXmac_tx_hw               = 0;
+	ptXmac->ulXmac_tx_hw_count         = 0;
+	ptXmac->ulXmac_tx_sent             = 0;
+	ptXmac->aulXmac_wr[0]              = 0;
+	ptXmac->aulXmac_wr[1]              = 0;
+	ptXmac->aulXmac_wr[2]              = 0;
+	ptXmac->aulXmac_wr[3]              = 0;
+	ptXmac->aulXmac_wr[4]              = 0;
+	ptXmac->aulXmac_wr[5]              = 0;
+	ptXmac->aulXmac_wr[6]              = 0;
+	ptXmac->aulXmac_wr[7]              = 0;
+	ptXmac->aulXmac_wr[8]              = 0;
+	ptXmac->aulXmac_wr[9]              = 0;
+	ptXmac->ulXmac_config_mii          = 0;
+	ptXmac->ulXmac_config_rx_nibble_fifo  = HOSTDFLT(xmac_config_rx_nibble_fifo);
+	ptXmac->ulXmac_config_tx_nibble_fifo  = 0;
+	ptXmac->ulXmac_rpu_count1          = 0;
+	ptXmac->ulXmac_rpu_count2          = 0;
+	ptXmac->ulXmac_tpu_count1          = 0;
+	ptXmac->ulXmac_tpu_count2          = 0;
+	ptXmac->ulXmac_rx_count            = 0;
+	ptXmac->ulXmac_tx_count            = 0;
+	ptXmac->ulXmac_rpm_mask0           = 0;
+	ptXmac->ulXmac_rpm_val0            = 0;
+	ptXmac->ulXmac_rpm_mask1           = 0;
+	ptXmac->ulXmac_rpm_val1            = 0;
+	ptXmac->ulXmac_tpm_mask0           = 0;
+	ptXmac->ulXmac_tpm_val0            = 0;
+	ptXmac->ulXmac_tpm_mask1           = 0;
+	ptXmac->ulXmac_tpm_val1            = 0;
+
+	ptXmac->ulXmac_rx_crc_polynomial_l = 0;
+	ptXmac->ulXmac_rx_crc_polynomial_h = 0;
+	ptXmac->ulXmac_rx_crc_l            = 0;
+	ptXmac->ulXmac_rx_crc_h            = 0;
+	ptXmac->ulXmac_rx_crc_cfg          = 0;
+	ptXmac->ulXmac_tx_crc_polynomial_l = 0;
+	ptXmac->ulXmac_tx_crc_polynomial_h = 0;
+	ptXmac->ulXmac_tx_crc_l            = 0;
+	ptXmac->ulXmac_tx_crc_h            = 0;
+	ptXmac->ulXmac_tx_crc_cfg          = 0;
+
+	ptXmac->ulXmac_rx_crc32_l          = 0;
+	ptXmac->ulXmac_rx_crc32_h          = 0;
+	ptXmac->ulXmac_rx_crc32_cfg        = 0;
+	ptXmac->ulXmac_tx_crc32_l          = 0;
+	ptXmac->ulXmac_tx_crc32_h          = 0;
+	ptXmac->ulXmac_tx_crc32_cfg        = 0;
+
+	ptXmac->ulXmac_config_sbu2         = HOSTDFLT(xmac_config_sbu2);
+	ptXmac->ulXmac_config_obu2         = HOSTDFLT(xmac_config_obu2);
+
+	ptXmac->ulXmac_rpu_pc              = 0;
+	ptXmac->ulXmac_tpu_pc              = 0;
+}
+
+
+
 static int configure_xm0io(unsigned long ulPins)
 {
 	HOSTDEF(ptAsicCtrlArea);
@@ -320,6 +762,8 @@ static int configure_xm0io(unsigned long ulPins)
 			{
 				uprintf("The XC0 clocks are already enabled.\n");
 			}
+
+			NX90_XC_Reset(0);
 
 			/* Stop the unit. */
 			ulValue  = HOSTMSK(xc_start_stop_ctrl_xc0_stop_rpu0);
@@ -423,6 +867,8 @@ static int configure_xm1io(unsigned long ulPins)
 			{
 				uprintf("The XC1 clocks are already enabled.\n");
 			}
+
+			NX90_XC_Reset(1);
 
 			/* Stop the unit. */
 			ulValue  = HOSTMSK(xc_start_stop_ctrl_xc0_stop_rpu1);
