@@ -349,18 +349,19 @@ end
 function TestClassIoMatrix.parseCfg_EndElement(tParser, strName)
   local aLxpAttr = tParser:getcallbacks().userdata
 
+  local _loadstring = loadstring or load
   local tCurrentNetxDevice = aLxpAttr.tCurrentNetxDevice
   local strCurrentPath = aLxpAttr.strCurrentPath
   if strCurrentPath=='/IoMatrixTest/Devices/netX/Init' then
     if tCurrentNetxDevice.init~=nil then
       -- Compile the init function.
-      local fn = loadstring(tCurrentNetxDevice.init)
+      local fn = _loadstring(tCurrentNetxDevice.init)
       tCurrentNetxDevice.init = fn
     end
   elseif strCurrentPath=='/IoMatrixTest/Devices/netX/Deinit' then
     if tCurrentNetxDevice.deinit~=nil then
       -- Compile the deinit function.
-      local fn = loadstring(tCurrentNetxDevice.deinit)
+      local fn = _loadstring(tCurrentNetxDevice.deinit)
       tCurrentNetxDevice.deinit = fn
     end
   end
