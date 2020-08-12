@@ -36,6 +36,8 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
   local aLxpAttr = tParser:getcallbacks().userdata
   -- Get the position in the XML text file for error messages.
   local iPosLine, iPosColumn = tParser:pos()
+  -- Get the bit module.
+  local bit = aLxpAttr.bit
 
   -- Append the new element to the current path.
   table.insert(aLxpAttr.atCurrentPath, strName)
@@ -117,7 +119,7 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
       else
         -- Get the shift value from the mask.
         for uiBitCnt = 0, 31 do
-          if aLxpAttr.bit.band(ulModuleIndexMask, bit.lshift(1, uiBitCnt))~=0 then
+          if bit.band(ulModuleIndexMask, bit.lshift(1, uiBitCnt))~=0 then
             ulModuleIndexShift = uiBitCnt
             break
           end
@@ -295,13 +297,13 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
       else
         ulPinFlags = 0
         if strPinFlags:find('I')~=nil then
-          ulPinFlags = aLxpAttr.bit.bor(ulPinFlags, aLxpAttr.tIoMatrix.PINFLAG_I)
+          ulPinFlags = bit.bor(ulPinFlags, aLxpAttr.tIoMatrix.PINFLAG_I)
         end
         if strPinFlags:find('O')~=nil then
-          ulPinFlags = aLxpAttr.bit.bor(ulPinFlags, aLxpAttr.tIoMatrix.PINFLAG_O)
+          ulPinFlags = bit.bor(ulPinFlags, aLxpAttr.tIoMatrix.PINFLAG_O)
         end
         if strPinFlags:find('Z')~=nil then
-          ulPinFlags = aLxpAttr.bit.bor(ulPinFlags, aLxpAttr.tIoMatrix.PINFLAG_Z)
+          ulPinFlags = bit.bor(ulPinFlags, aLxpAttr.tIoMatrix.PINFLAG_Z)
         end
       end
     end
