@@ -12,6 +12,9 @@ function TestClassIoMatrix:_init(strTestName, uiTestCase, tLogWriter, strLogLeve
 
   local P = self.P
   self:__parameter {
+    P:P('plugin', 'A pattern for the plugin to use.'):
+      required(false),
+
     P:P('definition', 'The file name of the XML test definition.'):
       required(true)
   }
@@ -484,6 +487,8 @@ function TestClassIoMatrix:run(aParameters, tLog)
   --
   -- Parse the parameters and collect all options.
   --
+  local strPluginPattern = atParameter['plugin']:get()
+
   local tIoMatrix = self.io_matrix(tLog)
 
   -- Read the test definition file.
@@ -502,7 +507,7 @@ function TestClassIoMatrix:run(aParameters, tLog)
   for _, tNetxDevice in ipairs(self.atDevicesNetx) do
     local tPlugin
     if tNetxDevice.plugin=='COMMON' then
-      tPlugin = tester:getCommonPlugin()
+      tPlugin = tester:getCommonPlugin(strPluginPattern)
       if not tPlugin then
         error("No plugin selected, nothing to do!")
       end
