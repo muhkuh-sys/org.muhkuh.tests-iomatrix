@@ -492,10 +492,9 @@ function TestClassIoMatrix:run(aParameters, tLog)
   local tIoMatrix = self.io_matrix(tLog)
 
   -- Read the test definition file.
-  local strParameterFileName = atParameter['definition']:get()
-  local strFileName = self.pl.path.exists(strParameterFileName)
-  if strFileName==nil then
-    tLog.error('The test definition file "%s" does not exist.', strParameterFileName)
+  local strFileName = atParameter['definition']:get()
+  if self.pl.path.exists(strFileName)~=strFileName then
+    tLog.error('The test definition file "%s" does not exist.', strFileName)
     error('Failed to load the test definition.')
   end
 
