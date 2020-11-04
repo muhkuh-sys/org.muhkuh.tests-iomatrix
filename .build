@@ -1,7 +1,7 @@
 #! /bin/bash
 set -e
 
-JONCHKI_VERSION=0.0.5.1
+JONCHKI_VERSION=0.0.6.1
 JONCHKI_VERBOSE=info
 
 # Get the path to this script. Found here: https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
