@@ -34,7 +34,7 @@ fi
 pushd ${BUILD_DIR}/build_requirements
 rm -f iomatrix.xml
 sed -e 's/${PROJECT_VERSION}/0/g' -e 's/${PROJECT_VERSION_VCS}/0/g' ${PRJ_DIR}/installer/jonchki/iomatrix.xml >iomatrix.xml
-${JONCHKI} install-dependencies --verbose ${JONCHKI_VERBOSE} --syscfg ${PRJ_DIR}/jonchki/jonchkisys.cfg --prjcfg ${PRJ_DIR}/jonchki/jonchkicfg.xml ${JONCHKI_SYSTEM} --build-dependencies iomatrix.xml
+${JONCHKI} install-dependencies --verbose ${JONCHKI_VERBOSE} --logfile jonchki.log --dependency-log ${PRJ_DIR}/dependency-log.xml --syscfg ${PRJ_DIR}/jonchki/jonchkisys.cfg --prjcfg ${PRJ_DIR}/jonchki/jonchkicfg.xml ${JONCHKI_SYSTEM} --build-dependencies iomatrix.xml
 popd
 
 python3 mbs/mbs
