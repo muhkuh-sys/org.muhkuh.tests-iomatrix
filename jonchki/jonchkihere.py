@@ -39,7 +39,7 @@ except ImportError:
     from urllib2 import urlopen, HTTPError
 
 
-strDefaultJonchkiVersion = '0.0.5.1'
+strDefaultJonchkiVersion = '0.0.6.1'
 
 
 class ProgressOutput:
@@ -105,7 +105,7 @@ class ProgressOutput:
 
             # Get the end position of the line in bytes.
             sizLineEnd = self.m_uiLinePositionStart
-            sizLineEnd += self.m_uiDotsPerLine * self.m_sizDot
+            sizLineEnd += int((self.m_uiDotsPerLine * self.m_sizDot) + 0.5)
             sizDownloaded = self.m_sizCurrent + sizData
             if sizLineEnd > sizDownloaded:
                 sizLineEnd = sizDownloaded
@@ -114,7 +114,7 @@ class ProgressOutput:
             # Get the number of bytes in this line.
             sizDotBytes = sizLineEnd - self.m_uiLinePositionStart
             # Get the number of new dots in this line.
-            sizDots = int(sizDotBytes / self.m_sizDot)
+            sizDots = int((sizDotBytes / self.m_sizDot) + 0.5)
             sizDots -= self.m_uiDotsPrintedInCurrentLine
             # Print the new dots.
             sys.stdout.write('.' * sizDots)
@@ -190,7 +190,10 @@ class PlatformDetect:
         strCpuArchitecture = None
 
         # Try to parse the output of the 'getconf LONG_BIT' command.
-        strOutput = subprocess.check_output(['getconf', 'LONG_BIT'])
+        strOutput = subprocess.check_output(['getconf', 'LONG_BIT']).decode(
+            "utf-8",
+            "replace"
+        )
         strOutputStrip = strOutput.strip()
         if strOutputStrip == '32':
             strCpuArchitecture = 'x86'
