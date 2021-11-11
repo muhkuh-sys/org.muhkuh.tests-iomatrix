@@ -150,31 +150,43 @@ function IoMatrix_FTDI:__find_ftdi_devices(atAllDevices, atDeviceAttr)
     if aucPinMask~=nil then
       self.tLog.debug('Pin mask: %s', table.concat(aucPinMask, ', '))
     end
+    local fSingle = tDeviceAttr.single
 
     -- Search the complete list of devices.
     local tFoundDevice
-    for _, tDevice in pairs(atAllDevices) do
-      -- Is the device already part of the identified devices?
-      for _, tIdentDev in pairs(self.atDeviceAttrs) do
-        if tIdentDev.strPortNumbers==tDevice.strPortNumbers then
-          self.tLog.debug('Not considering device at port [%s] again.', tIdentDev.strPrettyPortNumbers)
-          tDevice = nil
-          break
-        end 
+    if fSingle==true then
+      local sizAllDevices = #atAllDevices
+      if sizAllDevices==1 then
+        tFoundDevice = atAllDevices[1]
+      elseif sizAllDevices==0 then
+        self.tLog.debug('No device found.')
+      else
+        self.tLog.debug('With the "single" attribute there must be exactly one device, but here are %d of them.', sizAllDevices)
       end
-      if tDevice~=nil then
-        -- Should a port number be checked and does it differ?
-        if strPN~=nil and tDevice.strPortNumbers~=strPN then
-          -- Do not use this device.
-          self.tLog.debug('The port of device [%s] does not match.', tDevice.strPrettyPortNumbers)
-        elseif strSerial~=nil and tDevice.strFtdiSerial~=strSerial then
-          self.tLog.debug('The serial of device [%s] does not match.', tDevice.strPrettyPortNumbers)
-        elseif ulModuleIndex~=nil and tDevice.ulModuleIndex~=ulModuleIndex then
-          self.tLog.debug('The module index of device [%s] does not match.', tDevice.strPrettyPortNumbers)
-        else
-          self.tLog.debug('Device [%s] matches.', tDevice.strPrettyPortNumbers)
-          tFoundDevice = tDevice
-          break
+    else
+      for _, tDevice in pairs(atAllDevices) do
+        -- Is the device already part of the identified devices?
+        for _, tIdentDev in pairs(self.atDeviceAttrs) do
+          if tIdentDev.strPortNumbers==tDevice.strPortNumbers then
+            self.tLog.debug('Not considering device at port [%s] again.', tIdentDev.strPrettyPortNumbers)
+            tDevice = nil
+            break
+          end
+        end
+        if tDevice~=nil then
+          -- Should a port number be checked and does it differ?
+          if strPN~=nil and tDevice.strPortNumbers~=strPN then
+            -- Do not use this device.
+            self.tLog.debug('The port of device [%s] does not match.', tDevice.strPrettyPortNumbers)
+          elseif strSerial~=nil and tDevice.strFtdiSerial~=strSerial then
+            self.tLog.debug('The serial of device [%s] does not match.', tDevice.strPrettyPortNumbers)
+          elseif ulModuleIndex~=nil and tDevice.ulModuleIndex~=ulModuleIndex then
+            self.tLog.debug('The module index of device [%s] does not match.', tDevice.strPrettyPortNumbers)
+          else
+            self.tLog.debug('Device [%s] matches.', tDevice.strPrettyPortNumbers)
+            tFoundDevice = tDevice
+            break
+          end
         end
       end
     end

@@ -209,9 +209,18 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
       end
     end
 
+    local fSingle
+    local strSingle = atAttributes['single']
+    if strSingle~=nil then
+      strSingle = string.lower(strSingle)
+      if strSingle=='true' or strSingle=='yes' or strSingle=='1' then
+        fSingle = true
+      end
+    end
+
     if fOk~=true then
       aLxpAttr.tResult = nil
-    elseif auiPort==nil and strSerial==nil and uiModuleIndex==nil then
+    elseif auiPort==nil and strSerial==nil and uiModuleIndex==nil and fSingle==nil then
       aLxpAttr.tResult = nil
       aLxpAttr.tLog.error('Error in line %d, col %d: No way to identify device as no port, serial or moduleIndex specified.', iPosLine, iPosColumn)
     else
@@ -219,7 +228,8 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
         port = auiPort,
         serial = strSerial,
         moduleidx = uiModuleIndex,
-        pinmask = aucPinMask
+        pinmask = aucPinMask,
+        single = fSingle
       }
       table.insert(aLxpAttr.tCurrentFTDIDevice, atDevice)
     end
