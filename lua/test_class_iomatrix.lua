@@ -15,6 +15,9 @@ function TestClassIoMatrix:_init(strTestName, uiTestCase, tLogWriter, strLogLeve
     P:P('plugin', 'A pattern for the plugin to use.'):
       required(false),
 
+    P:P('plugin_options', 'Plugin options as a JSON object.'):
+      required(false),
+
     P:P('definition', 'The file name of the XML test definition.'):
       required(true)
   }
@@ -498,6 +501,17 @@ function TestClassIoMatrix:run(aParameters, tLog)
   -- Parse the parameters and collect all options.
   --
   local strPluginPattern = atParameter['plugin']:get()
+  local strPluginOptions = atParameter['plugin_options']:get()
+
+  local atPluginOptions = {}
+  if strPluginOptions~=nil then
+    local tJson, uiPos, strJsonErr = json.decode(strPluginOptions)
+    if tJson==nil then
+      tLog.warning('Ignoring invalid plugin options. Error parsing the JSON: %d %s', uiPos, strJsonErr)
+    else
+      atPluginOptions = tJson
+    end
+  end
 
   local tIoMatrix = self.io_matrix(tLog)
 
@@ -516,10 +530,14 @@ function TestClassIoMatrix:run(aParameters, tLog)
   for _, tNetxDevice in ipairs(self.atDevicesNetx) do
     local tPlugin
     if tNetxDevice.plugin=='COMMON' then
-      tPlugin = tester:getCommonPlugin(strPluginPattern)
-      if not tPlugin then
-        error("No plugin selected, nothing to do!")
+      tPlugin = _G.tester:getCommonPlugin(strPluginPattern, atPluginOptions)
+      if tPlugin==nil then
+        local strPluginOptions = pl.pretty.write(atPluginOptions)
+        local strError = string.format('Failed to establish a connection to the netX with pattern "%s" and options "%s".', strPluginPattern, strPluginOptions)
+        error(strError)
       end
+    else
+      error('Other netX plugins than "COMMON" are not supported.')
     end
 
     if tPlugin==nil then
