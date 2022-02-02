@@ -7,6 +7,7 @@ function TestClassIoMatrix:_init(strTestName, uiTestCase, tLogWriter, strLogLeve
   self:super(strTestName, uiTestCase, tLogWriter, strLogLevel)
 
   self.bit = require 'bit'
+  self.json = require 'dkjson'
   self.io_matrix = require 'io_matrix'
   self.lxp = require 'lxp'
 
@@ -495,6 +496,8 @@ end
 function TestClassIoMatrix:run(aParameters, tLog)
   local atParameter = self.atParameter
   local tLog = self.tLog
+  local pl = self.pl
+  local json = self.json
 
   ----------------------------------------------------------------------
   --
@@ -517,7 +520,7 @@ function TestClassIoMatrix:run(aParameters, tLog)
 
   -- Read the test definition file.
   local strFileName = atParameter['definition']:get()
-  if self.pl.path.exists(strFileName)~=strFileName then
+  if pl.path.exists(strFileName)~=strFileName then
     tLog.error('The test definition file "%s" does not exist.', strFileName)
     error('Failed to load the test definition.')
   end
