@@ -138,9 +138,9 @@ end
 
 
 
-function IoMatrix_netx:getContinuousChanges()
+function IoMatrix_netx:getContinuousChanges(fnCallback, pvUser)
   for _, tDev in pairs(self.atDevices) do
-    tDev:getContinuousChanges()
+    tDev:getContinuousChanges(fnCallback, pvUser)
   end
 end
 

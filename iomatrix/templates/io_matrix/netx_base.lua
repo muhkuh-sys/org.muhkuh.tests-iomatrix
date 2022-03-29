@@ -625,7 +625,7 @@ end
 
 
 
-function IoMatrix_netx_base:getContinuousChanges()
+function IoMatrix_netx_base:getContinuousChanges(fnCallback, pvUser)
   local tResult
 
   -- Collect the parameter.
@@ -635,9 +635,19 @@ function IoMatrix_netx_base:getContinuousChanges()
     self.hPinDescription                           -- Pin description handle.
   }
 
+  local fnDefaultCallback = self.fnCallbackMessage
+  local function fnMessageSplitter(strData, tParamB)
+    local strMatch = string.match(strData, "^([01]+)%c+$")
+    if strMatch~=nil then
+      return fnCallback(pvUser, strMatch)
+    else
+      return fnDefaultCallback(strData, tParamB)
+    end
+  end
+
   -- Call the netX program.
   self.tLog.debug('__/Output/____________________________________________________________________')
-  self.tPlugin:call(self.ulExecutionAddress, self.ulParameterStartAddress, self.fnCallbackMessage, 0)
+  self.tPlugin:call(self.ulExecutionAddress, self.ulParameterStartAddress, fnMessageSplitter, 0)
   self.tLog.debug('______________________________________________________________________________')
 
   -- Get the result.
