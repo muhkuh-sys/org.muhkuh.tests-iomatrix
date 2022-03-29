@@ -85,7 +85,7 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 				{
 					uprintf("The pin %s has an invalid index of %d!", ptPinDescCnt->apcName, uiIndex);
 				}
-				
+
 				break;
 
 			case PINTYPE_MLED:
