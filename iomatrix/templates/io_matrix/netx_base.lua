@@ -55,6 +55,7 @@ function IoMatrix_netx_base:_init(tLog, fnInit, fnDeinit, ulVerbose, fnCallbackP
   self.IOMATRIX_COMMAND_Set_All_Pins                = ${IOMATRIX_COMMAND_Set_All_Pins}
   self.IOMATRIX_COMMAND_Get_All_Pins                = ${IOMATRIX_COMMAND_Get_All_Pins}
   self.IOMATRIX_COMMAND_Get_Continuous_Status_Match = ${IOMATRIX_COMMAND_Get_Continuous_Status_Match}
+  self.IOMATRIX_COMMAND_Get_Continuous_Changes      = ${IOMATRIX_COMMAND_Get_Continuous_Changes}
 
   self.strPinStatusZ = string.char(self.PINSTATUS_HIGHZ)
   self.strPinStatus0 = string.char(self.PINSTATUS_OUTPUT0)
@@ -620,6 +621,32 @@ function IoMatrix_netx_base:bget()
   for iPos = 1, sizRawPinStates do
     self.atInBuffer[iPos] = string.byte(strRawPinStates, iPos)
   end
+end
+
+
+
+function IoMatrix_netx_base:getContinuousChanges()
+  local tResult
+
+  -- Collect the parameter.
+  self:__write_header{
+    self.ulVerbose,                                -- Verbose mode.
+    self.IOMATRIX_COMMAND_Get_Continuous_Changes,  -- The command code.
+    self.hPinDescription                           -- Pin description handle.
+  }
+
+  -- Call the netX program.
+  self.tLog.debug('__/Output/____________________________________________________________________')
+  self.tPlugin:call(self.ulExecutionAddress, self.ulParameterStartAddress, self.fnCallbackMessage, 0)
+  self.tLog.debug('______________________________________________________________________________')
+
+  -- Get the result.
+  local ulResult = self.tPlugin:read_data32(self.ulParameterStartAddress)
+  if ulResult==0 then
+    tResult = true
+  end
+
+  return tResult
 end
 
 

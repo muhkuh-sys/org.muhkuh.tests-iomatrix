@@ -31,12 +31,13 @@
 
 typedef enum IOMATRIX_COMMAND_ENUM
 {
-	IOMATRIX_COMMAND_Parse_Pin_Description    		= 0,
-	IOMATRIX_COMMAND_Set_Pin                  		= 1,
-	IOMATRIX_COMMAND_Get_Pin                  		= 2,
-	IOMATRIX_COMMAND_Set_All_Pins             		= 3,
-	IOMATRIX_COMMAND_Get_All_Pins             		= 4,
-	IOMATRIX_COMMAND_Get_Continuous_Status_Match  	= 5
+	IOMATRIX_COMMAND_Parse_Pin_Description        = 0,
+	IOMATRIX_COMMAND_Set_Pin                      = 1,
+	IOMATRIX_COMMAND_Get_Pin                      = 2,
+	IOMATRIX_COMMAND_Set_All_Pins                 = 3,
+	IOMATRIX_COMMAND_Get_All_Pins                 = 4,
+	IOMATRIX_COMMAND_Get_Continuous_Status_Match  = 5,
+	IOMATRIX_COMMAND_Get_Continuous_Changes       = 6
 } IOMATRIX_COMMAND_T;
 
 
@@ -89,7 +90,10 @@ typedef struct IOMATRIX_PARAMETER_CONTINUOUS_PIN_STATUS_T
 	unsigned char aucList[MAX_PINS_UNDER_TEST];		/* The list with test pattern. */
 }IOMATRIX_PARAMETER_GET_CONTINUOUS_STATUS_MATCH_T;
 
-
+typedef struct IOMATRIX_PARAMETER_GET_CONTINUOUS_CHANGES_STRUCT
+{
+	void *pvPinDescription;                         /* A handle of the pin description. */
+} IOMATRIX_PARAMETER_GET_CONTINUOUS_CHANGES_T;
 
 typedef struct IOMATRIX_PARAMETER_STRUCT
 {
@@ -103,6 +107,7 @@ typedef struct IOMATRIX_PARAMETER_STRUCT
 		IOMATRIX_PARAMETER_SET_ALL_PINS_T tSetAllPins;
 		IOMATRIX_PARAMETER_GET_ALL_PINS_T tGetAllPins;
 		IOMATRIX_PARAMETER_GET_CONTINUOUS_STATUS_MATCH_T tGetContinuousStatusMatch;
+		IOMATRIX_PARAMETER_GET_CONTINUOUS_CHANGES_T tGetContinuousChanges;
 	} uParameter;
 } IOMATRIX_PARAMETER_T;
 

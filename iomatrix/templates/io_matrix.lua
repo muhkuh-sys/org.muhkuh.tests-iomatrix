@@ -139,6 +139,10 @@ function IoMatrix:bget()
 end
 
 
+function IoMatrix:getContinuousChanges()
+  self.netx:getContinuousChanges()
+end
+
 
 function IoMatrix:close()
   self.netx:close()

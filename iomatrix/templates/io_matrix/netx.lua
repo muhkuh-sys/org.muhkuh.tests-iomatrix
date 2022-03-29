@@ -138,6 +138,14 @@ end
 
 
 
+function IoMatrix_netx:getContinuousChanges()
+  for _, tDev in pairs(self.atDevices) do
+    tDev:getContinuousChanges()
+  end
+end
+
+
+
 function IoMatrix_netx:close()
   -- No need to close something.
 end

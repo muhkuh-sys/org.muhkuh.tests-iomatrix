@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "rdy_run.h"
+#include "serial_vectors.h"
 #include "systime.h"
 #include "uprintf.h"
 #include "version.h"
@@ -509,6 +510,123 @@ static int get_continuous_status_match(IOMATRIX_PARAMETER_GET_CONTINUOUS_STATUS_
 }
 
 
+
+static int get_continuous_changes(IOMATRIX_PARAMETER_GET_CONTINUOUS_CHANGES_T *ptParameter __attribute__ ((unused)))
+{
+	int iResult;
+	int iPrintReport;
+	int iIsRunning;
+	unsigned long ulPinCnt;
+	unsigned long ulPinMax;
+	const PINDESCRIPTION_T *ptPinDescription;
+	unsigned char ucPinValue;
+	char cPinValue;
+	unsigned int uiPeek;
+	unsigned char ucCancelGet;
+	const unsigned long ulForcedUpdateInterval = 3000;
+	TIMER_HANDLE_T tTimer;
+	unsigned char aucLastPinState[MAX_PINS_UNDER_TEST];
+
+
+	/* Be optimistic */
+	iResult = 0;
+
+	/* Initialize the buffer for the pin values. */
+	memset(aucLastPinState, 0x00, sizeof(aucLastPinState));
+
+	/* Always print a report in the first round. */
+	iPrintReport = 1;
+
+	/* There is no cancel request yet. */
+	iIsRunning = 1;
+
+	systime_handle_start_ms(&tTimer, ulForcedUpdateInterval);
+
+	ulPinMax = ulPinsUnderTest;
+	while(iIsRunning)
+	{
+		ulPinCnt = 0;
+		while( ulPinCnt<ulPinMax )
+		{
+			/* Get the pointer to the pin description. */
+			ptPinDescription = atPinsUnderTest + ulPinCnt;
+
+			/* Get the pin value. */
+			iResult = iopins_get(ptPinDescription, &ucPinValue);
+			if( iResult!=0 )
+			{
+				uprintf("Failed to get the pin: ");
+				print_pin(ulPinCnt, ptPinDescription);
+				break;
+			}
+
+			/* Check if the pin value changed.
+			 * If it changed, update the buffer and remember to
+			 * print a report.
+			 */
+			if( ucPinValue!=aucLastPinState[ulPinCnt] )
+			{
+				aucLastPinState[ulPinCnt] = ucPinValue;
+				iPrintReport = 1;
+			}
+
+			++ulPinCnt;
+		}
+
+		if( iResult!=0 )
+		{
+			iIsRunning = 0;
+		}
+		else
+		{
+			/* Print a report at least every second. */
+			if( systime_handle_is_elapsed(&tTimer)!=0 )
+			{
+				iPrintReport = 1;
+			}
+
+			if( iPrintReport!=0 )
+			{
+				ulPinCnt = 0;
+				while( ulPinCnt<ulPinMax )
+				{
+					/* Convert the pin value to ASCII.
+					* A value of 0x00 is printed as "0", everything else is a "1".
+					*/
+					cPinValue = '0';
+					if( aucLastPinState[ulPinCnt]!=0 )
+					{
+						cPinValue = '1';
+					}
+					uprintf("%c", cPinValue);
+					++ulPinCnt;
+				}
+				uprintf("\n");
+
+				/* The report was printed. */
+				iPrintReport = 0;
+				systime_handle_start_ms(&tTimer, ulForcedUpdateInterval);
+			}
+
+			/* Is a cancel request waiting? */
+#if 0
+			uiPeek = SERIAL_PEEK();
+			if( uiPeek!=0 )
+			{
+				ucCancelGet = SERIAL_GET();
+				if( ucCancelGet==0x2b )
+				{
+					iIsRunning = 0;
+				}
+			}
+#endif
+		}
+	}
+
+	return iResult;
+}
+
+
 /*-------------------------------------------------------------------------*/
 
 TEST_RESULT_T test(IOMATRIX_PARAMETER_T *ptTestParams)
@@ -635,6 +753,22 @@ TEST_RESULT_T test(IOMATRIX_PARAMETER_T *ptTestParams)
 		else
 		{
 			iResult = get_continuous_status_match(&(ptTestParams->uParameter.tGetContinuousStatusMatch));
+		}
+		break;
+
+	case IOMATRIX_COMMAND_Get_Continuous_Changes:
+		if( s_ulVerbosity!=0 )
+		{
+			uprintf("Mode: Get continuous changes\n");
+		}
+
+		if( ptTestParams->uParameter.tGetContinuousChanges.pvPinDescription != (void*)atPinsUnderTest )
+		{
+			uprintf("Error: the pin description handle is invalid!\n");
+		}
+		else
+		{
+			iResult = get_continuous_changes(&(ptTestParams->uParameter.tGetContinuousChanges));
 		}
 		break;
 	}
