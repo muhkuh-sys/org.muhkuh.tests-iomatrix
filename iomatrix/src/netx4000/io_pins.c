@@ -939,7 +939,7 @@ static int get_rdyrun(unsigned int uiIndex, unsigned char *pucData)
 
 
 
-static int set_rstout(unsigned int uiIndex, PINSTATUS_T tValue)
+static int set_rstout(unsigned int uiIndex __attribute__((unused)), PINSTATUS_T tValue __attribute__((unused)))
 {
 	int iResult;
 
