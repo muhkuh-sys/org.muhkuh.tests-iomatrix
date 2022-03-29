@@ -185,6 +185,10 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 			case PINTYPE_IOLLEDM:
 				/* The netX10 has no IOL bridge yet. */
 				break;
+
+			case PINTYPE_SQI:
+				/* Not yet... */
+				break;
 			}
 
 			if( iResult!=0 )
@@ -377,7 +381,7 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDe
 			}
 		}
 	}
-	
+
 	return iResult;
 }
 
@@ -766,7 +770,7 @@ static int get_xmio(unsigned int uiIndex, unsigned char *pucData)
 	unsigned long ulMask;
 	unsigned char ucData;
 
-  
+
 	if( uiIndex==0 )
 	{
 		ulMask = HOSTMSK(xmac_status_shared0_gpio0_in);
@@ -854,6 +858,10 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 	case PINTYPE_IOLLEDM:
 		/* The netX10 has no IOL bridge yet. */
 		break;
+
+	case PINTYPE_SQI:
+		/* Not yet... */
+		break;
 	}
 
 	return iResult;
@@ -918,6 +926,10 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 
 	case PINTYPE_IOLLEDM:
 		/* The netX10 has no IOL bridge yet. */
+		break;
+
+	case PINTYPE_SQI:
+		/* Not yet... */
 		break;
 	}
 

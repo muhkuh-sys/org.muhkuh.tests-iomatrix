@@ -193,6 +193,10 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 			case PINTYPE_IOLLEDM:
 				/* The netX500 has no IOL bridge yet. */
 				break;
+
+			case PINTYPE_SQI:
+				/* The netX500 has no SQI unit... */
+				break;
 			}
 
 			if( iResult!=0 )
@@ -393,11 +397,11 @@ static int set_pio(unsigned int uiIndex, PINSTATUS_T tValue)
 	unsigned long ulOe;
 	unsigned long ulOut;
 	unsigned long ulMask;
-	
+
 
 	/* Be pessimistic... */
 	iResult = -1;
-	
+
 	/* Check the index. */
 	if( uiIndex<54 )
 	{
@@ -451,7 +455,7 @@ static int get_pio(unsigned int uiIndex, unsigned char *pucData)
 
 	/* Be pessimistic... */
 	iResult = -1;
-	
+
 	/* Check the index. */
 	if( uiIndex<32 )
 	{
@@ -698,6 +702,10 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 	case PINTYPE_IOLLEDM:
 		/* The netX500 has no IOL bridge yet. */
 		break;
+
+	case PINTYPE_SQI:
+		/* Not yet... */
+		break;
 	}
 
 	return iResult;
@@ -759,6 +767,10 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 
 	case PINTYPE_IOLLEDM:
 		/* The netX500 has no IOL bridge yet. */
+		break;
+
+	case PINTYPE_SQI:
+		/* Not yet... */
 		break;
 	}
 

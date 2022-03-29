@@ -43,6 +43,7 @@ typedef struct UNITCONFIGURATION_STRUCT
 	unsigned long ulRdyRun;
 	unsigned long ulRstOut;
 	unsigned long aulXmio[2];
+	unsigned long ulSqi;
 } UNITCONFIGURATION_T;
 
 
@@ -60,6 +61,7 @@ static void initialize_unit_configuration(UNITCONFIGURATION_T *ptUnitCfg)
 	ptUnitCfg->ulRstOut      = 0;
 	ptUnitCfg->aulXmio[0]    = 0;
 	ptUnitCfg->aulXmio[1]    = 0;
+	ptUnitCfg->ulSqi         = 0;
 }
 
 
@@ -245,6 +247,18 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 				if( uiIndex<24*MAX_NETIOL_NODES )
 				{
 					ptUnitCfg->aulIolLedM[uiIndex/24] |= 1U << (uiIndex%24);
+					iResult = 0;
+				}
+				else
+				{
+					uprintf("The pin %s has an invalid index of %d!", ptPinDescCnt->apcName, uiIndex);
+				}
+				break;
+
+			case PINTYPE_SQI:
+				if( uiIndex<8 )
+				{
+					ptUnitCfg->ulSqi |= 1U << uiIndex;
 					iResult = 0;
 				}
 				else
@@ -1177,6 +1191,37 @@ static int configure_iolledm(unsigned long *pulPins)
 
 
 
+static int configure_sqi(unsigned long ulPins)
+{
+	HOSTDEF(ptSqiArea);
+	unsigned long ulSioCfg;
+
+
+	/* Deactivate SQIROM. */
+	ptSqiArea->ulSqi_sqirom_cfg = 0;
+
+	/* Get the SIO configuration.
+	 * There are 2 interesting SIO settings:
+	 * 1) only SIO2 and 3 are used as PIOs
+	 * 2) all pins are used as PIOs.
+	 */
+	if( (ulPins&0x3f)==0 )
+	{
+		/* Use only SIO2 and 3 as PIOs. */
+		ulSioCfg = 0;
+	}
+	else
+	{
+		/* All pins are used as PIOs. */
+		ulSioCfg = 3;
+	}
+	ptSqiArea->aulSqi_cr[0] = ulSioCfg << HOSTSRT(sqi_cr0_sio_cfg);
+
+	return 0;
+}
+
+
+
 int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDesc)
 {
 	int iResult;
@@ -1389,6 +1434,14 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDe
 			{
 				iResult = configure_iolledm(tUnitCfg.aulIolLedM);
 			}
+		}
+
+		/*
+		 * SQI
+		 */
+		if( tUnitCfg.ulSqi!=0 )
+		{
+			configure_sqi(tUnitCfg.ulSqi);
 		}
 	}
 
@@ -1692,10 +1745,10 @@ static int set_mmiopio(unsigned int uiIndex, PINSTATUS_T tValue)
 	HOSTDEF(ptAsicCtrlArea);
 	HOSTDEF(ptMmioCtrlArea);
 	unsigned long ulValue;
-	
+
 	/* assume failure */
 	iResult = -1;
-	
+
 	/* check the index */
 	if( uiIndex<8 )
 	{
@@ -1751,7 +1804,7 @@ static int get_mmiopio(unsigned int uiIndex, unsigned char *pucData)
 
 	/* assume failure */
 	iResult = -1;
-	
+
 	/* check the index */
 	if( uiIndex<8 )
 	{
@@ -1785,10 +1838,10 @@ static int set_rdyrun(unsigned int uiIndex, PINSTATUS_T tValue)
 	unsigned long ulValue;
 	unsigned long ulMaskOe;
 	unsigned long ulMaskOut;
-	
+
 	/* assume failure */
 	iResult = -1;
-	
+
 	/* check the index */
 	if( uiIndex<2 )
 	{
@@ -2293,6 +2346,99 @@ static int get_iolledm(unsigned int uiIndex __attribute__((unused)), unsigned ch
 }
 
 
+
+static int set_sqi(unsigned int uiIndex, PINSTATUS_T tValue)
+{
+	HOSTDEF(ptSqiArea);
+	int iResult;
+	unsigned long ulOut;
+	unsigned long ulOe;
+
+
+	/* assume failure */
+	iResult = -1;
+
+	/* check the index */
+	if( uiIndex<8 )
+	{
+		ulOut = ptSqiArea->ulSqi_pio_out;
+		ulOe = ptSqiArea->ulSqi_pio_oe;
+
+		switch( tValue )
+		{
+		case PINSTATUS_HIGHZ:
+			/* Clear the output enable bit. */
+			ulOe &= ~(1U << uiIndex);
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT0:
+			/* Set the output enable bit and the output bit to 0. */
+			ulOut &= ~(1U << uiIndex);
+			ulOe |= 1U << uiIndex;
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT1:
+			/* Set the output enable bit and the output bit to 1. */
+			ulOut |= 1U << uiIndex;
+			ulOe |= 1U << uiIndex;
+			iResult = 0;
+			break;
+		}
+
+		ptSqiArea->ulSqi_pio_out = ulOut;
+		ptSqiArea->ulSqi_pio_oe = ulOe;
+
+		/* reconfigure the MMIO */
+		if( iResult!=0 )
+		{
+			uprintf("Invalid pin status: %d\n", tValue);
+		}
+	}
+	else
+	{
+		uprintf("Invalid SQI index: %d\n", uiIndex);
+	}
+
+	return iResult;
+}
+
+
+static int get_sqi(unsigned int uiIndex, unsigned char *pucData)
+{
+	int iResult;
+	HOSTDEF(ptSqiArea);
+	unsigned long ulValue;
+	unsigned char ucData;
+
+	/* assume failure */
+	iResult = -1;
+
+	/* check the index */
+	if( uiIndex<8 )
+	{
+		ulValue = ptSqiArea->ulSqi_pio_in;
+		ulValue &= 1U << uiIndex;
+		if (ulValue == 0)
+		{
+			ucData = 0;
+		}
+		else
+		{
+			ucData = 1;
+		}
+		*pucData = ucData;
+		iResult = 0;
+	}
+	else
+	{
+		uprintf("Invalid SQI index: %d\n", uiIndex);
+	}
+
+	return iResult;
+}
+
 /*---------------------------------------------------------------------------*/
 
 
@@ -2356,6 +2502,10 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 
 	case PINTYPE_IOLLEDM:
 		iResult = set_iolledm(uiIndex, tValue);
+		break;
+
+	case PINTYPE_SQI:
+		iResult = set_sqi(uiIndex, tValue);
 		break;
 	}
 
@@ -2423,6 +2573,10 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 
 	case PINTYPE_IOLLEDM:
 		iResult = get_iolledm(uiIndex, pucData);
+		break;
+
+	case PINTYPE_SQI:
+		iResult = get_sqi(uiIndex, pucData);
 		break;
 	}
 

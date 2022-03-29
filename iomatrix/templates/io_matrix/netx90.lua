@@ -241,7 +241,16 @@ IoMatrix_netx90.atKnownPins = {
   ['RDY'] = { type=${PINTYPE_RDYRUN}, index=0 },
   ['RUN'] = { type=${PINTYPE_RDYRUN}, index=1 },
 
-  ['RST_OUT'] = { type=${PINTYPE_RSTOUT}, index=0 }
+  ['RST_OUT'] = { type=${PINTYPE_RSTOUT}, index=0 },
+
+  ['SQI_CLK'] = { type=${PINTYPE_SQI}, index=0 },
+  ['SQI_CS0'] = { type=${PINTYPE_SQI}, index=1 },
+  ['SQI_CS1'] = { type=${PINTYPE_SQI}, index=2 },
+  ['SQI_CS2'] = { type=${PINTYPE_SQI}, index=3 },
+  ['SQI_MOSI'] = { type=${PINTYPE_SQI}, index=4 },
+  ['SQI_MISO'] = { type=${PINTYPE_SQI}, index=5 },
+  ['SQI_SIO2'] = { type=${PINTYPE_SQI}, index=6 },
+  ['SQI_SIO3'] = { type=${PINTYPE_SQI}, index=7 }
 }
 
 

@@ -189,6 +189,7 @@ static int parse_pin_description(const unsigned char *pucDefinition, unsigned lo
 				case PINTYPE_RAPGPIO:
 				case PINTYPE_APPPIO:
 				case PINTYPE_IOLLEDM:
+				case PINTYPE_SQI:
 					iResult = 0;
 					break;
 				}

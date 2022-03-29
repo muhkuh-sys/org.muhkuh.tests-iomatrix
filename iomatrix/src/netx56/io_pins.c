@@ -186,6 +186,10 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 			case PINTYPE_IOLLEDM:
 				/* The netX56 has no IOL bridge yet. */
 				break;
+
+			case PINTYPE_SQI:
+				/* Not yet. */
+				break;
 			}
 
 			if( iResult!=0 )
@@ -445,21 +449,21 @@ static int set_mmiopio(unsigned int uiIndex, PINSTATUS_T tValue)
 	HOSTDEF(ptAsicCtrlArea);
 	HOSTDEF(ptMmioCtrlArea);
 	unsigned long ulValue;
-	
+
 	/* assume failure */
 	iResult = -1;
-	
+
 	/* check the index */
 	if ((uiIndex <= 39) || (uiIndex == 48))
 	{
 		iResult = 0;
 	}
-	
+
 	/* set the value */
 	if( iResult==0 )
 	{
 		iResult = -1;
-		
+
 		switch( tValue )
 		{
 		case PINSTATUS_HIGHZ:
@@ -502,7 +506,7 @@ static int get_mmiopio(unsigned int uiIndex, unsigned char *pucData)
 
 	/* assume failure */
 	iResult = -1;
-	
+
 	/* check the index */
 	if ((uiIndex <= 39) || (uiIndex == 48))
 	{
@@ -537,10 +541,10 @@ static int set_rdyrun(unsigned int uiIndex, PINSTATUS_T tValue)
 	unsigned long ulValue;
 	unsigned long ulMaskOe;
 	unsigned long ulMaskOut;
-	
+
 	/* assume failure */
 	iResult = -1;
-	
+
 	/* check the index */
 	if( uiIndex<2 )
 	{
@@ -596,11 +600,11 @@ static int get_rdyrun(unsigned int uiIndex, unsigned char *pucData)
 	HOSTDEF(ptAsicCtrlArea);
 	unsigned long ulValue;
 	unsigned char ucData;
-	
-	
+
+
 	/* assume failure */
 	iResult = -1;
-	
+
 	/* check the index */
 	if( uiIndex<2 )
 	{
@@ -750,6 +754,10 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 	case PINTYPE_IOLLEDM:
 		/* The netX56 has no IOL bridge yet. */
 		break;
+
+	case PINTYPE_SQI:
+		/* Not yet... */
+		break;
 	}
 
 	return iResult;
@@ -811,6 +819,10 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 
 	case PINTYPE_IOLLEDM:
 		/* The netX56 has no IOL bridge yet. */
+		break;
+
+	case PINTYPE_SQI:
+		/* Not yet... */
 		break;
 	}
 
