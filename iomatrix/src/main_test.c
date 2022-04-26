@@ -521,8 +521,10 @@ static int get_continuous_changes(IOMATRIX_PARAMETER_GET_CONTINUOUS_CHANGES_T *p
 	const PINDESCRIPTION_T *ptPinDescription;
 	unsigned char ucPinValue;
 	char cPinValue;
+#if 0
 	unsigned int uiPeek;
 	unsigned char ucCancelGet;
+#endif
 	const unsigned long ulForcedUpdateInterval = 3000;
 	TIMER_HANDLE_T tTimer;
 	unsigned char aucLastPinState[MAX_PINS_UNDER_TEST];
