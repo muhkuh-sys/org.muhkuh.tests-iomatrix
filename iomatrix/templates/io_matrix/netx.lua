@@ -138,9 +138,22 @@ end
 
 
 
-function IoMatrix_netx:getContinuousChanges(fnCallback, pvUser)
+function IoMatrix_netx:getContinuousChanges(astrStates, fnCallback, pvUser)
+  -- Convert the list of states to 32bit values.
+  local aulStates = {}
+  for _, strState in ipairs(astrStates) do
+    local ulState = 0
+    for uiPos=string.len(strState),1,-1 do
+      ulState = ulState * 2
+      if string.sub(strState, uiPos, uiPos)=='1' then
+        ulState = ulState + 1
+      end
+    end
+    table.insert(aulStates, ulState)
+  end
+
   for _, tDev in pairs(self.atDevices) do
-    tDev:getContinuousChanges(fnCallback, pvUser)
+    tDev:getContinuousChanges(aulStates, fnCallback, pvUser)
   end
 end
 

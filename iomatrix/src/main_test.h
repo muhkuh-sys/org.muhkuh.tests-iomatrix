@@ -93,6 +93,8 @@ typedef struct IOMATRIX_PARAMETER_CONTINUOUS_PIN_STATUS_T
 typedef struct IOMATRIX_PARAMETER_GET_CONTINUOUS_CHANGES_STRUCT
 {
 	void *pvPinDescription;                         /* A handle of the pin description. */
+	unsigned long ulNumberOfStates;
+	unsigned long aulStates[MAX_PINS_UNDER_TEST/4];
 } IOMATRIX_PARAMETER_GET_CONTINUOUS_CHANGES_T;
 
 typedef struct IOMATRIX_PARAMETER_STRUCT

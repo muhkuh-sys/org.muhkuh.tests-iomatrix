@@ -139,8 +139,8 @@ function IoMatrix:bget()
 end
 
 
-function IoMatrix:getContinuousChanges(fnCallback, pvUser)
-  self.netx:getContinuousChanges(fnCallback, pvUser)
+function IoMatrix:getContinuousChanges(astrStates, fnCallback, pvUser)
+  self.netx:getContinuousChanges(astrStates, fnCallback, pvUser)
 end
 
 

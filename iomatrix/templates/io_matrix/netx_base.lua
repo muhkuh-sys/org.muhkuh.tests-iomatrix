@@ -428,32 +428,32 @@ function IoMatrix_netx_base:parse_pins()
 end
 
 
--- No need of passing arguments because netx_base is the base class of netx 
+-- No need of passing arguments because netx_base is the base class of netx
 function IoMatrix_netx_base:get_continuous_status_match(tStateList, ulNumberOfPatternsToTest)
   local strList = ""  -- List with all test patterns
   local ulCount = 0   -- Variable to count number of table entries
- 
+
   -- Here write data into one string
   -- Go over the table and concat all entries of test patterns
   for _, tValue in ipairs(tStateList) do
   strList = strList .. tValue
   end
-  
+
   self.tLog.debug('strList of Testpattern: %s', strList)
-  
+
   -- Last check if number if test pins and count of test patterns fit
   for Index, Value in pairs( tStateList ) do
     ulCount = ulCount + 1
   end
-  
+
   self.tLog.debug('ulCount: %d', ulCount)
   self.tLog.debug('ulNumberOfPatternsToTest: %d', ulNumberOfPatternsToTest)
-  
+
   if ulCount ~= ulNumberOfPatternsToTest then
-    
+
     error('Error: Pattern count of list does not fit with handover variable ulNumberOfPatternsToTest')
   end
-  
+
   -- Collect the parameter for the header
   self:__write_header{
     self.ulVerbose,                                     -- Verbose mode.
@@ -462,12 +462,12 @@ function IoMatrix_netx_base:get_continuous_status_match(tStateList, ulNumberOfPa
     ulNumberOfPatternsToTest,                           -- Count of Pins in List to test
     strList                                             -- Sequence of pin status
   }
-  
+
   -- Call the netX program
   self.tLog.debug('__/Output of get_continuous_status_match Test/________________________________')
   self.tPlugin:call(self.ulExecutionAddress, self.ulParameterStartAddress, self.fnCallbackMessage, 0)
   self.tLog.debug('______________________________________________________________________________')
-  
+
   -- Get the result
   local ulResult = self.tPlugin:read_data32(self.ulParameterStartAddress)
   if ulResult~=0 then
@@ -475,7 +475,7 @@ function IoMatrix_netx_base:get_continuous_status_match(tStateList, ulNumberOfPa
   else
     tResult = true
   end
-  
+
   self.tLog.debug('Leaving netx_base get_continuous_status_match function')
   return tResult
 end
@@ -625,15 +625,21 @@ end
 
 
 
-function IoMatrix_netx_base:getContinuousChanges(fnCallback, pvUser)
+function IoMatrix_netx_base:getContinuousChanges(aulStates, fnCallback, pvUser)
   local tResult
 
   -- Collect the parameter.
-  self:__write_header{
+  local aulCmd = {
     self.ulVerbose,                                -- Verbose mode.
     self.IOMATRIX_COMMAND_Get_Continuous_Changes,  -- The command code.
-    self.hPinDescription                           -- Pin description handle.
+    self.hPinDescription,                          -- Pin description handle.
+    #aulStates                                     -- Number of states.
   }
+  for _, ulState in ipairs(aulStates) do
+    table.insert(aulCmd, ulState)
+  end
+
+  self:__write_header(aulCmd)
 
   local fnDefaultCallback = self.fnCallbackMessage
   local function fnMessageSplitter(strData, tParamB)

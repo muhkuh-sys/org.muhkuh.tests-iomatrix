@@ -511,7 +511,7 @@ static int get_continuous_status_match(IOMATRIX_PARAMETER_GET_CONTINUOUS_STATUS_
 
 
 
-static int get_continuous_changes(IOMATRIX_PARAMETER_GET_CONTINUOUS_CHANGES_T *ptParameter __attribute__ ((unused)))
+static int get_continuous_changes(IOMATRIX_PARAMETER_GET_CONTINUOUS_CHANGES_T *ptParameter)
 {
 	int iResult;
 	int iPrintReport;
@@ -529,6 +529,9 @@ static int get_continuous_changes(IOMATRIX_PARAMETER_GET_CONTINUOUS_CHANGES_T *p
 	TIMER_HANDLE_T tTimer;
 	unsigned char aucLastPinState[MAX_PINS_UNDER_TEST];
 
+	unsigned long ulCombinedPinState;
+	unsigned long ulCurrentPinState;
+
 
 	/* Be optimistic */
 	iResult = 0;
@@ -542,11 +545,16 @@ static int get_continuous_changes(IOMATRIX_PARAMETER_GET_CONTINUOUS_CHANGES_T *p
 	/* There is no cancel request yet. */
 	iIsRunning = 1;
 
+	ulCurrentPinState = 0;
+
 	systime_handle_start_ms(&tTimer, ulForcedUpdateInterval);
 
 	ulPinMax = ulPinsUnderTest;
 	while(iIsRunning)
 	{
+		/* Get all pins and store the new state in aucLastPinState.
+		 * Set iPrintReport to 1 if a pin changed.
+		 */
 		ulPinCnt = 0;
 		while( ulPinCnt<ulPinMax )
 		{
@@ -590,17 +598,22 @@ static int get_continuous_changes(IOMATRIX_PARAMETER_GET_CONTINUOUS_CHANGES_T *p
 			if( iPrintReport!=0 )
 			{
 				ulPinCnt = 0;
+				ulCombinedPinState = 0;
 				while( ulPinCnt<ulPinMax )
 				{
 					/* Convert the pin value to ASCII.
 					* A value of 0x00 is printed as "0", everything else is a "1".
 					*/
 					cPinValue = '0';
+					ucPinValue = 0U;
 					if( aucLastPinState[ulPinCnt]!=0 )
 					{
 						cPinValue = '1';
+						ucPinValue = 1U;
 					}
 					uprintf("%c", cPinValue);
+					ulCombinedPinState |= (((unsigned long)ucPinValue) << ulPinCnt);
+
 					++ulPinCnt;
 				}
 				uprintf("\n");
@@ -608,10 +621,20 @@ static int get_continuous_changes(IOMATRIX_PARAMETER_GET_CONTINUOUS_CHANGES_T *p
 				/* The report was printed. */
 				iPrintReport = 0;
 				systime_handle_start_ms(&tTimer, ulForcedUpdateInterval);
+
+				/* Does this match the current state? */
+				if( ulCombinedPinState==ptParameter->aulStates[ulCurrentPinState] )
+				{
+					++ulCurrentPinState;
+					if( ulCurrentPinState>=ptParameter->ulNumberOfStates )
+					{
+						iIsRunning = 0;
+					}
+				}
 			}
 
-			/* Is a cancel request waiting? */
 #if 0
+			/* Is a cancel request waiting? */
 			uiPeek = SERIAL_PEEK();
 			if( uiPeek!=0 )
 			{
