@@ -133,6 +133,6 @@ LUA_NETX_BASE = atEnv.NETX56.GccSymbolTemplate('targets/lua/io_matrix/netx_base.
 LUA_NETX90_MPW = atEnv.NETX56.GccSymbolTemplate('targets/lua/io_matrix/netx90_mpw.lua', elf_netx56_t, GCCSYMBOLTEMPLATE_TEMPLATE=File('templates/io_matrix/netx90_mpw.lua'))
 LUA_NETX90 = atEnv.NETX56.GccSymbolTemplate('targets/lua/io_matrix/netx90.lua', elf_netx56_t, GCCSYMBOLTEMPLATE_TEMPLATE=File('templates/io_matrix/netx90.lua'))
 LUA_NETX4000 = atEnv.NETX56.GccSymbolTemplate('targets/lua/io_matrix/netx4000.lua', elf_netx56_t, GCCSYMBOLTEMPLATE_TEMPLATE=File('templates/io_matrix/netx4000.lua'))
-Export('LUA_NETX_BASE', 'LUA_NETX4000', 'LUA_NETX90', 'LUA_NETX90_MPW')
+LUA_NETX500 = atEnv.NETX56.GccSymbolTemplate('targets/lua/io_matrix/netx500.lua', elf_netx56_t, GCCSYMBOLTEMPLATE_TEMPLATE=File('templates/io_matrix/netx500.lua'))
 
-
+Export('LUA_NETX_BASE', 'LUA_NETX4000', 'LUA_NETX90', 'LUA_NETX90_MPW','LUA_NETX500')
