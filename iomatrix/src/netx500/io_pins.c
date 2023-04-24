@@ -656,7 +656,7 @@ static int get_xm0io(unsigned int uiIndex, unsigned char *pucData)
 	{
 		ulStatus = ptXpec0Area->aulStatcfg[0];
 		ulValue = ulStatus & HOSTMSK(statcfg0_gpio0_in) << uiIndex;
-		if( ulStatus==0 )
+		if( ulValue==0 )
 		{
 			ucData = 0;
 		}
@@ -702,7 +702,7 @@ static int get_xm1io(unsigned int uiIndex, unsigned char *pucData)
 	{
 		ulStatus = ptXpec0Area->aulStatcfg[1];
 		ulValue = ulStatus & HOSTMSK(statcfg1_gpio0_in) << uiIndex;
-		if( ulStatus==0 )
+		if( ulValue==0 )
 		{
 			ucData = 0;
 		}
