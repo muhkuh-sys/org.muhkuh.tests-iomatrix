@@ -494,10 +494,10 @@ static int set_xm0io(unsigned int uiIndex, PINSTATUS_T tValue)
 		switch( tValue )
 		{
 		case PINSTATUS_HIGHZ:
-			/* Clear the out bit. */
+			/* Clear the output enable bit. */
 			ulOe &= ~ulMask_oe;
 
-			/* Clear the output enable bit. */
+			/* Clear the out bit. */
 			ulOut &= ~ulMask_out;
 
 			/* DEBUG INFORMATION: */
@@ -507,10 +507,10 @@ static int set_xm0io(unsigned int uiIndex, PINSTATUS_T tValue)
 			break;
 
 		case PINSTATUS_OUTPUT0:
-			/* Clear the out bit. */
+			/* Set the output enable bit. */
 			ulOe |= ulMask_oe;
 
-			/* Set the output enable bit. */
+			/* Clear the out bit. */
 			ulOut &= ~ulMask_out;
 
 			/* DEBUG INFORMATION: */
@@ -520,10 +520,10 @@ static int set_xm0io(unsigned int uiIndex, PINSTATUS_T tValue)
 			break;
 
 		case PINSTATUS_OUTPUT1:
-			/* Set the out bit. */
+			/* Set the output enable bit. */
 			ulOe |= ulMask_oe;
 
-			/* Set the output enable bit. */
+			/* Set the out bit. */
 			ulOut |= ulMask_out;
 
 			/* DEBUG INFORMATION: */
@@ -567,7 +567,6 @@ static int set_xm0io(unsigned int uiIndex, PINSTATUS_T tValue)
 
 
 
-
 static int set_xm1io(unsigned int uiIndex, PINSTATUS_T tValue)
 {
 	HOSTDEF(ptXpec0Area);
@@ -596,10 +595,10 @@ static int set_xm1io(unsigned int uiIndex, PINSTATUS_T tValue)
 		switch( tValue )
 		{
 		case PINSTATUS_HIGHZ:
-			/* Clear the out bit. */
+			/* Clear the output enable bit. */
 			ulOe &= ~ulMask_oe;
 
-			/* Clear the output enable bit. */
+			/* Clear the out bit. */
 			ulOut &= ~ulMask_out;
 
 			/* DEBUG INFORMATION: */
@@ -609,10 +608,10 @@ static int set_xm1io(unsigned int uiIndex, PINSTATUS_T tValue)
 			break;
 
 		case PINSTATUS_OUTPUT0:
-			/* Clear the out bit. */
+			/* Set the output enable bit. */
 			ulOe |= ulMask_oe;
 
-			/* Set the output enable bit. */
+			/* Clear the out bit. */
 			ulOut &= ~ulMask_out;
 
 			/* DEBUG INFORMATION: */
@@ -622,10 +621,10 @@ static int set_xm1io(unsigned int uiIndex, PINSTATUS_T tValue)
 			break;
 
 		case PINSTATUS_OUTPUT1:
-			/* Set the out bit. */
+			/* Set the output enable bit. */
 			ulOe |= ulMask_oe;
 
-			/* Set the output enable bit. */
+			/* Set the out bit. */
 			ulOut |= ulMask_out;
 
 			/* DEBUG INFORMATION: */
@@ -1544,4 +1543,3 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 
 	return iResult;
 }
-
