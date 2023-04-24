@@ -145,6 +145,10 @@ IoMatrix_netx500.atKnownPins = {
   ['XM0_IO1'] = { type=${PINTYPE_XMIO}, index=1 },
   ['XM1_IO0'] = { type=${PINTYPE_XMIO}, index=2 },
   ['XM1_IO1'] = { type=${PINTYPE_XMIO}, index=3 },
+  ['XM2_IO0'] = { type=${PINTYPE_XMIO}, index=4 },
+  ['XM2_IO1'] = { type=${PINTYPE_XMIO}, index=5 },
+  ['XM3_IO0'] = { type=${PINTYPE_XMIO}, index=6 },
+  ['XM3_IO1'] = { type=${PINTYPE_XMIO}, index=7 }
 }
 
 return IoMatrix_netx500
