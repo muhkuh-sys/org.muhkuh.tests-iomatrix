@@ -269,6 +269,92 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
       end
     end
 
+    local aucDefaultOut
+    local strDefaultOut = atAttributes['defaultout']
+    if strDefaultOut~=nil then
+      -- The "default out" value must be one or more HEX bytes.
+      -- This means the number of digits must be a multiple of 2.
+      local sizDefaultOut = string.len(strDefaultOut)
+      if string.match(strDefaultOut, '^%x+$')==nil then
+        fOk = nil
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: the attribute "defaultout" are no valid HEX dump: %s.',
+          iPosLine,
+          iPosColumn,
+          strDefaultOut
+        )
+      elseif math.fmod(sizDefaultOut, 2)~=0 then
+        fOk = nil
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: the length of "defaultout" must be a multiple of 2. Here it is %d.',
+          iPosLine,
+          iPosColumn,
+          sizDefaultOut
+        )
+      else
+        aucDefaultOut = {}
+        for uiCnt=1, sizDefaultOut, 2 do
+          local strData = string.sub(strDefaultOut, uiCnt, uiCnt+1)
+          local ucData = tonumber(strData, 16)
+          if ucData==nil then
+            fOk = nil
+            aLxpAttr.tLog.error(
+              'Error in line %d, col %d: the attribute "defaultout" has an invalid HEX digit at offset %d: %s',
+              iPosLine,
+              iPosColumn,
+              uiCnt,
+              strData
+            )
+            break
+          end
+          table.insert(aucDefaultOut, ucData)
+        end
+      end
+    end
+
+    local aucDefaultOe
+    local strDefaultOe = atAttributes['defaultoe']
+    if strDefaultOe~=nil then
+      -- The "default oe" value must be one or more HEX bytes.
+      -- This means the number of digits must be a multiple of 2.
+      local sizDefaultOe = string.len(strDefaultOe)
+      if string.match(strDefaultOe, '^%x+$')==nil then
+        fOk = nil
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: the attribute "defaultoe" are no valid HEX dump: %s.',
+          iPosLine,
+          iPosColumn,
+          strDefaultOe
+        )
+      elseif math.fmod(sizDefaultOe, 2)~=0 then
+        fOk = nil
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: the length of "defaultoe" must be a multiple of 2. Here it is %d.',
+          iPosLine,
+          iPosColumn,
+          sizDefaultOe
+        )
+      else
+        aucDefaultOe = {}
+        for uiCnt=1, sizDefaultOe, 2 do
+          local strData = string.sub(strDefaultOe, uiCnt, uiCnt+1)
+          local ucData = tonumber(strData, 16)
+          if ucData==nil then
+            fOk = nil
+            aLxpAttr.tLog.error(
+              'Error in line %d, col %d: the attribute "defaultoe" has an invalid HEX digit at offset %d: %s',
+              iPosLine,
+              iPosColumn,
+              uiCnt,
+              strData
+            )
+            break
+          end
+          table.insert(aucDefaultOe, ucData)
+        end
+      end
+    end
+
     local fSingle
     local strSingle = atAttributes['single']
     if strSingle~=nil then
@@ -293,6 +379,8 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
         serial = strSerial,
         moduleidx = uiModuleIndex,
         pinmask = aucPinMask,
+        defaultout = aucDefaultOut,
+        defaultoe = aucDefaultOe,
         single = fSingle
       }
       table.insert(aLxpAttr.tCurrentFTDIDevice, atDevice)

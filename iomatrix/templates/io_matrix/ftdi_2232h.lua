@@ -12,6 +12,8 @@ function Ftdi2232H:_init(tLog)
   self.tContextB = nil
 
   self.aucPinMask = nil
+  self.aucDefaultOut = nil
+  self.aucDefaultOe = nil
 
   self.atBuffer = {
     r = 0,
@@ -26,11 +28,38 @@ end
 
 
 
-function Ftdi2232H:open(tListEntry, aucPinMask)
+function Ftdi2232H:open(tListEntry, aucPinMask, aucDefaultOut, aucDefaultOe)
+  local bit = self.bit
+
+  -- The mask defines which pins are in use.
+  -- Use all pins by default.
   if aucPinMask==nil then
     aucPinMask = { 0xff, 0xff, 0xff, 0xff }
   end
   self.aucPinMask = aucPinMask
+
+  -- Provide a default output value for unused pins.
+  -- The default is 0.
+  if aucDefaultOut==nil then
+    aucDefaultOut = { 0x00, 0x00, 0x00, 0x00 }
+  end
+  self.aucDefaultOut = {
+    bit.band(aucDefaultOut[1], bit.bxor(aucPinMask[1], 0xff)),
+    bit.band(aucDefaultOut[2], bit.bxor(aucPinMask[2], 0xff)),
+    bit.band(aucDefaultOut[3], bit.bxor(aucPinMask[3], 0xff)),
+    bit.band(aucDefaultOut[4], bit.bxor(aucPinMask[4], 0xff))
+  }
+  -- Provide a default output enable value for unused pins.
+  -- The default is 0.
+  if aucDefaultOe==nil then
+    aucDefaultOe = { 0x00, 0x00, 0x00, 0x00 }
+  end
+  self.aucDefaultOe = {
+    bit.band(aucDefaultOe[1], bit.bxor(aucPinMask[1], 0xff)),
+    bit.band(aucDefaultOe[2], bit.bxor(aucPinMask[2], 0xff)),
+    bit.band(aucDefaultOe[3], bit.bxor(aucPinMask[3], 0xff)),
+    bit.band(aucDefaultOe[4], bit.bxor(aucPinMask[4], 0xff))
+  }
 
   -- Create a context for interface A and B.
   local tContextA = self.luaftdi.Context()
@@ -150,6 +179,8 @@ function Ftdi2232H:__write_pins(uiOe, uiOut)
   local luaftdi = self.luaftdi
   local bit = self.bit
   local aucPinMask = self.aucPinMask
+  local aucDefaultOut = self.aucDefaultOut
+  local aucDefaultOe = self.aucDefaultOe
 
 --  print(string.format(
 --    '%08x %08x %02x %02x %02x %02x',
@@ -165,17 +196,18 @@ function Ftdi2232H:__write_pins(uiOe, uiOut)
   if bit.bor(aucPinMask[1], aucPinMask[2])~=0x00 then
     local aucCmd = {}
     if aucPinMask[1]~=0x00 then
-      table.insert(aucCmd, string.char(luaftdi.SET_BITS_LOW, bit.band(uiOut, 0xff), bit.band(uiOe, 0xff)))
+      table.insert(aucCmd, string.char(
+        luaftdi.SET_BITS_LOW,
+        bit.bor(bit.band(uiOut, 0xff), aucDefaultOut[1]),
+        bit.bor(bit.band(uiOe, 0xff), aucDefaultOe[1])
+      ))
     end
     if aucPinMask[2]~=0x00 then
-      table.insert(
-        aucCmd,
-        string.char(
-          luaftdi.SET_BITS_HIGH,
-          bit.band(bit.rshift(uiOut, 8), 0xff),
-          bit.band(bit.rshift(uiOe, 8), 0xff)
-        )
-      )
+      table.insert(aucCmd, string.char(
+        luaftdi.SET_BITS_HIGH,
+        bit.bor(bit.band(bit.rshift(uiOut, 8), 0xff), aucDefaultOut[2]),
+        bit.bor(bit.band(bit.rshift(uiOe, 8), 0xff), aucDefaultOe[2])
+      ))
     end
     table.insert(aucCmd, string.char(luaftdi.SEND_IMMEDIATE))
 
@@ -185,24 +217,18 @@ function Ftdi2232H:__write_pins(uiOe, uiOut)
   if bit.bor(aucPinMask[3], aucPinMask[4])~=0x00 then
     local aucCmd = {}
     if aucPinMask[3]~=0x00 then
-      table.insert(
-        aucCmd,
-        string.char(
-          luaftdi.SET_BITS_LOW,
-          bit.band(bit.rshift(uiOut, 16), 0xff),
-          bit.band(bit.rshift(uiOe, 16), 0xff)
-        )
-      )
+      table.insert(aucCmd, string.char(
+        luaftdi.SET_BITS_LOW,
+        bit.bor(bit.band(bit.rshift(uiOut, 16), 0xff), aucDefaultOut[3]),
+        bit.bor(bit.band(bit.rshift(uiOe, 16), 0xff), aucDefaultOe[3])
+      ))
     end
     if aucPinMask[4]~=0x00 then
-      table.insert(
-        aucCmd,
-        string.char(
-          luaftdi.SET_BITS_HIGH,
-          bit.band(bit.rshift(uiOut, 24), 0xff),
-          bit.band(bit.rshift(uiOe, 24), 0xff)
-        )
-      )
+      table.insert(aucCmd, string.char(
+        luaftdi.SET_BITS_HIGH,
+        bit.bor(bit.band(bit.rshift(uiOut, 24), 0xff), aucDefaultOut[4]),
+        bit.bor(bit.band(bit.rshift(uiOe, 24), 0xff), aucDefaultOe[4])
+      ))
     end
     table.insert(aucCmd, string.char(luaftdi.SEND_IMMEDIATE))
 

@@ -157,6 +157,14 @@ function IoMatrix_FTDI:__find_ftdi_devices(atAllDevices, atDeviceAttr)
     if aucPinMask~=nil then
       self.tLog.debug('Pin mask: %s', table.concat(aucPinMask, ', '))
     end
+    local aucDefaultOut = tDeviceAttr.defaultout
+    if aucDefaultOut~=nil then
+      self.tLog.debug('Default out: %s', table.concat(aucDefaultOut, ', '))
+    end
+    local aucDefaultOE = tDeviceAttr.defaultoe
+    if aucDefaultOE~=nil then
+      self.tLog.debug('Default OE: %s', table.concat(aucDefaultOE, ', '))
+    end
     local fSingle = tDeviceAttr.single
 
     -- Search the complete list of devices.
@@ -207,7 +215,7 @@ function IoMatrix_FTDI:__find_ftdi_devices(atAllDevices, atDeviceAttr)
       break
     else
       local tFtdi = self.cFTDI2232H(self.tLog)
-      local tResult = tFtdi:open(tFoundDevice.tListEntry, aucPinMask)
+      local tResult = tFtdi:open(tFoundDevice.tListEntry, aucPinMask, aucDefaultOut, aucDefaultOE)
       if tResult==nil then
         self.tLog.error('Failed to open the device [%s].', tFoundDevice.strPrettyPortNumbers)
         tAllOk = false
