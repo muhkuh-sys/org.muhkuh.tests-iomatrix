@@ -69,7 +69,12 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
       end
       if tDev~=nil then
         aLxpAttr.tResult = nil
-        aLxpAttr.tLog.error('Error in line %d, col %d: plugin "%s" is already defined.', iPosLine, iPosColumn, strPlugin)
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: plugin "%s" is already defined.',
+          iPosLine,
+          iPosColumn,
+          strPlugin
+        )
       else
         -- Create a new netX device.
         local atDevice = {
@@ -93,7 +98,12 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
       usVendor = tonumber(strVendor)
       if usVendor==nil then
         fOk = nil
-        aLxpAttr.tLog.error('Error in line %d, col %d: attribute "vendor" is no number: "%s".', iPosLine, iPosColumn, strVendor)
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: attribute "vendor" is no number: "%s".',
+          iPosLine,
+          iPosColumn,
+          strVendor
+        )
       end
     end
 
@@ -107,7 +117,12 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
       usProduct = tonumber(strProduct)
       if usProduct==nil then
         fOk = nil
-        aLxpAttr.tLog.error('Error in line %d, col %d: attribute "product" is no number: "%s".', iPosLine, iPosColumn, strProduct)
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: attribute "product" is no number: "%s".',
+          iPosLine,
+          iPosColumn,
+          strProduct
+        )
       end
     end
 
@@ -119,10 +134,20 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
       ulModuleIndexMask = tonumber(strModuleIndexMask)
       if ulModuleIndexMask==nil then
         fOk = nil
-        aLxpAttr.tLog.error('Error in line %d, col %d: attribute "moduleIndexMask" is no number: "%s".', iPosLine, iPosColumn, strModuleIndexMask)
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: attribute "moduleIndexMask" is no number: "%s".',
+          iPosLine,
+          iPosColumn,
+          strModuleIndexMask
+        )
       elseif ulModuleIndexMask==0 then
         fOk = nil
-        aLxpAttr.tLog.error('Error in line %d, col %d: the "moduleIndexMask" must not be 0.', iPosLine, iPosColumn, strModuleIndexMask)
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: the "moduleIndexMask" must not be 0.',
+          iPosLine,
+          iPosColumn,
+          strModuleIndexMask
+        )
       else
         -- Get the shift value from the mask.
         for uiBitCnt = 0, 31 do
@@ -133,7 +158,12 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
         end
         if ulModuleIndexShift==nil then
           fOk = nil
-          aLxpAttr.tLog.error('Error in line %d, col %d: failed to get the shift value for a "moduleIndexMask" of 0x%08x.', iPosLine, iPosColumn, ulModuleIndexMask)
+          aLxpAttr.tLog.error(
+            'Error in line %d, col %d: failed to get the shift value for a "moduleIndexMask" of 0x%08x.',
+            iPosLine,
+            iPosColumn,
+            ulModuleIndexMask
+          )
         end
       end
     end
@@ -162,11 +192,16 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
       local atPort = aLxpAttr.pl.stringx.split(strPort, ',')
       -- Loop over all elements and convert them to numbers.
       auiPort = {}
-      for uiPortIdx, strPort in ipairs(atPort) do
-        local uiPort = tonumber(strPort)
+      for uiPortElementIdx, strPortElement in ipairs(atPort) do
+        local uiPort = tonumber(strPortElement)
         if uiPort==nil then
           fOk = nil
-          aLxpAttr.tLog.error('Error in line %d, col %d: element %d of the "port" list is no number.', iPosLine, iPosColumn, uiPortIdx)
+          aLxpAttr.tLog.error(
+            'Error in line %d, col %d: element %d of the "port" list is no number.',
+            iPosLine,
+            iPosColumn,
+            uiPortElementIdx
+          )
           break
         else
           table.insert(auiPort, uiPort)
@@ -182,7 +217,12 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
       uiModuleIndex = tonumber(strModuleIndex)
       if uiModuleIndex==nil then
         fOk = nil
-        aLxpAttr.tLog.error('Error in line %d, col %d: attribute "moduleIndex" is no number: "%s".', iPosLine, iPosColumn, strModuleIndex)
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: attribute "moduleIndex" is no number: "%s".',
+          iPosLine,
+          iPosColumn,
+          strModuleIndex
+        )
       end
     end
 
@@ -194,10 +234,20 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
       local sizPinMask = string.len(strPinMask)
       if string.match(strPinMask, '^%x+$')==nil then
         fOk = nil
-        aLxpAttr.tLog.error('Error in line %d, col %d: the attribute "pinMask" are no valid HEX dump: %s.', iPosLine, iPosColumn, strPinMask)
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: the attribute "pinMask" are no valid HEX dump: %s.',
+          iPosLine,
+          iPosColumn,
+          strPinMask
+        )
       elseif math.fmod(sizPinMask, 2)~=0 then
         fOk = nil
-        aLxpAttr.tLog.error('Error in line %d, col %d: the number of HEX digits in the attribute "pinMask" must be a multiple of 2. Here it is %d.', iPosLine, iPosColumn, sizPinMask)
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: the length of "pinMask" must be a multiple of 2. Here it is %d.',
+          iPosLine,
+          iPosColumn,
+          sizPinMask
+        )
       else
         aucPinMask = {}
         for uiCnt=1, sizPinMask, 2 do
@@ -205,7 +255,13 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
           local ucData = tonumber(strData, 16)
           if ucData==nil then
             fOk = nil
-            aLxpAttr.tLog.error('Error in line %d, col %d: the attribute "pinMask" has an invalid HEX digit at offset %d: %s', iPosLine, iPosColumn, uiCnt, strData)
+            aLxpAttr.tLog.error(
+              'Error in line %d, col %d: the attribute "pinMask" has an invalid HEX digit at offset %d: %s',
+              iPosLine,
+              iPosColumn,
+              uiCnt,
+              strData
+            )
             break
           end
           table.insert(aucPinMask, ucData)
@@ -226,7 +282,11 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
       aLxpAttr.tResult = nil
     elseif auiPort==nil and strSerial==nil and uiModuleIndex==nil and fSingle==nil then
       aLxpAttr.tResult = nil
-      aLxpAttr.tLog.error('Error in line %d, col %d: No way to identify device as no port, serial or moduleIndex specified.', iPosLine, iPosColumn)
+      aLxpAttr.tLog.error(
+        'Error in line %d, col %d: No way to identify device as no port, serial or moduleIndex specified.',
+        iPosLine,
+        iPosColumn
+      )
     else
       local atDevice = {
         port = auiPort,
@@ -272,7 +332,12 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
       uiFamilyIndex = tonumber(strFamilyIndex)
       if uiFamilyIndex==nil then
         fOk = nil
-        aLxpAttr.tLog.error('Error in line %d, col %d: attribute "familyIndex" is no number: "%s".', iPosLine, iPosColumn, strFamilyIndex)
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: attribute "familyIndex" is no number: "%s".',
+          iPosLine,
+          iPosColumn,
+          strFamilyIndex
+        )
       end
     end
 
@@ -293,10 +358,20 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
       ucPinDefault = tonumber(strPinDefault)
       if ucPinDefault==nil then
         fOk = nil
-        aLxpAttr.tLog.error('Error in line %d, col %d: attribute "pinDefault" is no number: "%s".', iPosLine, iPosColumn, strPinDefault)
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: attribute "pinDefault" is no number: "%s".',
+          iPosLine,
+          iPosColumn,
+          strPinDefault
+        )
       elseif ucPinDefault~=0 and ucPinDefault~=1 then
         fOk = nil
-        aLxpAttr.tLog.error('Error in line %d, col %d: attribute "pinDefault" is neither "0" nor "1": "%s".', iPosLine, iPosColumn, strPinDefault)
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: attribute "pinDefault" is neither "0" nor "1": "%s".',
+          iPosLine,
+          iPosColumn,
+          strPinDefault
+        )
       end
     end
 
@@ -310,7 +385,12 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
       strPinFlags = string.upper(strPinFlags)
       if strPinFlags:match('^[IOZ]*$')==nil then
         fOk = nil
-        aLxpAttr.tLog.error('Error in line %d, col %d: invalid attribute "pinFlags": "%s".', iPosLine, iPosColumn, strPinFlags)
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: invalid attribute "pinFlags": "%s".',
+          iPosLine,
+          iPosColumn,
+          strPinFlags
+        )
       else
         ulPinFlags = 0
         if strPinFlags:find('I')~=nil then
@@ -423,7 +503,8 @@ end
 --- Parse a FTDI configuration file.
 -- @param strFilename The path to the configuration file.
 -- @param tLog A lua-log object which can be used for log messages.
--- @param atValidKeys A list of valid keys. It is used to validate the keys pairs in the configuration file and to translate them to numbers.
+-- @param atValidKeys A list of valid keys. It is used to validate the keys pairs in the configuration file and to
+--                    translate them to numbers.
 function TestClassIoMatrix:parse_test_definition(strFilename, tLog, tIoMatrix)
   -- Be optimistic!
   local tResult = true
@@ -493,7 +574,7 @@ end
 
 
 
-function TestClassIoMatrix:run(aParameters, tLog)
+function TestClassIoMatrix:run()
   local atParameter = self.atParameter
   local tLog = self.tLog
   local pl = self.pl
@@ -535,8 +616,11 @@ function TestClassIoMatrix:run(aParameters, tLog)
     if tNetxDevice.plugin=='COMMON' then
       tPlugin = _G.tester:getCommonPlugin(strPluginPattern, atPluginOptions)
       if tPlugin==nil then
-        local strPluginOptions = pl.pretty.write(atPluginOptions)
-        local strError = string.format('Failed to establish a connection to the netX with pattern "%s" and options "%s".', strPluginPattern, strPluginOptions)
+        local strError = string.format(
+          'Failed to establish a connection to the netX with pattern "%s" and options "%s".',
+          strPluginPattern,
+          pl.pretty.write(atPluginOptions)
+        )
         error(strError)
       end
     else
