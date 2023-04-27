@@ -31,7 +31,14 @@ function IoMatrix_FTDI:_init(tLog)
   self.cFTDI2232H = require 'io_matrix.ftdi_2232h'
 
   local tVersionInfo = self.luaftdi.get_library_version()
-  tLog.debug("[FTDI version] major: %d, minor: %d, micro: %d, version_str: %s, snapshot_str: %s", tVersionInfo.major, tVersionInfo.minor, tVersionInfo.micro, tVersionInfo.version_str, tVersionInfo.snapshot_str)
+  tLog.debug(
+    "[FTDI version] major: %d, minor: %d, micro: %d, version_str: %s, snapshot_str: %s",
+    tVersionInfo.major,
+    tVersionInfo.minor,
+    tVersionInfo.micro,
+    tVersionInfo.version_str,
+    tVersionInfo.snapshot_str
+  )
 
   -- No FTDI devices detected yet.
   self.atDevices = {}
@@ -43,7 +50,7 @@ end
 
 
 
-function IoMatrix_FTDI:__print_list_entry(fnLog, tListEntry)
+function IoMatrix_FTDI.__print_list_entry(fnLog, tListEntry)
   fnLog('  Bus: %d', tListEntry:get_bus_number())
   fnLog('  Port number: %d', tListEntry:get_port_number())
 
@@ -161,7 +168,10 @@ function IoMatrix_FTDI:__find_ftdi_devices(atAllDevices, atDeviceAttr)
       elseif sizAllDevices==0 then
         self.tLog.debug('No device found.')
       else
-        self.tLog.debug('With the "single" attribute there must be exactly one device, but here are %d of them.', sizAllDevices)
+        self.tLog.debug(
+          'With the "single" attribute there must be exactly one device, but here are %d of them.',
+          sizAllDevices
+        )
       end
     else
       for _, tDevice in pairs(atAllDevices) do
@@ -227,7 +237,7 @@ function IoMatrix_FTDI:add_ftdi_devices(atAttributes)
   self.tLog.debug('-----------------------------------------------------------------------')
   self.tLog.debug("List all devices with VID 0x%04x and PID 0x%04x.", usUSBVendor, usUSBProduct)
   for tListEntry in tList:iter() do
-    self:__print_list_entry(self.tLog.debug, tListEntry)
+    self.__print_list_entry(self.tLog.debug, tListEntry)
     self.tLog.debug('')
   end
   self.tLog.debug('-----------------------------------------------------------------------')

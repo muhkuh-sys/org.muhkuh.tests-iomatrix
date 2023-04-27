@@ -151,7 +151,15 @@ function Ftdi2232H:__write_pins(uiOe, uiOut)
   local bit = self.bit
   local aucPinMask = self.aucPinMask
 
---  print(string.format('%08x %08x %02x %02x %02x %02x', uiOe, uiOut, aucPinMask[1], aucPinMask[2], aucPinMask[3], aucPinMask[4]))
+--  print(string.format(
+--    '%08x %08x %02x %02x %02x %02x',
+--    uiOe,
+--    uiOut,
+--    aucPinMask[1],
+--    aucPinMask[2],
+--    aucPinMask[3],
+--    aucPinMask[4]
+--  ))
 
   -- Construct the MPSSE sequence for interface A and B.
   if bit.bor(aucPinMask[1], aucPinMask[2])~=0x00 then
@@ -160,7 +168,14 @@ function Ftdi2232H:__write_pins(uiOe, uiOut)
       table.insert(aucCmd, string.char(luaftdi.SET_BITS_LOW, bit.band(uiOut, 0xff), bit.band(uiOe, 0xff)))
     end
     if aucPinMask[2]~=0x00 then
-      table.insert(aucCmd, string.char(luaftdi.SET_BITS_HIGH, bit.band(bit.rshift(uiOut, 8), 0xff), bit.band(bit.rshift(uiOe, 8), 0xff)))
+      table.insert(
+        aucCmd,
+        string.char(
+          luaftdi.SET_BITS_HIGH,
+          bit.band(bit.rshift(uiOut, 8), 0xff),
+          bit.band(bit.rshift(uiOe, 8), 0xff)
+        )
+      )
     end
     table.insert(aucCmd, string.char(luaftdi.SEND_IMMEDIATE))
 
@@ -170,10 +185,24 @@ function Ftdi2232H:__write_pins(uiOe, uiOut)
   if bit.bor(aucPinMask[3], aucPinMask[4])~=0x00 then
     local aucCmd = {}
     if aucPinMask[3]~=0x00 then
-      table.insert(aucCmd, string.char(luaftdi.SET_BITS_LOW, bit.band(bit.rshift(uiOut, 16), 0xff), bit.band(bit.rshift(uiOe, 16), 0xff)))
+      table.insert(
+        aucCmd,
+        string.char(
+          luaftdi.SET_BITS_LOW,
+          bit.band(bit.rshift(uiOut, 16), 0xff),
+          bit.band(bit.rshift(uiOe, 16), 0xff)
+        )
+      )
     end
     if aucPinMask[4]~=0x00 then
-      table.insert(aucCmd, string.char(luaftdi.SET_BITS_HIGH, bit.band(bit.rshift(uiOut, 24), 0xff), bit.band(bit.rshift(uiOe, 24), 0xff)))
+      table.insert(
+        aucCmd,
+        string.char(
+          luaftdi.SET_BITS_HIGH,
+          bit.band(bit.rshift(uiOut, 24), 0xff),
+          bit.band(bit.rshift(uiOe, 24), 0xff)
+        )
+      )
     end
     table.insert(aucCmd, string.char(luaftdi.SEND_IMMEDIATE))
 
@@ -257,8 +286,7 @@ function Ftdi2232H:add_pin(strID, strKnownName, uiDefaultValue, uiFlags)
     self.tLog.error('Invalid pin index: %s', strOffset)
     error('Invalid pin index.')
   end
-  
-  
+
   local uiBitIndex = uiOffset + self.__atInterfaceToOffset[strIf]
 
   if self.atPinId2BitIndex[strID]~=nil then
