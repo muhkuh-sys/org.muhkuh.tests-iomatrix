@@ -174,8 +174,21 @@ end
 --]]
 
 
+--[[
+function Ftdi2232H.hexdump(atCmd)
+  local t = {}
+  local strData = table.concat(atCmd)
+  local sizData = string.len(strData)
+  for i=1,sizData do
+    table.insert(t, string.format("%02x", string.byte(strData, i)))
+  end
+  return table.concat(t, ',')
+end
+--]]
+
 -- Write all pins with an output enable and an output value.
 function Ftdi2232H:__write_pins(uiOe, uiOut)
+--  local tLog = self.tLog
   local luaftdi = self.luaftdi
   local bit = self.bit
   local aucPinMask = self.aucPinMask
@@ -210,6 +223,7 @@ function Ftdi2232H:__write_pins(uiOe, uiOut)
       ))
     end
     table.insert(aucCmd, string.char(luaftdi.SEND_IMMEDIATE))
+--    tLog.alert("MPSSE A: %s", self.hexdump(aucCmd))
 
     self.tContextA:write_data(table.concat(aucCmd))
   end
@@ -231,6 +245,7 @@ function Ftdi2232H:__write_pins(uiOe, uiOut)
       ))
     end
     table.insert(aucCmd, string.char(luaftdi.SEND_IMMEDIATE))
+--    tLog.alert("MPSSE B: %s", self.hexdump(aucCmd))
 
     self.tContextB:write_data(table.concat(aucCmd))
   end
@@ -369,9 +384,7 @@ end
 
 function Ftdi2232H:parse_pins()
   -- Set all pins to input.
-  self.atBuffer.w = 0
-  self.atBuffer.oe = 0
-  self:__write_pins(0, 0)
+  self:setZ()
   -- Read the current pin status.
   self.atBuffer.r = self:__read_pins()
 end
@@ -391,8 +404,25 @@ end
 
 
 function Ftdi2232H:setZ()
-  self.atBuffer.oe = 0
-  self.atBuffer.w = 0
+  local bit = self.bit
+  local atBuffer = self.atBuffer
+  local aucDefaultOut = self.aucDefaultOut
+  local aucDefaultOe = self.aucDefaultOe
+
+  -- Initialize the pins with the default values.
+  atBuffer.w = bit.bor(
+    aucDefaultOut[1],
+    bit.lshift(aucDefaultOut[2],  8),
+    bit.lshift(aucDefaultOut[3], 16),
+    bit.lshift(aucDefaultOut[4], 24)
+  )
+  atBuffer.oe = bit.bor(
+    aucDefaultOe[1],
+    bit.lshift(aucDefaultOe[2],  8),
+    bit.lshift(aucDefaultOe[3], 16),
+    bit.lshift(aucDefaultOe[4], 24)
+  )
+  self:__write_pins(atBuffer.w, atBuffer.oe)
 end
 
 
