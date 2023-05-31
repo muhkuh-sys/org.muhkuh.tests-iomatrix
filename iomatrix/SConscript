@@ -55,6 +55,7 @@ sources_netx90 = """
 
 sources_netx500 = """
 	src/netx500/io_pins.c
+	src/netx500/xc_reset.c
 """
 
 sources_netx4000 = """
@@ -80,7 +81,7 @@ IOMATRIX_NETX4000 = env_netx4000_t.ObjCopy('targets/netx4000/iomatrix_netx4000.b
 
 env_netx500_t = atEnv.NETX500.Clone()
 env_netx500_t.Replace(LDFILE = 'src/netx500/netx500.ld')
-env_netx500_t.Append(CPPPATH = aCppPath)
+env_netx500_t.Append(CPPPATH = aCppPath + ['src/netx500'])
 src_netx500_t = env_netx500_t.SetBuildPath('targets/netx500', 'src', sources_common + sources_netx500)
 elf_netx500_t = env_netx500_t.Elf('targets/netx500/iomatrix_netx500.elf', src_netx500_t + env_netx500_t['PLATFORM_LIBRARY'])
 IOMATRIX_NETX500 = env_netx500_t.ObjCopy('targets/netx500/iomatrix_netx500.bin', elf_netx500_t)

@@ -22,6 +22,7 @@
 
 #include "netx_io_areas.h"
 #include "uprintf.h"
+#include "xc_reset.h"
 
 
 //-------------------------------------
@@ -184,26 +185,26 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 				break;
 
 			case PINTYPE_XMIO:
-				/* For now XM0_IO0-1, XM1_IO0-1, XM2_IO0-1 and XM3_IO0-1 are supported with the indices 0..1 . */
+				/* For now XM*_IO0, XM*_IO1 and XM*_RX are supported. */
 				uiIndex = ptPinDescCnt->uiIndex;
-				if( uiIndex<2 )
+				if( uiIndex<3 )
 				{
 					ptUnitCfg->aulXmio[0] |= 1U << uiIndex;
 					iResult = 0;
 				}
-				else if( uiIndex<4 )
-				{
-					ptUnitCfg->aulXmio[1] |= 1U << (uiIndex - 2U);
-					iResult = 0;
-				}
 				else if( uiIndex<6 )
 				{
-					ptUnitCfg->aulXmio[2] |= 1U << (uiIndex - 4U);
+					ptUnitCfg->aulXmio[1] |= 1U << (uiIndex - 3U);
 					iResult = 0;
 				}
-				else if( uiIndex<8 )
+				else if( uiIndex<9 )
 				{
-					ptUnitCfg->aulXmio[3] |= 1U << (uiIndex - 6U);
+					ptUnitCfg->aulXmio[2] |= 1U << (uiIndex - 6U);
+					iResult = 0;
+				}
+				else if( uiIndex<12 )
+				{
+					ptUnitCfg->aulXmio[3] |= 1U << (uiIndex - 9U);
 					iResult = 0;
 				}
 				else
@@ -246,104 +247,75 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 static int configure_xmio(void)
 {
 	HOSTDEF(ptXpec0Area);
-	HOSTDEF(ptXpec1Area);
-	HOSTDEF(ptXpec2Area);
-	HOSTDEF(ptXpec3Area);
+	HOSTDEF(ptXmac0Area);
+	HOSTDEF(ptXmac1Area);
+	HOSTDEF(ptXmac2Area);
+	HOSTDEF(ptXmac3Area);
 	unsigned long ulValue;
 	int iResult;
-	unsigned long ulStatus;
-//	int iStatus_out;
-//	int iStatus_in;
-//	int iStatus_oe;
+
 
 	/* Be optimistic. */
 	iResult = 0;
 
-	/* Stop xpu unit */
-	/* 0: start XPU, 1: hold XPU  */
-	/* As a precaution, the register xpu_hold_pc of Xpec1-Xpec3 are also switched off - but it is not absolutely necessary */
-	ptXpec0Area->ulXpu_hold_pc = HOSTMSK(xpu_hold_pc_hold);
-	ptXpec1Area->ulXpu_hold_pc = HOSTMSK(xpu_hold_pc_hold);
-	ptXpec2Area->ulXpu_hold_pc = HOSTMSK(xpu_hold_pc_hold);
-	ptXpec3Area->ulXpu_hold_pc = HOSTMSK(xpu_hold_pc_hold);
+	/* Reset all XCs. netX500/100 has 4 units. */
+	NX500_XC_Reset(0);
+	NX500_XC_Reset(1);
+	NX500_XC_Reset(2);
+	NX500_XC_Reset(3);
 
-	/* Have the XPUs unit stopped? */
-	ulStatus =  ptXpec0Area->ulXpu_hold_pc & HOSTMSK(xpu_hold_pc_hold);
-	ulStatus &= ptXpec1Area->ulXpu_hold_pc & HOSTMSK(xpu_hold_pc_hold);
-	ulStatus &= ptXpec2Area->ulXpu_hold_pc & HOSTMSK(xpu_hold_pc_hold);
-	ulStatus &= ptXpec3Area->ulXpu_hold_pc & HOSTMSK(xpu_hold_pc_hold);
+	/* Set the XM0_IO0 and XM0_IO1 pins to input and output value to zero. */
+	ulValue  = 0U << HOSTSRT(statcfg0_gpio0_out); // set output value of gpio0/XM0_IO0 to zero
+	ulValue |= 0U << HOSTSRT(statcfg0_gpio0_oe); // set gpio0/XM0_IO0 to input
+	ulValue |= 0U << HOSTSRT(statcfg0_gpio1_out); // set output value of gpio1/XM0_IO1 to zero
+	ulValue |= 0U << HOSTSRT(statcfg0_gpio1_oe); // set gpio1/XM0_IO1 to input
+	ptXpec0Area->aulStatcfg[0] = ulValue;
 
-	/* DEBUG INFORMATION: */
-	uprintf("STATUS: Config Xpec0 unit:%d\n",ptXpec0Area->ulXpu_hold_pc & HOSTMSK(xpu_hold_pc_hold));
-	uprintf("STATUS: Config Xpec1 unit:%d\n",ptXpec1Area->ulXpu_hold_pc & HOSTMSK(xpu_hold_pc_hold));
-	uprintf("STATUS: Config Xpec2 unit:%d\n",ptXpec2Area->ulXpu_hold_pc & HOSTMSK(xpu_hold_pc_hold));
-	uprintf("STATUS: Config Xpec3 unit:%d\n",ptXpec3Area->ulXpu_hold_pc & HOSTMSK(xpu_hold_pc_hold));
+	/* Set the XM1_IO0 and XM1_IO1 pins to input and output value to zero. */
+	ulValue  = 0U << HOSTSRT(statcfg1_gpio0_out); // set output value of gpio0/XM1_IO0 to zero
+	ulValue |= 0U << HOSTSRT(statcfg1_gpio0_oe); // set gpio0/XM1_IO0 to input
+	ulValue |= 0U << HOSTSRT(statcfg1_gpio1_out); // set output value of gpio1/XM1_IO1 to zero
+	ulValue |= 0U << HOSTSRT(statcfg1_gpio1_oe); // set gpio1/XM1_IO1 to input
+	ptXpec0Area->aulStatcfg[1] = ulValue;
 
-	if (ulStatus != HOSTMSK(xpu_hold_pc_hold))
-	{
-		uprintf("ERROR: XMIO pins can not be used as the unit is running.\n");
-		iResult = -1;
-	}
-	else
-	{
-		/* Set all pins to input and output value to zero. */
-		ulValue = 0;
-		ulValue |= 0U << HOSTSRT(statcfg0_gpio0_out); // set output value of gpio0/XM0_IO0 to zero
-		ulValue |= 0U << HOSTSRT(statcfg0_gpio0_oe); // set gpio0/XM0_IO0 to input
-		ulValue |= 0U << HOSTSRT(statcfg0_gpio1_out); // set output value of gpio1/XM0_IO1 to zero
-		ulValue |= 0U << HOSTSRT(statcfg0_gpio1_oe); // set gpio1/XM0_IO1 to input
-		ptXpec0Area->aulStatcfg[0] = ulValue;
-#if 0
-		/* DEBUG INFORMATION: */
-		ulStatus = ptXpec0Area->aulStatcfg[0];
+	/* Set the XM2_IO0 and XM2_IO1 pins to input and output value to zero. */
+	ulValue  = 0U << HOSTSRT(statcfg2_gpio0_out); // set output value of gpio0/XM2_IO0 to zero
+	ulValue |= 0U << HOSTSRT(statcfg2_gpio0_oe);  // set gpio0/XM1_IO0 to input
+	ulValue |= 0U << HOSTSRT(statcfg2_gpio1_out); // set output value of gpio1/XM2_IO1 to zero
+	ulValue |= 0U << HOSTSRT(statcfg2_gpio1_oe);  // set gpio1/XM1_IO1 to input
+	ptXpec0Area->aulStatcfg[2] = ulValue;
 
-		iStatus_out = (ulStatus & HOSTMSK(statcfg0_gpio0_out)) >> HOSTSRT(statcfg0_gpio0_out);
-		iStatus_in = (ulStatus & HOSTMSK(statcfg0_gpio0_in)) >> HOSTSRT(statcfg0_gpio0_in);
-		iStatus_oe = (ulStatus & HOSTMSK(statcfg0_gpio0_oe)) >> HOSTSRT(statcfg0_gpio0_oe);
-		uprintf("STATUS: config Statcfg0 GPIO0/XM0_IO0 - out:%d - oe:%d - in:%d\n",iStatus_out,iStatus_oe,iStatus_in);
+	/* Set the XM3_IO0 and XM3_IO1 pins to input and output value to zero. */
+	ulValue  = 0U << HOSTSRT(statcfg3_gpio0_out); // set output value of gpio0/XM3_IO0 to zero
+	ulValue |= 0U << HOSTSRT(statcfg3_gpio0_oe); // set gpio0/XM1_IO0 to input
+	ulValue |= 0U << HOSTSRT(statcfg3_gpio1_out); // set output value of gpio1/XM3_IO1 to zero
+	ulValue |= 0U << HOSTSRT(statcfg3_gpio1_oe); // set gpio1/XM1_IO1 to input
+	ptXpec0Area->aulStatcfg[3] = ulValue;
 
-		iStatus_out = (ulStatus & HOSTMSK(statcfg0_gpio1_out)) >> HOSTSRT(statcfg0_gpio1_out);
-		iStatus_in = (ulStatus & HOSTMSK(statcfg0_gpio1_in)) >> HOSTSRT(statcfg0_gpio1_in);
-		iStatus_oe = (ulStatus & HOSTMSK(statcfg0_gpio1_oe)) >> HOSTSRT(statcfg0_gpio1_oe);
-		uprintf("STATUS: config Statcfg0 GPIO1/XM0_IO1 - out:%d - oe:%d - in:%d\n",iStatus_out,iStatus_oe,iStatus_in);
-#endif
-		/* Set all pins to input and output value to zero. */
-		ulValue = 0;
-		ulValue |= 0U << HOSTSRT(statcfg1_gpio0_out); // set output value of gpio0/XM1_IO0 to zero
-		ulValue |= 0U << HOSTSRT(statcfg1_gpio0_oe); // set gpio0/XM1_IO0 to input
-		ulValue |= 0U << HOSTSRT(statcfg1_gpio1_out); // set output value of gpio1/XM1_IO1 to zero
-		ulValue |= 0U << HOSTSRT(statcfg1_gpio1_oe); // set gpio1/XM1_IO1 to input
-		ptXpec0Area->aulStatcfg[1] = ulValue;
-#if 0
-		/* DEBUG INFORMATION: */
-		ulStatus = ptXpec0Area->aulStatcfg[1];
+	/* Activate sampling of the RX pin with every 100MHz clock. */
+	ptXmac0Area->ulXmac_sbu_rate_mul_add = 0x0001U;
+	ptXmac0Area->ulXmac_sbu_rate_mul_start = 0xfffeU;
+	ptXmac0Area->ulXmac_start_sample_pos = 0xfffeU;
+	ptXmac0Area->ulXmac_stop_sample_pos = 0xffffU;
+	ptXmac0Area->ulXmac_config_sbu = 1U << HOSTSRT(xmac_config_sbu_count_modulo);
 
-		iStatus_out = (ulStatus & HOSTMSK(statcfg1_gpio0_out)) >> HOSTSRT(statcfg1_gpio0_out);
-		iStatus_in = (ulStatus & HOSTMSK(statcfg1_gpio0_in)) >> HOSTSRT(statcfg1_gpio0_in);
-		iStatus_oe = (ulStatus & HOSTMSK(statcfg1_gpio0_oe)) >> HOSTSRT(statcfg1_gpio0_oe);
-		uprintf("STATUS: condig Statcfg1 GPIO0/XM1_IO0 - out:%d - oe:%d - in:%d\n",iStatus_out,iStatus_oe,iStatus_in);
+	ptXmac1Area->ulXmac_sbu_rate_mul_add = 0x0001;
+	ptXmac1Area->ulXmac_sbu_rate_mul_start = 0xfffeU;
+	ptXmac1Area->ulXmac_start_sample_pos = 0xfffeU;
+	ptXmac1Area->ulXmac_stop_sample_pos = 0xffffU;
+	ptXmac1Area->ulXmac_config_sbu = 1U << HOSTSRT(xmac_config_sbu_count_modulo);
 
-		iStatus_out = (ulStatus & HOSTMSK(statcfg1_gpio1_out)) >> HOSTSRT(statcfg1_gpio1_out);
-		iStatus_in = (ulStatus & HOSTMSK(statcfg1_gpio1_in)) >> HOSTSRT(statcfg1_gpio1_in);
-		iStatus_oe = (ulStatus & HOSTMSK(statcfg1_gpio1_oe)) >> HOSTSRT(statcfg1_gpio1_oe);
-		uprintf("STATUS: condig Statcfg1 GPIO1/XM1_IO1 - out:%d - oe:%d - in:%d\n",iStatus_out,iStatus_oe,iStatus_in);
-#endif
-		/* Set all pins to input and output value to zero. */
-		ulValue = 0;
-		ulValue |= 0U << HOSTSRT(statcfg2_gpio0_out); // set output value of gpio0/XM1_IO0 to zero
-		ulValue |= 0U << HOSTSRT(statcfg2_gpio0_oe);  // set gpio0/XM1_IO0 to input
-		ulValue |= 0U << HOSTSRT(statcfg2_gpio1_out); // set output value of gpio1/XM1_IO1 to zero
-		ulValue |= 0U << HOSTSRT(statcfg2_gpio1_oe);  // set gpio1/XM1_IO1 to input
-		ptXpec0Area->aulStatcfg[2] = ulValue;
+	ptXmac2Area->ulXmac_sbu_rate_mul_add = 0x0001;
+	ptXmac2Area->ulXmac_sbu_rate_mul_start = 0xfffeU;
+	ptXmac2Area->ulXmac_start_sample_pos = 0xfffeU;
+	ptXmac2Area->ulXmac_stop_sample_pos = 0xffffU;
+	ptXmac2Area->ulXmac_config_sbu = 1U << HOSTSRT(xmac_config_sbu_count_modulo);
 
-		/* Set all pins to input and output value to zero. */
-		ulValue = 0;
-		ulValue |= 0U << HOSTSRT(statcfg3_gpio0_out); // set output value of gpio0/XM1_IO0 to zero
-		ulValue |= 0U << HOSTSRT(statcfg3_gpio0_oe); // set gpio0/XM1_IO0 to input
-		ulValue |= 0U << HOSTSRT(statcfg3_gpio1_out); // set output value of gpio1/XM1_IO1 to zero
-		ulValue |= 0U << HOSTSRT(statcfg3_gpio1_oe); // set gpio1/XM1_IO1 to input
-		ptXpec0Area->aulStatcfg[3] = ulValue;
-	}
+	ptXmac3Area->ulXmac_sbu_rate_mul_add = 0x0001;
+	ptXmac3Area->ulXmac_sbu_rate_mul_start = 0xfffeU;
+	ptXmac3Area->ulXmac_start_sample_pos = 0xfffeU;
+	ptXmac3Area->ulXmac_stop_sample_pos = 0xffffU;
+	ptXmac3Area->ulXmac_config_sbu = 1U << HOSTSRT(xmac_config_sbu_count_modulo);
 
 	return iResult;
 }
@@ -390,18 +362,18 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDe
 		if( (tUnitCfg.aulHifPio[0]|tUnitCfg.aulHifPio[1])!=0 )
 		{
 			/* Switch the interface to PIO. */
-	                ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
-	                ptAsicCtrlArea->ulIo_config &= ~HOSTMSK(io_config_if_select_n);
+			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
+			ptAsicCtrlArea->ulIo_config &= ~HOSTMSK(io_config_if_select_n);
 
 			/* enable output mode */
-	                ptNetxControlledGlobalRegisterBlock2Area->ulIf_conf1 = (4<<28);
+			ptNetxControlledGlobalRegisterBlock2Area->ulIf_conf1 = (4<<28);
 
-	                ptNetxControlledGlobalRegisterBlock2Area->ulIo_reg_drv_en0 = 0;
-	                ptNetxControlledGlobalRegisterBlock2Area->ulIo_reg_drv_en1 = 0;
+			ptNetxControlledGlobalRegisterBlock2Area->ulIo_reg_drv_en0 = 0;
+			ptNetxControlledGlobalRegisterBlock2Area->ulIo_reg_drv_en1 = 0;
 
 			/* Set all pins to PIO mode, it makes no sense to keep some in DPM mode. */
-	                ptNetxControlledGlobalRegisterBlock2Area->ulIo_reg_mode0 = 0;
-	                ptNetxControlledGlobalRegisterBlock2Area->ulIo_reg_mode1 = (1<<30);
+			ptNetxControlledGlobalRegisterBlock2Area->ulIo_reg_mode0 = 0;
+			ptNetxControlledGlobalRegisterBlock2Area->ulIo_reg_mode1 = (1<<30);
 		}
 
 		/*
@@ -475,10 +447,7 @@ static int set_xm0io(unsigned int uiIndex, PINSTATUS_T tValue)
 	unsigned long ulMask_out;
 	unsigned long ulMask_oe;
 	int iResult;
-//	unsigned long ulStatus;
-//	int iStatus_out;
-//	int iStatus_in;
-//	int iStatus_oe;
+
 
 	/* Be pessimistic. */
 	iResult = -1;
@@ -536,24 +505,22 @@ static int set_xm0io(unsigned int uiIndex, PINSTATUS_T tValue)
 		if( iResult==0 )
 		{
 			ptXpec0Area->aulStatcfg[0] = ulOut | ulOe;
-#if 0
-			/* DEBUG INFORMATION: */
-			ulStatus = ptXpec0Area->aulStatcfg[0];
-			iStatus_out = (ulStatus & HOSTMSK(statcfg0_gpio0_out)) >> HOSTSRT(statcfg0_gpio0_out);
-			iStatus_in = (ulStatus & HOSTMSK(statcfg0_gpio0_in)) >> HOSTSRT(statcfg0_gpio0_in);
-			iStatus_oe = (ulStatus & HOSTMSK(statcfg0_gpio0_oe)) >> HOSTSRT(statcfg0_gpio0_oe);
-			uprintf("STATUS: set function Statcfg0 GPIO0/XM0_IO0 - out:%d - oe:%d - in:%d\n",iStatus_out,iStatus_oe,iStatus_in);
-
-			iStatus_out = (ulStatus & HOSTMSK(statcfg0_gpio1_out)) >> HOSTSRT(statcfg0_gpio1_out);
-			iStatus_in = (ulStatus & HOSTMSK(statcfg0_gpio1_in)) >> HOSTSRT(statcfg0_gpio1_in);
-			iStatus_oe = (ulStatus & HOSTMSK(statcfg0_gpio1_oe)) >> HOSTSRT(statcfg0_gpio1_oe);
-			uprintf("STATUS: set function Statcfg0 GPIO1/XM0_IO1 - out:%d - oe:%d - in:%d\n",iStatus_out,iStatus_oe,iStatus_in);
-#endif
 		}
 		else
 		{
 			/* DEBUG INFORMATION: */
 			uprintf("ERROR: set XM0_IO index: %d\n",uiIndex);
+		}
+	}
+	else if( uiIndex==2U )
+	{
+		if( tValue==PINSTATUS_HIGHZ )
+		{
+			iResult = 0;
+		}
+		else
+		{
+			uprintf("ERROR: can not set XM0_RX to output, it is read only.\n");
 		}
 	}
 	else
@@ -576,10 +543,7 @@ static int set_xm1io(unsigned int uiIndex, PINSTATUS_T tValue)
 	unsigned long ulMask_out;
 	unsigned long ulMask_oe;
 	int iResult;
-//	unsigned long ulStatus;
-//	int iStatus_out;
-//	int iStatus_in;
-//	int iStatus_oe;
+
 
 	/* Be pessimistic. */
 	iResult = -1;
@@ -637,24 +601,22 @@ static int set_xm1io(unsigned int uiIndex, PINSTATUS_T tValue)
 		if( iResult==0 )
 		{
 			ptXpec0Area->aulStatcfg[1] = ulOut | ulOe;
-#if 0
-			/* DEBUG INFORMATION: */
-			ulStatus = ptXpec0Area->aulStatcfg[1];
-			iStatus_out = (ulStatus & HOSTMSK(statcfg1_gpio0_out)) >> HOSTSRT(statcfg1_gpio0_out);
-			iStatus_in = (ulStatus & HOSTMSK(statcfg1_gpio0_in)) >> HOSTSRT(statcfg1_gpio0_in);
-			iStatus_oe = (ulStatus & HOSTMSK(statcfg1_gpio0_oe)) >> HOSTSRT(statcfg1_gpio0_oe);
-			uprintf("STATUS: set function Statcfg1 GPIO0/XM1_IO0 - out:%d - oe:%d - in:%d\n",iStatus_out,iStatus_oe,iStatus_in);
-
-			iStatus_out = (ulStatus & HOSTMSK(statcfg1_gpio1_out)) >> HOSTSRT(statcfg1_gpio1_out);
-			iStatus_in = (ulStatus & HOSTMSK(statcfg1_gpio1_in)) >> HOSTSRT(statcfg1_gpio1_in);
-			iStatus_oe = (ulStatus & HOSTMSK(statcfg1_gpio1_oe)) >> HOSTSRT(statcfg1_gpio1_oe);
-			uprintf("STATUS: set function Statcfg1 GPIO1/XM1_IO1 - out:%d - oe:%d - in:%d\n",iStatus_out,iStatus_oe,iStatus_in);
-#endif
 		}
 		else
 		{
 			/* DEBUG INFORMATION: */
 			uprintf("ERROR: set XM1_IO index: %d\n",uiIndex);
+		}
+	}
+	else if( uiIndex==2U )
+	{
+		if( tValue==PINSTATUS_HIGHZ )
+		{
+			iResult = 0;
+		}
+		else
+		{
+			uprintf("ERROR: can not set XM1_RX to output, it is read only.\n");
 		}
 	}
 	else
@@ -677,10 +639,7 @@ static int set_xm2io(unsigned int uiIndex, PINSTATUS_T tValue)
 	unsigned long ulMask_out;
 	unsigned long ulMask_oe;
 	int iResult;
-//	unsigned long ulStatus;
-//	int iStatus_out;
-//	int iStatus_in;
-//	int iStatus_oe;
+
 
 	/* Be pessimistic. */
 	iResult = -1;
@@ -738,24 +697,22 @@ static int set_xm2io(unsigned int uiIndex, PINSTATUS_T tValue)
 		if( iResult==0 )
 		{
 			ptXpec0Area->aulStatcfg[2] = ulOut | ulOe;
-#if 0
-			/* DEBUG INFORMATION: */
-			ulStatus = ptXpec0Area->aulStatcfg[2];
-			iStatus_out = (ulStatus & HOSTMSK(statcfg2_gpio0_out)) >> HOSTSRT(statcfg2_gpio0_out);
-			iStatus_in = (ulStatus & HOSTMSK(statcfg2_gpio0_in)) >> HOSTSRT(statcfg2_gpio0_in);
-			iStatus_oe = (ulStatus & HOSTMSK(statcfg2_gpio0_oe)) >> HOSTSRT(statcfg2_gpio0_oe);
-			uprintf("STATUS: set function Statcfg1 GPIO0/XM2_IO0 - out:%d - oe:%d - in:%d\n",iStatus_out,iStatus_oe,iStatus_in);
-
-			iStatus_out = (ulStatus & HOSTMSK(statcfg2_gpio1_out)) >> HOSTSRT(statcfg2_gpio1_out);
-			iStatus_in = (ulStatus & HOSTMSK(statcfg2_gpio1_in)) >> HOSTSRT(statcfg2_gpio1_in);
-			iStatus_oe = (ulStatus & HOSTMSK(statcfg2_gpio1_oe)) >> HOSTSRT(statcfg2_gpio1_oe);
-			uprintf("STATUS: set function Statcfg1 GPIO1/XM2_IO1 - out:%d - oe:%d - in:%d\n",iStatus_out,iStatus_oe,iStatus_in);
-#endif
 		}
 		else
 		{
 			/* DEBUG INFORMATION: */
 			uprintf("ERROR: set XM2_IO index: %d\n",uiIndex);
+		}
+	}
+	else if( uiIndex==2U )
+	{
+		if( tValue==PINSTATUS_HIGHZ )
+		{
+			iResult = 0;
+		}
+		else
+		{
+			uprintf("ERROR: can not set XM2_RX to output, it is read only.\n");
 		}
 	}
 	else
@@ -778,10 +735,7 @@ static int set_xm3io(unsigned int uiIndex, PINSTATUS_T tValue)
 	unsigned long ulMask_out;
 	unsigned long ulMask_oe;
 	int iResult;
-//	unsigned long ulStatus;
-//	int iStatus_out;
-//	int iStatus_in;
-//	int iStatus_oe;
+
 
 	/* Be pessimistic. */
 	iResult = -1;
@@ -839,24 +793,22 @@ static int set_xm3io(unsigned int uiIndex, PINSTATUS_T tValue)
 		if( iResult==0 )
 		{
 			ptXpec0Area->aulStatcfg[3] = ulOut | ulOe;
-#if 0
-			/* DEBUG INFORMATION: */
-			ulStatus = ptXpec0Area->aulStatcfg[3];
-			iStatus_out = (ulStatus & HOSTMSK(statcfg3_gpio0_out)) >> HOSTSRT(statcfg3_gpio0_out);
-			iStatus_in = (ulStatus & HOSTMSK(statcfg3_gpio0_in)) >> HOSTSRT(statcfg3_gpio0_in);
-			iStatus_oe = (ulStatus & HOSTMSK(statcfg3_gpio0_oe)) >> HOSTSRT(statcfg3_gpio0_oe);
-			uprintf("STATUS: set function Statcfg1 GPIO0/XM3_IO0 - out:%d - oe:%d - in:%d\n",iStatus_out,iStatus_oe,iStatus_in);
-
-			iStatus_out = (ulStatus & HOSTMSK(statcfg3_gpio1_out)) >> HOSTSRT(statcfg3_gpio1_out);
-			iStatus_in = (ulStatus & HOSTMSK(statcfg3_gpio1_in)) >> HOSTSRT(statcfg3_gpio1_in);
-			iStatus_oe = (ulStatus & HOSTMSK(statcfg3_gpio1_oe)) >> HOSTSRT(statcfg3_gpio1_oe);
-			uprintf("STATUS: set function Statcfg1 GPIO1/XM3_IO1 - out:%d - oe:%d - in:%d\n",iStatus_out,iStatus_oe,iStatus_in);
-#endif
 		}
 		else
 		{
 			/* DEBUG INFORMATION: */
 			uprintf("ERROR: set XM3_IO index: %d\n",uiIndex);
+		}
+	}
+	else if( uiIndex==2U )
+	{
+		if( tValue==PINSTATUS_HIGHZ )
+		{
+			iResult = 0;
+		}
+		else
+		{
+			uprintf("ERROR: can not set XM3_RX to output, it is read only.\n");
 		}
 	}
 	else
@@ -873,13 +825,13 @@ static int set_xm3io(unsigned int uiIndex, PINSTATUS_T tValue)
 static int get_xm0io(unsigned int uiIndex, unsigned char *pucData)
 {
 	HOSTDEF(ptXpec0Area);
+	HOSTDEF(ptXmac0Area);
 	unsigned long ulStatus;
 	unsigned long ulValue;
 	unsigned char ucData;
+	unsigned int uiRetries;
 	int iResult;
-//	int iStatus_out;
-//	int iStatus_in;
-//	int iStatus_oe;
+
 
 	/* Be pessimistic. */
 	iResult = -1;
@@ -895,15 +847,32 @@ static int get_xm0io(unsigned int uiIndex, unsigned char *pucData)
 		{
 			ucData = 1;
 		}
-#if 0
-		/* DEBUG INFORMATION: */
-		iStatus_out = (ulStatus & (HOSTMSK(statcfg0_gpio0_out) << (2*uiIndex))) >> (HOSTSRT(statcfg0_gpio0_out) + 2*uiIndex);
-		iStatus_in = (ulStatus & HOSTMSK(statcfg0_gpio0_in) << uiIndex) >> (HOSTSRT(statcfg0_gpio0_in) + uiIndex);
-		iStatus_oe = (ulStatus & (HOSTMSK(statcfg0_gpio0_oe) << (2*uiIndex))) >> (HOSTSRT(statcfg0_gpio0_oe) + 2*uiIndex);
-		uprintf("STATUS: get function Statcfg0 XM0_IO:%d - out:%d - oe:%d - in:%d\n",uiIndex,iStatus_out,iStatus_oe,iStatus_in);
-#endif
 		*pucData = ucData;
 		iResult = 0;
+	}
+	else if( uiIndex==2U )
+	{
+		uiRetries = 16U;
+		while( uiRetries!=0 )
+		{
+			ulValue = ptXmac0Area->ulXmac_rx;
+			if( ulValue==0x0000U )
+			{
+				*pucData = 0;
+				iResult = 0;
+				break;
+			}
+			else if( ulValue==0xffffU )
+			{
+				*pucData = 1;
+				iResult = 0;
+				break;
+			}
+			else
+			{
+				--uiRetries;
+			}
+		}
 	}
 	else
 	{
@@ -919,13 +888,13 @@ static int get_xm0io(unsigned int uiIndex, unsigned char *pucData)
 static int get_xm1io(unsigned int uiIndex, unsigned char *pucData)
 {
 	HOSTDEF(ptXpec0Area);
+	HOSTDEF(ptXmac1Area);
 	unsigned long ulStatus;
 	unsigned long ulValue;
 	unsigned char ucData;
+	unsigned int uiRetries;
 	int iResult;
-//	int iStatus_out;
-//	int iStatus_in;
-//	int iStatus_oe;
+
 
 	/* Be pessimistic. */
 	iResult = -1;
@@ -941,15 +910,32 @@ static int get_xm1io(unsigned int uiIndex, unsigned char *pucData)
 		{
 			ucData = 1;
 		}
-#if 0
-		/* DEBUG INFORMATION: */
-		iStatus_out = (ulStatus & (HOSTMSK(statcfg1_gpio0_out) << (2*uiIndex))) >> (HOSTSRT(statcfg1_gpio0_out) + 2*uiIndex);
-		iStatus_in = (ulStatus & HOSTMSK(statcfg1_gpio0_in) << uiIndex) >> (HOSTSRT(statcfg1_gpio0_in) + uiIndex);
-		iStatus_oe = (ulStatus & (HOSTMSK(statcfg1_gpio0_oe) << (2*uiIndex))) >> (HOSTSRT(statcfg1_gpio0_oe) + 2*uiIndex);
-		uprintf("STATUS: get function Statcfg1 XM1_IO:%d - out:%d - oe:%d - in:%d\n",uiIndex,iStatus_out,iStatus_oe,iStatus_in);
-#endif
 		*pucData = ucData;
 		iResult = 0;
+	}
+	else if( uiIndex==2U )
+	{
+		uiRetries = 16U;
+		while( uiRetries!=0 )
+		{
+			ulValue = ptXmac1Area->ulXmac_rx;
+			if( ulValue==0x0000U )
+			{
+				*pucData = 0;
+				iResult = 0;
+				break;
+			}
+			else if( ulValue==0xffffU )
+			{
+				*pucData = 1;
+				iResult = 0;
+				break;
+			}
+			else
+			{
+				--uiRetries;
+			}
+		}
 	}
 	else
 	{
@@ -965,13 +951,13 @@ static int get_xm1io(unsigned int uiIndex, unsigned char *pucData)
 static int get_xm2io(unsigned int uiIndex, unsigned char *pucData)
 {
 	HOSTDEF(ptXpec0Area);
+	HOSTDEF(ptXmac2Area);
 	unsigned long ulStatus;
 	unsigned long ulValue;
 	unsigned char ucData;
+	unsigned int uiRetries;
 	int iResult;
-//	int iStatus_out;
-//	int iStatus_in;
-//	int iStatus_oe;
+
 
 	/* Be pessimistic. */
 	iResult = -1;
@@ -987,15 +973,33 @@ static int get_xm2io(unsigned int uiIndex, unsigned char *pucData)
 		{
 			ucData = 1;
 		}
-#if 0
-		/* DEBUG INFORMATION: */
-		iStatus_out = (ulStatus & (HOSTMSK(statcfg2_gpio0_out) << (2*uiIndex))) >> (HOSTSRT(statcfg2_gpio0_out) + 2*uiIndex);
-		iStatus_in = (ulStatus & HOSTMSK(statcfg2_gpio0_in) << uiIndex) >> (HOSTSRT(statcfg2_gpio0_in) + uiIndex);
-		iStatus_oe = (ulStatus & (HOSTMSK(statcfg2_gpio0_oe) << (2*uiIndex))) >> (HOSTSRT(statcfg2_gpio0_oe) + 2*uiIndex);
-		uprintf("STATUS: get function Statcfg2 XM2_IO:%d - out:%d - oe:%d - in:%d\n",uiIndex,iStatus_out,iStatus_oe,iStatus_in);
-#endif
 		*pucData = ucData;
 		iResult = 0;
+	}
+	else if( uiIndex==2U )
+	{
+		uiRetries = 16U;
+		while( uiRetries!=0 )
+		{
+			ulValue = ptXmac2Area->ulXmac_rx;
+			uprintf("XM2_RX=0x%04x\n", ulValue);
+			if( ulValue==0x0000U )
+			{
+				*pucData = 0;
+				iResult = 0;
+				break;
+			}
+			else if( ulValue==0xffffU )
+			{
+				*pucData = 1;
+				iResult = 0;
+				break;
+			}
+			else
+			{
+				--uiRetries;
+			}
+		}
 	}
 	else
 	{
@@ -1011,13 +1015,13 @@ static int get_xm2io(unsigned int uiIndex, unsigned char *pucData)
 static int get_xm3io(unsigned int uiIndex, unsigned char *pucData)
 {
 	HOSTDEF(ptXpec0Area);
+	HOSTDEF(ptXmac3Area);
 	unsigned long ulStatus;
 	unsigned long ulValue;
 	unsigned char ucData;
+	unsigned int uiRetries;
 	int iResult;
-//	int iStatus_out;
-//	int iStatus_in;
-//	int iStatus_oe;
+
 
 	/* Be pessimistic. */
 	iResult = -1;
@@ -1033,15 +1037,33 @@ static int get_xm3io(unsigned int uiIndex, unsigned char *pucData)
 		{
 			ucData = 1;
 		}
-#if 0
-		/* DEBUG INFORMATION: */
-		iStatus_out = (ulStatus & (HOSTMSK(statcfg3_gpio0_out) << (2*uiIndex))) >> (HOSTSRT(statcfg3_gpio0_out) + 2*uiIndex);
-		iStatus_in = (ulStatus & HOSTMSK(statcfg3_gpio0_in) << uiIndex) >> (HOSTSRT(statcfg3_gpio0_in) + uiIndex);
-		iStatus_oe = (ulStatus & (HOSTMSK(statcfg3_gpio0_oe) << (2*uiIndex))) >> (HOSTSRT(statcfg3_gpio0_oe) + 2*uiIndex);
-		uprintf("STATUS: get function Statcfg3 XM3_IO:%d - out:%d - oe:%d - in:%d\n",uiIndex,iStatus_out,iStatus_oe,iStatus_in);
-#endif
 		*pucData = ucData;
 		iResult = 0;
+	}
+	else if( uiIndex==2U )
+	{
+		uiRetries = 16U;
+		while( uiRetries!=0 )
+		{
+			ulValue = ptXmac3Area->ulXmac_rx;
+			uprintf("XM3_RX=0x%04x\n", ulValue);
+			if( ulValue==0x0000U )
+			{
+				*pucData = 0;
+				iResult = 0;
+				break;
+			}
+			else if( ulValue==0xffffU )
+			{
+				*pucData = 1;
+				iResult = 0;
+				break;
+			}
+			else
+			{
+				--uiRetries;
+			}
+		}
 	}
 	else
 	{
@@ -1424,21 +1446,21 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 
 	case PINTYPE_XMIO:
 		uiIndex = ptPinDescription->uiIndex;
-		if( uiIndex<2 )
+		if( uiIndex<3 )
 		{
 			iResult = set_xm0io(uiIndex, tValue);
 		}
-		else if( uiIndex<4 )
-		{
-			iResult = set_xm1io(uiIndex-2U, tValue);
-		}
 		else if( uiIndex<6 )
 		{
-			iResult = set_xm2io(uiIndex-4U, tValue);
+			iResult = set_xm1io(uiIndex-3U, tValue);
 		}
-		else if( uiIndex<8 )
+		else if( uiIndex<9 )
 		{
-			iResult = set_xm3io(uiIndex-6U, tValue);
+			iResult = set_xm2io(uiIndex-6U, tValue);
+		}
+		else if( uiIndex<12 )
+		{
+			iResult = set_xm3io(uiIndex-9U, tValue);
 		}
 		break;
 
@@ -1506,21 +1528,21 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 
 	case PINTYPE_XMIO:
 		uiIndex = ptPinDescription->uiIndex;
-		if( uiIndex<2 )
+		if( uiIndex<3 )
 		{
 			iResult = get_xm0io(uiIndex, pucData);
 		}
-		else if( uiIndex<4 )
-		{
-			iResult = get_xm1io(uiIndex-2U, pucData);
-		}
 		else if( uiIndex<6 )
 		{
-			iResult = get_xm2io(uiIndex-4U, pucData);
+			iResult = get_xm1io(uiIndex-3U, pucData);
 		}
-		else if( uiIndex<8 )
+		else if( uiIndex<9 )
 		{
-			iResult = get_xm3io(uiIndex-6U, pucData);
+			iResult = get_xm2io(uiIndex-6U, pucData);
+		}
+		else if( uiIndex<12 )
+		{
+			iResult = get_xm3io(uiIndex-9U, pucData);
 		}
 		break;
 
