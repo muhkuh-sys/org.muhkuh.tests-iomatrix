@@ -208,15 +208,15 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 				break;
 
 			case PINTYPE_XMIO:
-				/* For now XM0_IO0-5 and XM1_IO0-5 are supported with the indices 0..11 . */
-				if( uiIndex<6 )
+				/* For now XM0_IO0-5, XM0_RX, XM1_IO0-5 and XM1_RX are supported with the indices 0..13 . */
+				if( uiIndex<7 )
 				{
 					ptUnitCfg->aulXmio[0] |= 1U << uiIndex;
 					iResult = 0;
 				}
-				else if( uiIndex<12 )
+				else if( uiIndex<14 )
 				{
-					ptUnitCfg->aulXmio[1] |= 1U << (uiIndex - 6U);
+					ptUnitCfg->aulXmio[1] |= 1U << (uiIndex - 7U);
 					iResult = 0;
 				}
 				else
@@ -730,6 +730,7 @@ static int configure_xm0io(unsigned long ulPins)
 	HOSTDEF(ptXcStartStopArea);
 	HOSTDEF(ptXc0Xmac0RegsArea);
 	unsigned long ulValue;
+	unsigned long ulIoPins;
 	int iResult;
 
 
@@ -745,12 +746,16 @@ static int configure_xm0io(unsigned long ulPins)
 	}
 	else
 	{
-		/* Can the pins be activated? */
+		/* Extraxct the IO pins. */
+		ulIoPins = ulPins & ((1U<<0U)|(1U<<1U)|(1U<<2U)|(1U<<3U)|(1U<<4U)|(1U<<5U));
+
+		/* Can the IO pins be activated? */
 		ulValue   = ptAsicCtrlArea->asIo_config[0].ulMask;
+		uprintf("mask: 0x%08x\n", ulValue);
 		ulValue  &= HOSTMSK(io_config0_sel_xm0_io);
 		ulValue >>= HOSTSRT(io_config0_sel_xm0_io);
-		ulValue  &= ulPins;
-		if( ulValue!=ulPins )
+		ulValue  &= ulIoPins;
+		if( ulValue!=ulIoPins )
 		{
 			uprintf("ERROR: Not all XM0_IO pins can be enabled.\n");
 			iResult = -1;
@@ -820,6 +825,17 @@ static int configure_xm0io(unsigned long ulPins)
 				ulValue |= HOSTMSK(io_config0_sel_xm0_io_wm);
 				ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
 				ptAsicCtrlArea->asIo_config[0].ulConfig = ulValue;
+
+				/* Is XM0_RM in use? */
+				if( (ulPins&(1U<<6U))!=0 )
+				{
+					/* Activate continuous sampling of the XM0_RX pin. */
+					ptXc0Xmac0RegsArea->ulXmac_sbu_rate_mul_add = 0x0001U;
+					ptXc0Xmac0RegsArea->ulXmac_sbu_rate_mul_start = 0xfffeU;
+					ptXc0Xmac0RegsArea->ulXmac_start_sample_pos = 0xfffeU;
+					ptXc0Xmac0RegsArea->ulXmac_stop_sample_pos = 0xffffU;
+					ptXc0Xmac0RegsArea->ulXmac_config_sbu = 1U << HOSTSRT(xmac_config_sbu_count_modulo);
+				}
 			}
 		}
 	}
@@ -835,6 +851,7 @@ static int configure_xm1io(unsigned long ulPins)
 	HOSTDEF(ptXcStartStopArea);
 	HOSTDEF(ptXc0Xmac1RegsArea);
 	unsigned long ulValue;
+	unsigned long ulIoPins;
 	int iResult;
 
 
@@ -850,12 +867,15 @@ static int configure_xm1io(unsigned long ulPins)
 	}
 	else
 	{
+		/* Extraxct the IO pins. */
+		ulIoPins = ulPins & ((1U<<0U)|(1U<<1U)|(1U<<2U)|(1U<<3U)|(1U<<4U)|(1U<<5U));
+
 		/* Can the pins be activated? */
 		ulValue   = ptAsicCtrlArea->asIo_config[1].ulMask;
 		ulValue  &= HOSTMSK(io_config1_sel_xm1_io);
 		ulValue >>= HOSTSRT(io_config1_sel_xm1_io);
-		ulValue  &= ulPins;
-		if( ulValue!=ulPins )
+		ulValue  &= ulIoPins;
+		if( ulValue!=ulIoPins )
 		{
 			uprintf("ERROR: Not all XM1_IO pins can be enabled.\n");
 			iResult = -1;
@@ -925,6 +945,17 @@ static int configure_xm1io(unsigned long ulPins)
 				ulValue |= HOSTMSK(io_config1_sel_xm1_io_wm);
 				ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
 				ptAsicCtrlArea->asIo_config[1].ulConfig = ulValue;
+
+				/* Is XM0_RM in use? */
+				if( (ulPins&(1U<<6U))!=0 )
+				{
+					/* Activate continuous sampling of the XM0_RX pin. */
+					ptXc0Xmac1RegsArea->ulXmac_sbu_rate_mul_add = 0x0001U;
+					ptXc0Xmac1RegsArea->ulXmac_sbu_rate_mul_start = 0xfffeU;
+					ptXc0Xmac1RegsArea->ulXmac_start_sample_pos = 0xfffeU;
+					ptXc0Xmac1RegsArea->ulXmac_stop_sample_pos = 0xffffU;
+					ptXc0Xmac1RegsArea->ulXmac_config_sbu = 1U << HOSTSRT(xmac_config_sbu_count_modulo);
+				}
 			}
 		}
 	}
@@ -2056,6 +2087,17 @@ static int set_xm0io(unsigned int uiIndex, PINSTATUS_T tValue)
 			ptXc0Xmac0RegsArea->ulXmac_io_oe_shared0  = ulOe;
 		}
 	}
+	else if( uiIndex==6U )
+	{
+		if( tValue==PINSTATUS_HIGHZ )
+		{
+			iResult = 0;
+		}
+		else
+		{
+			uprintf("ERROR: can not set XM0_RX to output, it is read only.\n");
+		}
+	}
 	else
 	{
 		uprintf("Invalid index for XM1IO: %d\n", uiIndex);
@@ -2124,6 +2166,17 @@ static int set_xm1io(unsigned int uiIndex, PINSTATUS_T tValue)
 			ptXc0Xmac1RegsArea->ulXmac_io_oe_shared1  = ulOe;
 		}
 	}
+	else if( uiIndex==6U )
+	{
+		if( tValue==PINSTATUS_HIGHZ )
+		{
+			iResult = 0;
+		}
+		else
+		{
+			uprintf("ERROR: can not set XM1_RX to output, it is read only.\n");
+		}
+	}
 	else
 	{
 		uprintf("Invalid index for XM1IO: %d\n", uiIndex);
@@ -2138,6 +2191,7 @@ static int get_xm0io(unsigned int uiIndex, unsigned char *pucData)
 {
 	HOSTDEF(ptXc0Xmac0RegsArea);
 	unsigned long ulValue;
+	unsigned int uiRetries;
 	unsigned char ucData;
 	int iResult;
 
@@ -2159,6 +2213,30 @@ static int get_xm0io(unsigned int uiIndex, unsigned char *pucData)
 		*pucData = ucData;
 		iResult = 0;
 	}
+	else if( uiIndex==6U )
+	{
+		uiRetries = 16U;
+		while( uiRetries!=0 )
+		{
+			ulValue = ptXc0Xmac0RegsArea->ulXmac_rx;
+			if( ulValue==0x0000U )
+			{
+				*pucData = 0;
+				iResult = 0;
+				break;
+			}
+			else if( ulValue==0xffffU )
+			{
+				*pucData = 1;
+				iResult = 0;
+				break;
+			}
+			else
+			{
+				--uiRetries;
+			}
+		}
+	}
 
 	return iResult;
 }
@@ -2169,6 +2247,7 @@ static int get_xm1io(unsigned int uiIndex, unsigned char *pucData)
 {
 	HOSTDEF(ptXc0Xmac1RegsArea);
 	unsigned long ulValue;
+	unsigned int uiRetries;
 	unsigned char ucData;
 	int iResult;
 
@@ -2189,6 +2268,30 @@ static int get_xm1io(unsigned int uiIndex, unsigned char *pucData)
 		}
 		*pucData = ucData;
 		iResult = 0;
+	}
+	else if( uiIndex==6U )
+	{
+		uiRetries = 16U;
+		while( uiRetries!=0 )
+		{
+			ulValue = ptXc0Xmac1RegsArea->ulXmac_rx;
+			if( ulValue==0x0000U )
+			{
+				*pucData = 0;
+				iResult = 0;
+				break;
+			}
+			else if( ulValue==0xffffU )
+			{
+				*pucData = 1;
+				iResult = 0;
+				break;
+			}
+			else
+			{
+				--uiRetries;
+			}
+		}
 	}
 
 	return iResult;
@@ -2482,13 +2585,13 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 		break;
 
 	case PINTYPE_XMIO:
-		if( uiIndex<6 )
+		if( uiIndex<7 )
 		{
 			iResult = set_xm0io(uiIndex, tValue);
 		}
-		else if( uiIndex<12 )
+		else if( uiIndex<14 )
 		{
-			iResult = set_xm1io(uiIndex-6U, tValue);
+			iResult = set_xm1io(uiIndex-7U, tValue);
 		}
 		break;
 
@@ -2553,13 +2656,13 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 		break;
 
 	case PINTYPE_XMIO:
-		if( uiIndex<6 )
+		if( uiIndex<7 )
 		{
 			iResult = get_xm0io(uiIndex, pucData);
 		}
-		else if( uiIndex<12 )
+		else if( uiIndex<14 )
 		{
-			iResult = get_xm1io(uiIndex-6U, pucData);
+			iResult = get_xm1io(uiIndex-7U, pucData);
 		}
 		break;
 
