@@ -244,7 +244,7 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 
 
 
-static int configure_xmio(void)
+static int configure_xmio(UNITCONFIGURATION_T *ptUnitCfg)
 {
 	HOSTDEF(ptXpec0Area);
 	HOSTDEF(ptXmac0Area);
@@ -264,58 +264,90 @@ static int configure_xmio(void)
 	NX500_XC_Reset(2);
 	NX500_XC_Reset(3);
 
-	/* Set the XM0_IO0 and XM0_IO1 pins to input and output value to zero. */
-	ulValue  = 0U << HOSTSRT(statcfg0_gpio0_out); // set output value of gpio0/XM0_IO0 to zero
-	ulValue |= 0U << HOSTSRT(statcfg0_gpio0_oe); // set gpio0/XM0_IO0 to input
-	ulValue |= 0U << HOSTSRT(statcfg0_gpio1_out); // set output value of gpio1/XM0_IO1 to zero
-	ulValue |= 0U << HOSTSRT(statcfg0_gpio1_oe); // set gpio1/XM0_IO1 to input
-	ptXpec0Area->aulStatcfg[0] = ulValue;
+	/* Are XM0_IO0 or XM0_IO1 in use? */
+	if( (ptUnitCfg->aulXmio[0]&3)!=0 )
+	{
+		/* Set the XM0_IO0 and XM0_IO1 pins to input and output value to zero. */
+		ulValue  = 0U << HOSTSRT(statcfg0_gpio0_out); // set output value of gpio0/XM0_IO0 to zero
+		ulValue |= 0U << HOSTSRT(statcfg0_gpio0_oe); // set gpio0/XM0_IO0 to input
+		ulValue |= 0U << HOSTSRT(statcfg0_gpio1_out); // set output value of gpio1/XM0_IO1 to zero
+		ulValue |= 0U << HOSTSRT(statcfg0_gpio1_oe); // set gpio1/XM0_IO1 to input
+		ptXpec0Area->aulStatcfg[0] = ulValue;
+	}
 
-	/* Set the XM1_IO0 and XM1_IO1 pins to input and output value to zero. */
-	ulValue  = 0U << HOSTSRT(statcfg1_gpio0_out); // set output value of gpio0/XM1_IO0 to zero
-	ulValue |= 0U << HOSTSRT(statcfg1_gpio0_oe); // set gpio0/XM1_IO0 to input
-	ulValue |= 0U << HOSTSRT(statcfg1_gpio1_out); // set output value of gpio1/XM1_IO1 to zero
-	ulValue |= 0U << HOSTSRT(statcfg1_gpio1_oe); // set gpio1/XM1_IO1 to input
-	ptXpec0Area->aulStatcfg[1] = ulValue;
+	/* Are XM1_IO0 or XM1_IO1 in use? */
+	if( (ptUnitCfg->aulXmio[1]&3)!=0 )
+	{
+		/* Set the XM1_IO0 and XM1_IO1 pins to input and output value to zero. */
+		ulValue  = 0U << HOSTSRT(statcfg1_gpio0_out); // set output value of gpio0/XM1_IO0 to zero
+		ulValue |= 0U << HOSTSRT(statcfg1_gpio0_oe); // set gpio0/XM1_IO0 to input
+		ulValue |= 0U << HOSTSRT(statcfg1_gpio1_out); // set output value of gpio1/XM1_IO1 to zero
+		ulValue |= 0U << HOSTSRT(statcfg1_gpio1_oe); // set gpio1/XM1_IO1 to input
+		ptXpec0Area->aulStatcfg[1] = ulValue;
+	}
 
-	/* Set the XM2_IO0 and XM2_IO1 pins to input and output value to zero. */
-	ulValue  = 0U << HOSTSRT(statcfg2_gpio0_out); // set output value of gpio0/XM2_IO0 to zero
-	ulValue |= 0U << HOSTSRT(statcfg2_gpio0_oe);  // set gpio0/XM1_IO0 to input
-	ulValue |= 0U << HOSTSRT(statcfg2_gpio1_out); // set output value of gpio1/XM2_IO1 to zero
-	ulValue |= 0U << HOSTSRT(statcfg2_gpio1_oe);  // set gpio1/XM1_IO1 to input
-	ptXpec0Area->aulStatcfg[2] = ulValue;
+	/* Are XM2_IO0 or XM2_IO1 in use? */
+	if( (ptUnitCfg->aulXmio[2]&3)!=0 )
+	{
+		/* Set the XM2_IO0 and XM2_IO1 pins to input and output value to zero. */
+		ulValue  = 0U << HOSTSRT(statcfg2_gpio0_out); // set output value of gpio0/XM2_IO0 to zero
+		ulValue |= 0U << HOSTSRT(statcfg2_gpio0_oe);  // set gpio0/XM1_IO0 to input
+		ulValue |= 0U << HOSTSRT(statcfg2_gpio1_out); // set output value of gpio1/XM2_IO1 to zero
+		ulValue |= 0U << HOSTSRT(statcfg2_gpio1_oe);  // set gpio1/XM1_IO1 to input
+		ptXpec0Area->aulStatcfg[2] = ulValue;
+	}
 
-	/* Set the XM3_IO0 and XM3_IO1 pins to input and output value to zero. */
-	ulValue  = 0U << HOSTSRT(statcfg3_gpio0_out); // set output value of gpio0/XM3_IO0 to zero
-	ulValue |= 0U << HOSTSRT(statcfg3_gpio0_oe); // set gpio0/XM1_IO0 to input
-	ulValue |= 0U << HOSTSRT(statcfg3_gpio1_out); // set output value of gpio1/XM3_IO1 to zero
-	ulValue |= 0U << HOSTSRT(statcfg3_gpio1_oe); // set gpio1/XM1_IO1 to input
-	ptXpec0Area->aulStatcfg[3] = ulValue;
+	/* Are XM3_IO0 or XM3_IO1 in use? */
+	if( (ptUnitCfg->aulXmio[3]&3)!=0 )
+	{
+		/* Set the XM3_IO0 and XM3_IO1 pins to input and output value to zero. */
+		ulValue  = 0U << HOSTSRT(statcfg3_gpio0_out); // set output value of gpio0/XM3_IO0 to zero
+		ulValue |= 0U << HOSTSRT(statcfg3_gpio0_oe); // set gpio0/XM1_IO0 to input
+		ulValue |= 0U << HOSTSRT(statcfg3_gpio1_out); // set output value of gpio1/XM3_IO1 to zero
+		ulValue |= 0U << HOSTSRT(statcfg3_gpio1_oe); // set gpio1/XM1_IO1 to input
+		ptXpec0Area->aulStatcfg[3] = ulValue;
+	}
 
-	/* Activate sampling of the RX pin with every 100MHz clock. */
-	ptXmac0Area->ulXmac_sbu_rate_mul_add = 0x0001U;
-	ptXmac0Area->ulXmac_sbu_rate_mul_start = 0xfffeU;
-	ptXmac0Area->ulXmac_start_sample_pos = 0xfffeU;
-	ptXmac0Area->ulXmac_stop_sample_pos = 0xffffU;
-	ptXmac0Area->ulXmac_config_sbu = 1U << HOSTSRT(xmac_config_sbu_count_modulo);
+	/* Is XM0_RX in use? */
+	if( (ptUnitCfg->aulXmio[0]&4)!=0 )
+	{
+		/* Activate continuous sampling of the XM0_RX pin. */
+		ptXmac0Area->ulXmac_sbu_rate_mul_add = 0x0001U;
+		ptXmac0Area->ulXmac_sbu_rate_mul_start = 0xfffeU;
+		ptXmac0Area->ulXmac_start_sample_pos = 0xfffeU;
+		ptXmac0Area->ulXmac_stop_sample_pos = 0xffffU;
+		ptXmac0Area->ulXmac_config_sbu = 1U << HOSTSRT(xmac_config_sbu_count_modulo);
+	}
 
-	ptXmac1Area->ulXmac_sbu_rate_mul_add = 0x0001;
-	ptXmac1Area->ulXmac_sbu_rate_mul_start = 0xfffeU;
-	ptXmac1Area->ulXmac_start_sample_pos = 0xfffeU;
-	ptXmac1Area->ulXmac_stop_sample_pos = 0xffffU;
-	ptXmac1Area->ulXmac_config_sbu = 1U << HOSTSRT(xmac_config_sbu_count_modulo);
+	/* Is XM1_RX in use? */
+	if( (ptUnitCfg->aulXmio[1]&4)!=0 )
+	{
+		ptXmac1Area->ulXmac_sbu_rate_mul_add = 0x0001;
+		ptXmac1Area->ulXmac_sbu_rate_mul_start = 0xfffeU;
+		ptXmac1Area->ulXmac_start_sample_pos = 0xfffeU;
+		ptXmac1Area->ulXmac_stop_sample_pos = 0xffffU;
+		ptXmac1Area->ulXmac_config_sbu = 1U << HOSTSRT(xmac_config_sbu_count_modulo);
+	}
 
-	ptXmac2Area->ulXmac_sbu_rate_mul_add = 0x0001;
-	ptXmac2Area->ulXmac_sbu_rate_mul_start = 0xfffeU;
-	ptXmac2Area->ulXmac_start_sample_pos = 0xfffeU;
-	ptXmac2Area->ulXmac_stop_sample_pos = 0xffffU;
-	ptXmac2Area->ulXmac_config_sbu = 1U << HOSTSRT(xmac_config_sbu_count_modulo);
+	/* Is XM2_RX in use? */
+	if( (ptUnitCfg->aulXmio[2]&4)!=0 )
+	{
+		ptXmac2Area->ulXmac_sbu_rate_mul_add = 0x0001;
+		ptXmac2Area->ulXmac_sbu_rate_mul_start = 0xfffeU;
+		ptXmac2Area->ulXmac_start_sample_pos = 0xfffeU;
+		ptXmac2Area->ulXmac_stop_sample_pos = 0xffffU;
+		ptXmac2Area->ulXmac_config_sbu = 1U << HOSTSRT(xmac_config_sbu_count_modulo);
+	}
 
-	ptXmac3Area->ulXmac_sbu_rate_mul_add = 0x0001;
-	ptXmac3Area->ulXmac_sbu_rate_mul_start = 0xfffeU;
-	ptXmac3Area->ulXmac_start_sample_pos = 0xfffeU;
-	ptXmac3Area->ulXmac_stop_sample_pos = 0xffffU;
-	ptXmac3Area->ulXmac_config_sbu = 1U << HOSTSRT(xmac_config_sbu_count_modulo);
+	/* Is XM3_RX in use? */
+	if( (ptUnitCfg->aulXmio[3]&4)!=0 )
+	{
+		ptXmac3Area->ulXmac_sbu_rate_mul_add = 0x0001;
+		ptXmac3Area->ulXmac_sbu_rate_mul_start = 0xfffeU;
+		ptXmac3Area->ulXmac_start_sample_pos = 0xfffeU;
+		ptXmac3Area->ulXmac_stop_sample_pos = 0xffffU;
+		ptXmac3Area->ulXmac_config_sbu = 1U << HOSTSRT(xmac_config_sbu_count_modulo);
+	}
 
 	return iResult;
 }
@@ -425,7 +457,7 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDe
 		 */
 		if( (tUnitCfg.aulXmio[0]|tUnitCfg.aulXmio[1]|tUnitCfg.aulXmio[2]|tUnitCfg.aulXmio[3])!=0 )
 		{
-			iResult = configure_xmio();
+			iResult = configure_xmio(&tUnitCfg);
 		}
 
 	}
