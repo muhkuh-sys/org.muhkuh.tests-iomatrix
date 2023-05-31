@@ -144,15 +144,19 @@ IoMatrix_netx500.atKnownPins = {
   ['XM0_IO0']     = { type=${PINTYPE_XMIO}, index=0 },
   ['XM0_IO1']     = { type=${PINTYPE_XMIO}, index=1 },
   ['XM0_RX']      = { type=${PINTYPE_XMIO}, index=2 },
-  ['XM1_IO0']     = { type=${PINTYPE_XMIO}, index=3 },
-  ['XM1_IO1']     = { type=${PINTYPE_XMIO}, index=4 },
-  ['XM1_RX']      = { type=${PINTYPE_XMIO}, index=5 },
-  ['XM2_IO0']     = { type=${PINTYPE_XMIO}, index=6 },
-  ['XM2_IO1']     = { type=${PINTYPE_XMIO}, index=7 },
-  ['XM2_RX']      = { type=${PINTYPE_XMIO}, index=8 },
-  ['XM3_IO0']     = { type=${PINTYPE_XMIO}, index=9 },
-  ['XM3_IO1']     = { type=${PINTYPE_XMIO}, index=10 },
-  ['XM3_RX']      = { type=${PINTYPE_XMIO}, index=11 }
+  ['XM0_TX']      = { type=${PINTYPE_XMIO}, index=3 },
+  ['XM1_IO0']     = { type=${PINTYPE_XMIO}, index=4 },
+  ['XM1_IO1']     = { type=${PINTYPE_XMIO}, index=5 },
+  ['XM1_RX']      = { type=${PINTYPE_XMIO}, index=6 },
+  ['XM1_TX']      = { type=${PINTYPE_XMIO}, index=7 },
+  ['XM2_IO0']     = { type=${PINTYPE_XMIO}, index=8 },
+  ['XM2_IO1']     = { type=${PINTYPE_XMIO}, index=9 },
+  ['XM2_RX']      = { type=${PINTYPE_XMIO}, index=10 },
+  ['XM2_TX']      = { type=${PINTYPE_XMIO}, index=11 },
+  ['XM3_IO0']     = { type=${PINTYPE_XMIO}, index=12 },
+  ['XM3_IO1']     = { type=${PINTYPE_XMIO}, index=13 },
+  ['XM3_RX']      = { type=${PINTYPE_XMIO}, index=14 },
+  ['XM3_TX']      = { type=${PINTYPE_XMIO}, index=15 },
 }
 
 return IoMatrix_netx500

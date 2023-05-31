@@ -187,24 +187,24 @@ static int collect_unit_configuration(const PINDESCRIPTION_T *ptPinDesc, unsigne
 			case PINTYPE_XMIO:
 				/* For now XM*_IO0, XM*_IO1 and XM*_RX are supported. */
 				uiIndex = ptPinDescCnt->uiIndex;
-				if( uiIndex<3 )
+				if( uiIndex<4 )
 				{
 					ptUnitCfg->aulXmio[0] |= 1U << uiIndex;
 					iResult = 0;
 				}
-				else if( uiIndex<6 )
+				else if( uiIndex<8 )
 				{
-					ptUnitCfg->aulXmio[1] |= 1U << (uiIndex - 3U);
-					iResult = 0;
-				}
-				else if( uiIndex<9 )
-				{
-					ptUnitCfg->aulXmio[2] |= 1U << (uiIndex - 6U);
+					ptUnitCfg->aulXmio[1] |= 1U << (uiIndex - 4U);
 					iResult = 0;
 				}
 				else if( uiIndex<12 )
 				{
-					ptUnitCfg->aulXmio[3] |= 1U << (uiIndex - 9U);
+					ptUnitCfg->aulXmio[2] |= 1U << (uiIndex - 8U);
+					iResult = 0;
+				}
+				else if( uiIndex<16 )
+				{
+					ptUnitCfg->aulXmio[3] |= 1U << (uiIndex - 12U);
 					iResult = 0;
 				}
 				else
@@ -318,6 +318,19 @@ static int configure_xmio(UNITCONFIGURATION_T *ptUnitCfg)
 		ptXmac0Area->ulXmac_stop_sample_pos = 0xffffU;
 		ptXmac0Area->ulXmac_config_sbu = 1U << HOSTSRT(xmac_config_sbu_count_modulo);
 	}
+	/* Is XM0_TX in use? */
+	if( (ptUnitCfg->aulXmio[0]&8)!=0 )
+	{
+		ulValue  = HOSTMSK(xmac_config_obu_count_modulo);
+		ulValue |= HOSTMSK(xmac_config_obu_tx_three_state);
+		ptXmac0Area->ulXmac_config_obu = ulValue;
+
+		ptXmac0Area->ulXmac_obu_rate_mul_add = 0x0001U;
+		ptXmac0Area->ulXmac_obu_rate_mul_start = 0xff00U;
+		ptXmac0Area->ulXmac_start_trans_pos = 0xff00U;
+		ptXmac0Area->ulXmac_stop_trans_pos = 0xffffU;
+		ptXmac0Area->ulXmac_tx = 0x0000U;
+	}
 
 	/* Is XM1_RX in use? */
 	if( (ptUnitCfg->aulXmio[1]&4)!=0 )
@@ -327,6 +340,19 @@ static int configure_xmio(UNITCONFIGURATION_T *ptUnitCfg)
 		ptXmac1Area->ulXmac_start_sample_pos = 0xfffeU;
 		ptXmac1Area->ulXmac_stop_sample_pos = 0xffffU;
 		ptXmac1Area->ulXmac_config_sbu = 1U << HOSTSRT(xmac_config_sbu_count_modulo);
+	}
+	/* Is XM1_TX in use? */
+	if( (ptUnitCfg->aulXmio[1]&8)!=0 )
+	{
+		ulValue  = HOSTMSK(xmac_config_obu_count_modulo);
+		ulValue |= HOSTMSK(xmac_config_obu_tx_three_state);
+		ptXmac1Area->ulXmac_config_obu = ulValue;
+
+		ptXmac1Area->ulXmac_obu_rate_mul_add = 0x0001U;
+		ptXmac1Area->ulXmac_obu_rate_mul_start = 0xff00U;
+		ptXmac1Area->ulXmac_start_trans_pos = 0xff00U;
+		ptXmac1Area->ulXmac_stop_trans_pos = 0xffffU;
+		ptXmac1Area->ulXmac_tx = 0x0000U;
 	}
 
 	/* Is XM2_RX in use? */
@@ -338,6 +364,19 @@ static int configure_xmio(UNITCONFIGURATION_T *ptUnitCfg)
 		ptXmac2Area->ulXmac_stop_sample_pos = 0xffffU;
 		ptXmac2Area->ulXmac_config_sbu = 1U << HOSTSRT(xmac_config_sbu_count_modulo);
 	}
+	/* Is XM2_TX in use? */
+	if( (ptUnitCfg->aulXmio[2]&8)!=0 )
+	{
+		ulValue  = HOSTMSK(xmac_config_obu_count_modulo);
+		ulValue |= HOSTMSK(xmac_config_obu_tx_three_state);
+		ptXmac2Area->ulXmac_config_obu = ulValue;
+
+		ptXmac2Area->ulXmac_obu_rate_mul_add = 0x0001U;
+		ptXmac2Area->ulXmac_obu_rate_mul_start = 0xff00U;
+		ptXmac2Area->ulXmac_start_trans_pos = 0xff00U;
+		ptXmac2Area->ulXmac_stop_trans_pos = 0xffffU;
+		ptXmac2Area->ulXmac_tx = 0x0000U;
+	}
 
 	/* Is XM3_RX in use? */
 	if( (ptUnitCfg->aulXmio[3]&4)!=0 )
@@ -347,6 +386,19 @@ static int configure_xmio(UNITCONFIGURATION_T *ptUnitCfg)
 		ptXmac3Area->ulXmac_start_sample_pos = 0xfffeU;
 		ptXmac3Area->ulXmac_stop_sample_pos = 0xffffU;
 		ptXmac3Area->ulXmac_config_sbu = 1U << HOSTSRT(xmac_config_sbu_count_modulo);
+	}
+	/* Is XM3_TX in use? */
+	if( (ptUnitCfg->aulXmio[3]&8)!=0 )
+	{
+		ulValue  = HOSTMSK(xmac_config_obu_count_modulo);
+		ulValue |= HOSTMSK(xmac_config_obu_tx_three_state);
+		ptXmac3Area->ulXmac_config_obu = ulValue;
+
+		ptXmac3Area->ulXmac_obu_rate_mul_add = 0x0001U;
+		ptXmac3Area->ulXmac_obu_rate_mul_start = 0xff00U;
+		ptXmac3Area->ulXmac_start_trans_pos = 0xff00U;
+		ptXmac3Area->ulXmac_stop_trans_pos = 0xffffU;
+		ptXmac3Area->ulXmac_tx = 0x0000U;
 	}
 
 	return iResult;
@@ -473,6 +525,7 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDe
 static int set_xm0io(unsigned int uiIndex, PINSTATUS_T tValue)
 {
 	HOSTDEF(ptXpec0Area);
+	HOSTDEF(ptXmac0Area);
 	unsigned long ulStatcfg;
 	unsigned long ulOut;
 	unsigned long ulOe;
@@ -555,6 +608,34 @@ static int set_xm0io(unsigned int uiIndex, PINSTATUS_T tValue)
 			uprintf("ERROR: can not set XM0_RX to output, it is read only.\n");
 		}
 	}
+	else if( uiIndex==3U )
+	{
+		ulOe  = HOSTMSK(xmac_config_obu_count_modulo);
+
+		switch( tValue )
+		{
+		case PINSTATUS_HIGHZ:
+			ulOe |= HOSTMSK(xmac_config_obu_tx_three_state);
+			ptXmac0Area->ulXmac_config_obu = ulOe;
+
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT0:
+			ptXmac0Area->ulXmac_config_obu = ulOe;
+			ptXmac0Area->ulXmac_tx = 0x0000U;
+
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT1:
+			ptXmac0Area->ulXmac_config_obu = ulOe;
+			ptXmac0Area->ulXmac_tx = 0xffffU;
+
+			iResult = 0;
+			break;
+		}
+	}
 	else
 	{
 		/* DEBUG INFORMATION: */
@@ -569,6 +650,7 @@ static int set_xm0io(unsigned int uiIndex, PINSTATUS_T tValue)
 static int set_xm1io(unsigned int uiIndex, PINSTATUS_T tValue)
 {
 	HOSTDEF(ptXpec0Area);
+	HOSTDEF(ptXmac1Area);
 	unsigned long ulStatcfg;
 	unsigned long ulOut;
 	unsigned long ulOe;
@@ -651,6 +733,34 @@ static int set_xm1io(unsigned int uiIndex, PINSTATUS_T tValue)
 			uprintf("ERROR: can not set XM1_RX to output, it is read only.\n");
 		}
 	}
+	else if( uiIndex==3U )
+	{
+		ulOe  = HOSTMSK(xmac_config_obu_count_modulo);
+
+		switch( tValue )
+		{
+		case PINSTATUS_HIGHZ:
+			ulOe |= HOSTMSK(xmac_config_obu_tx_three_state);
+			ptXmac1Area->ulXmac_config_obu = ulOe;
+
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT0:
+			ptXmac1Area->ulXmac_config_obu = ulOe;
+			ptXmac1Area->ulXmac_tx = 0x0000U;
+
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT1:
+			ptXmac1Area->ulXmac_config_obu = ulOe;
+			ptXmac1Area->ulXmac_tx = 0xffffU;
+
+			iResult = 0;
+			break;
+		}
+	}
 	else
 	{
 		/* DEBUG INFORMATION: */
@@ -665,6 +775,7 @@ static int set_xm1io(unsigned int uiIndex, PINSTATUS_T tValue)
 static int set_xm2io(unsigned int uiIndex, PINSTATUS_T tValue)
 {
 	HOSTDEF(ptXpec0Area);
+	HOSTDEF(ptXmac2Area);
 	unsigned long ulStatcfg;
 	unsigned long ulOut;
 	unsigned long ulOe;
@@ -747,6 +858,34 @@ static int set_xm2io(unsigned int uiIndex, PINSTATUS_T tValue)
 			uprintf("ERROR: can not set XM2_RX to output, it is read only.\n");
 		}
 	}
+	else if( uiIndex==3U )
+	{
+		ulOe  = HOSTMSK(xmac_config_obu_count_modulo);
+
+		switch( tValue )
+		{
+		case PINSTATUS_HIGHZ:
+			ulOe |= HOSTMSK(xmac_config_obu_tx_three_state);
+			ptXmac2Area->ulXmac_config_obu = ulOe;
+
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT0:
+			ptXmac2Area->ulXmac_config_obu = ulOe;
+			ptXmac2Area->ulXmac_tx = 0x0000U;
+
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT1:
+			ptXmac2Area->ulXmac_config_obu = ulOe;
+			ptXmac2Area->ulXmac_tx = 0xffffU;
+
+			iResult = 0;
+			break;
+		}
+	}
 	else
 	{
 		/* DEBUG INFORMATION: */
@@ -761,6 +900,7 @@ static int set_xm2io(unsigned int uiIndex, PINSTATUS_T tValue)
 static int set_xm3io(unsigned int uiIndex, PINSTATUS_T tValue)
 {
 	HOSTDEF(ptXpec0Area);
+	HOSTDEF(ptXmac3Area);
 	unsigned long ulStatcfg;
 	unsigned long ulOut;
 	unsigned long ulOe;
@@ -843,6 +983,34 @@ static int set_xm3io(unsigned int uiIndex, PINSTATUS_T tValue)
 			uprintf("ERROR: can not set XM3_RX to output, it is read only.\n");
 		}
 	}
+	else if( uiIndex==3U )
+	{
+		ulOe  = HOSTMSK(xmac_config_obu_count_modulo);
+
+		switch( tValue )
+		{
+		case PINSTATUS_HIGHZ:
+			ulOe |= HOSTMSK(xmac_config_obu_tx_three_state);
+			ptXmac3Area->ulXmac_config_obu = ulOe;
+
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT0:
+			ptXmac3Area->ulXmac_config_obu = ulOe;
+			ptXmac3Area->ulXmac_tx = 0x0000U;
+
+			iResult = 0;
+			break;
+
+		case PINSTATUS_OUTPUT1:
+			ptXmac3Area->ulXmac_config_obu = ulOe;
+			ptXmac3Area->ulXmac_tx = 0xffffU;
+
+			iResult = 0;
+			break;
+		}
+	}
 	else
 	{
 		/* DEBUG INFORMATION: */
@@ -906,6 +1074,10 @@ static int get_xm0io(unsigned int uiIndex, unsigned char *pucData)
 			}
 		}
 	}
+	else if( uiIndex==3U )
+	{
+		uprintf("ERROR: reading XM0_TX is not possible, it is write-only.\n");
+	}
 	else
 	{
 		/* DEBUG INFORMATION: */
@@ -968,6 +1140,10 @@ static int get_xm1io(unsigned int uiIndex, unsigned char *pucData)
 				--uiRetries;
 			}
 		}
+	}
+	else if( uiIndex==3U )
+	{
+		uprintf("ERROR: reading XM1_TX is not possible, it is write-only.\n");
 	}
 	else
 	{
@@ -1033,6 +1209,10 @@ static int get_xm2io(unsigned int uiIndex, unsigned char *pucData)
 			}
 		}
 	}
+	else if( uiIndex==3U )
+	{
+		uprintf("ERROR: reading XM2_TX is not possible, it is write-only.\n");
+	}
 	else
 	{
 		/* DEBUG INFORMATION: */
@@ -1096,6 +1276,10 @@ static int get_xm3io(unsigned int uiIndex, unsigned char *pucData)
 				--uiRetries;
 			}
 		}
+	}
+	else if( uiIndex==3U )
+	{
+		uprintf("ERROR: reading XM3_TX is not possible, it is write-only.\n");
 	}
 	else
 	{
@@ -1478,21 +1662,21 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 
 	case PINTYPE_XMIO:
 		uiIndex = ptPinDescription->uiIndex;
-		if( uiIndex<3 )
+		if( uiIndex<4 )
 		{
 			iResult = set_xm0io(uiIndex, tValue);
 		}
-		else if( uiIndex<6 )
+		else if( uiIndex<8 )
 		{
-			iResult = set_xm1io(uiIndex-3U, tValue);
-		}
-		else if( uiIndex<9 )
-		{
-			iResult = set_xm2io(uiIndex-6U, tValue);
+			iResult = set_xm1io(uiIndex-4U, tValue);
 		}
 		else if( uiIndex<12 )
 		{
-			iResult = set_xm3io(uiIndex-9U, tValue);
+			iResult = set_xm2io(uiIndex-8U, tValue);
+		}
+		else if( uiIndex<16 )
+		{
+			iResult = set_xm3io(uiIndex-12U, tValue);
 		}
 		break;
 
@@ -1560,21 +1744,21 @@ int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
 
 	case PINTYPE_XMIO:
 		uiIndex = ptPinDescription->uiIndex;
-		if( uiIndex<3 )
+		if( uiIndex<4 )
 		{
 			iResult = get_xm0io(uiIndex, pucData);
 		}
-		else if( uiIndex<6 )
+		else if( uiIndex<8 )
 		{
-			iResult = get_xm1io(uiIndex-3U, pucData);
-		}
-		else if( uiIndex<9 )
-		{
-			iResult = get_xm2io(uiIndex-6U, pucData);
+			iResult = get_xm1io(uiIndex-4U, pucData);
 		}
 		else if( uiIndex<12 )
 		{
-			iResult = get_xm3io(uiIndex-9U, pucData);
+			iResult = get_xm2io(uiIndex-8U, pucData);
+		}
+		else if( uiIndex<16 )
+		{
+			iResult = get_xm3io(uiIndex-12U, pucData);
 		}
 		break;
 
