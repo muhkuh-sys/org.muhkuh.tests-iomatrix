@@ -234,7 +234,7 @@ function IoMatrix:__test_pin(atNetworks, tNetworkUnderTest, tPinUnderTest, ucVal
     tLog.debug('Not testing pin "%s": it has no output capabilities.', tPinUnderTest.id)
     fOk = false
   else
-    -- The rest of the network must not have an output-only pin.
+    -- The rest of the network must not have an output-only pin, which can not be set to high-Z.
     local uiInputCnt = 0
     for _, tOtherPin in ipairs(tNetworkUnderTest) do
       if tOtherPin~=tPinUnderTest then
