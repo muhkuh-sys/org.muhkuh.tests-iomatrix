@@ -168,32 +168,3 @@ tArtifact0Hash = atEnv.DEFAULT.Hash('%s.hash' % tArtifact0[0].get_path(), tArtif
 tConfiguration0 = atEnv.DEFAULT.Version(os.path.join(strModulePath, '%s-%s.xml' % (strArtifact0, PROJECT_VERSION)), 'installer/jonchki/%s.xml' % strModule)
 tConfiguration0Hash = atEnv.DEFAULT.Hash('%s.hash' % tConfiguration0[0].get_path(), tConfiguration0[0].get_path(), HASH_ALGORITHM='md5,sha1,sha224,sha256,sha384,sha512', HASH_TEMPLATE='${ID_UC}:${HASH}\n')
 tArtifact0Pom = atEnv.DEFAULT.ArtifactVersion(os.path.join(strModulePath, '%s-%s.pom' % (strArtifact0, PROJECT_VERSION)), 'installer/jonchki/pom.xml')
-
-
-#----------------------------------------------------------------------------
-#
-# Make a local demo installation.
-#
-# Copy all binary binaries.
-atFiles = {
-    'targets/testbench/netx/iomatrix_netx10.bin':      IOMATRIX_NETX10,
-#    'targets/testbench/netx/iomatrix_netx50.bin':     iomatrix_netx50,
-    'targets/testbench/netx/iomatrix_netx56.bin':      IOMATRIX_NETX56,
-    'targets/testbench/netx/iomatrix_netx90_mpw.bin':  IOMATRIX_NETX90_MPW,
-    'targets/testbench/netx/iomatrix_netx90.bin':      IOMATRIX_NETX90,
-    'targets/testbench/netx/iomatrix_netx500.bin':     IOMATRIX_NETX500,
-    'targets/testbench/netx/iomatrix_netx4000.bin':    IOMATRIX_NETX4000,
-
-    # Copy all LUA scripts.
-    'targets/testbench/lua/io_matrix.lua':             'iomatrix/templates/io_matrix.lua',
-    'targets/testbench/lua/io_matrix/ftdi_2232h.lua':  'iomatrix/templates/io_matrix/ftdi_2232h.lua',
-    'targets/testbench/lua/io_matrix/ftdi.lua':        'iomatrix/templates/io_matrix/ftdi.lua',
-    'targets/testbench/lua/io_matrix/netx4000.lua':    LUA_NETX4000,
-    'targets/testbench/lua/io_matrix/netx90.lua':      LUA_NETX90,
-    'targets/testbench/lua/io_matrix/netx500.lua':     LUA_NETX500,
-    'targets/testbench/lua/io_matrix/netx90_mpw.lua':  LUA_NETX90_MPW,
-    'targets/testbench/lua/io_matrix/netx_base.lua':   LUA_NETX_BASE,
-    'targets/testbench/lua/io_matrix/netx.lua':        'iomatrix/templates/io_matrix/netx.lua'
-}
-for tDst, tSrc in atFiles.items():
-    Command(tDst, tSrc, Copy("$TARGET", "$SOURCE"))
