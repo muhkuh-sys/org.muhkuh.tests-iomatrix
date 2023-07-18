@@ -65,6 +65,8 @@ end
 
 
 function IoMatrix:parse_pin_description(atPinDescription)
+  local tLog = self.tLog
+
   self.atPins = {}
   self.netx:clear_pins()
   self.ftdi:clear_pins()
@@ -86,14 +88,14 @@ function IoMatrix:parse_pin_description(atPinDescription)
 
     -- Does the ID already exist?
     if self.atPins[strID]~=nil then
-      self.tLog.error('The pin "%s" already exists.', strID)
+      tLog.error('The pin "%s" already exists.', strID)
       error("Pin already exists.")
     end
 
     -- Get the distributor fot the family.
     local tDistrib = self.atFamily2Distributor[tFamily]
     if tFamily==nil then
-      self.tLog.error('Invalid pin family: %s.', tostring(tFamily))
+      tLog.error('Invalid pin family: %s.', tostring(tFamily))
       error("Invalid pin family.")
     end
 
@@ -187,6 +189,8 @@ end
 
 
 function IoMatrix:__check_all_networks_for_default(atNetworks, tNetworkExcept)
+  local tLog = self.tLog
+
   -- Be optimistic.
   local uiErrorCounter = 0
 
@@ -206,7 +210,7 @@ function IoMatrix:__check_all_networks_for_default(atNetworks, tNetworkExcept)
   end
 
   if uiErrorCounter==0 then
-    self.tLog.debug('All pins are in default state.')
+    tLog.debug('All pins are in default state.')
   end
   return uiErrorCounter
 end
@@ -214,6 +218,7 @@ end
 
 
 function IoMatrix:__test_pin(atNetworks, tNetworkUnderTest, tPinUnderTest, ucValue)
+  local tLog = self.tLog
   local uiErrorCounter = 0
 
   -- Can the network be tested by driving the selected pin?
@@ -221,7 +226,7 @@ function IoMatrix:__test_pin(atNetworks, tNetworkUnderTest, tPinUnderTest, ucVal
 
   -- Does the pin have output capabilities?
   if (tPinUnderTest.flags & self.PINFLAG_O)==0 then
-    self.tLog.debug('Not testing pin "%s": it has no output capabilities.', tPinUnderTest.id)
+    tLog.debug('Not testing pin "%s": it has no output capabilities.', tPinUnderTest.id)
     fOk = false
   else
     -- The rest of the network must not have an output-only pin.
@@ -229,7 +234,7 @@ function IoMatrix:__test_pin(atNetworks, tNetworkUnderTest, tPinUnderTest, ucVal
     for _, tOtherPin in ipairs(tNetworkUnderTest) do
       if tOtherPin~=tPinUnderTest then
         if (tOtherPin.flags & self.PINFLAG_IOZ)==self.PINFLAG_O then
-          self.tLog.debug('Not testing pin "%s": the connected pin "%s" is output-only.', tPinUnderTest.id, tOtherPin.id)
+          tLog.debug('Not testing pin "%s": the connected pin "%s" is output-only.', tPinUnderTest.id, tOtherPin.id)
           fOk = false
           break
         end
@@ -239,13 +244,13 @@ function IoMatrix:__test_pin(atNetworks, tNetworkUnderTest, tPinUnderTest, ucVal
       end
     end
     if uiInputCnt==0 then
-      self.tLog.debug('Not testing pin "%s": no pins with input capabilities connected.', tPinUnderTest.id)
+      tLog.debug('Not testing pin "%s": no pins with input capabilities connected.', tPinUnderTest.id)
       fOk = false
     end
   end
 
   if fOk==true then
-    self.tLog.debug('Set pin "%s" to %d.', tPinUnderTest.id, ucValue)
+    tLog.debug('Set pin "%s" to %d.', tPinUnderTest.id, ucValue)
     tPinUnderTest.bset(ucValue)
     self:bset()
     self:__delay_to_stabilize_pins()
@@ -256,10 +261,10 @@ function IoMatrix:__test_pin(atNetworks, tNetworkUnderTest, tPinUnderTest, ucVal
       if tOtherPin~=tPinUnderTest then
         local ucOtherVal = tOtherPin.bget()
         if ucValue~=ucOtherVal then
-          self.tLog.error('Pin "%s" did not follow setting "%s" to %d.', tOtherPin.id, tPinUnderTest.id, ucValue)
+          tLog.error('Pin "%s" did not follow setting "%s" to %d.', tOtherPin.id, tPinUnderTest.id, ucValue)
           uiErrorCounter = uiErrorCounter + 1
         else
-          self.tLog.debug('Pin "%s" follows.', tOtherPin.id)
+          tLog.debug('Pin "%s" follows.', tOtherPin.id)
         end
       end
     end
@@ -274,6 +279,7 @@ end
 
 
 function IoMatrix:matrix_test(atNetworksAscii)
+  local tLog = self.tLog
   local uiErrorCounter = 0
 
   -- Parse the networks.
@@ -300,7 +306,7 @@ function IoMatrix:matrix_test(atNetworksAscii)
       -- Set the pin to 1.
       uiErrorCounter = uiErrorCounter + self:__test_pin(atNetworks, tNetworkUnderTest, tPinUnderTest, 1)
       -- Set the pin to z.
-      self.tLog.debug('Set pin "%s" to z.', tPinUnderTest.id)
+      tLog.debug('Set pin "%s" to z.', tPinUnderTest.id)
       tPinUnderTest.bset('z')
       self:bset()
       self:__delay_to_stabilize_pins()
