@@ -26,7 +26,6 @@ local IoMatrix_FTDI = class()
 function IoMatrix_FTDI:_init(tLog)
   self.tLog = tLog
 
-  self.bit = require 'bit'
   self.luaftdi = require 'luaftdi'
   self.cFTDI2232H = require 'io_matrix.ftdi_2232h'
 
@@ -116,8 +115,8 @@ function IoMatrix_FTDI:__build_ftdi_index(tList, ulModuleIndexMask, ulModuleInde
             self.tLog.debug('Failed to read the pins.')
           else
             local ulPins = tResult
-            self.tLog.debug('Input data: 0x%s', self.bit.tohex(ulPins))
-            ulModuleIndex = self.bit.rshift(self.bit.band(ulPins, ulModuleIndexMask), ulModuleIndexShift)
+            self.tLog.debug('Input data: 0x%x', ulPins)
+            ulModuleIndex = (ulPins & ulModuleIndexMask) >> ulModuleIndexShift
             self.tLog.debug('Found module index %d.', ulModuleIndex)
           end
 

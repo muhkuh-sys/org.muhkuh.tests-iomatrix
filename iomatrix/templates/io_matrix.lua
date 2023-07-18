@@ -23,7 +23,6 @@ local IoMatrix = class()
 
 
 function IoMatrix:_init(tLog)
-  self.bit = require 'bit'
   self.pl = require'pl.import_into'()
 
   self.tLog = tLog
@@ -215,14 +214,13 @@ end
 
 
 function IoMatrix:__test_pin(atNetworks, tNetworkUnderTest, tPinUnderTest, ucValue)
-  local bit = self.bit
   local uiErrorCounter = 0
 
   -- Can the network be tested by driving the selected pin?
   local fOk = true
 
   -- Does the pin have output capabilities?
-  if bit.band(tPinUnderTest.flags, self.PINFLAG_O)==0 then
+  if (tPinUnderTest.flags & self.PINFLAG_O)==0 then
     self.tLog.debug('Not testing pin "%s": it has no output capabilities.', tPinUnderTest.id)
     fOk = false
   else
@@ -230,12 +228,12 @@ function IoMatrix:__test_pin(atNetworks, tNetworkUnderTest, tPinUnderTest, ucVal
     local uiInputCnt = 0
     for _, tOtherPin in ipairs(tNetworkUnderTest) do
       if tOtherPin~=tPinUnderTest then
-        if bit.band(tOtherPin.flags, self.PINFLAG_IOZ)==self.PINFLAG_O then
+        if (tOtherPin.flags & self.PINFLAG_IOZ)==self.PINFLAG_O then
           self.tLog.debug('Not testing pin "%s": the connected pin "%s" is output-only.', tPinUnderTest.id, tOtherPin.id)
           fOk = false
           break
         end
-        if bit.band(tPinUnderTest.flags, self.PINFLAG_I)~=0 then
+        if (tOtherPin.flags & self.PINFLAG_I)~=0 then
           uiInputCnt = uiInputCnt + 1
         end
       end

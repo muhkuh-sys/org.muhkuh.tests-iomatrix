@@ -25,7 +25,6 @@ function IoMatrix_netx_base:_init(tLog, fnInit, fnDeinit, ulVerbose, fnCallbackP
   -- Disable verbose mode by default.
   self.ulVerbose = ulVerbose or 0
 
-  self.bit = require 'bit'
   self.pl = require'pl.import_into'()
   local romloader = require 'romloader'
   self.romloader = romloader
@@ -133,22 +132,21 @@ end
 
 function IoMatrix_netx_base.__get_dword(strData, ulOffset)
   return (
-    string.byte(strData, ulOffset) +
-    string.byte(strData, ulOffset + 1) * 0x00000100 +
-    string.byte(strData, ulOffset + 2) * 0x00010000 +
-    string.byte(strData, ulOffset + 3) * 0x01000000
+    string.byte(strData, ulOffset) |
+    string.byte(strData, ulOffset + 1) <<  8 |
+    string.byte(strData, ulOffset + 2) << 16 |
+    string.byte(strData, ulOffset + 3) << 24
   )
 end
 
 
 
 function IoMatrix_netx_base:__chunk_add_dword(atTable, ulData)
-  local bit = self.bit
   table.insert(atTable, string.char(
-    bit.band(ulData, 0xff),
-    bit.band(bit.rshift(ulData, 8), 0xff),
-    bit.band(bit.rshift(ulData, 16), 0xff),
-    bit.band(bit.rshift(ulData, 24), 0xff)
+     ulData & 0x000000ff,
+    (ulData & 0x0000ff00) >>  8,
+    (ulData & 0x00ff0000) >> 16,
+    (ulData & 0xff000000) >> 24
   ))
 end
 
