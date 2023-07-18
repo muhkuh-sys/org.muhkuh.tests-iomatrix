@@ -199,11 +199,16 @@ function IoMatrix:__check_all_networks_for_default(atNetworks, tNetworkExcept)
     if tNetwork~=tNetworkExcept then
       -- Loop over all pins.
       for uiPinCnt, tPin in ipairs(tNetwork) do
-        -- Get the buffered pin state.
-        local ucVal = tPin.bget()
-        if ucVal~=tPin.default then
-          self.tLog.error('Pin "%s" should be in the default state of %d, but it is %d.', tPin.id, tPin.default, ucVal)
-          uiErrorCounter = uiErrorCounter + 1
+        -- Skip pins which have no "I" attribute.
+        if (tPin.flags & self.PINFLAG_I)==0 then
+          tLog.debug('Not reading pin "%s": it has no input capabilities.', tPin.id)
+        else
+          -- Get the buffered pin state.
+          local ucVal = tPin.bget()
+          if ucVal~=tPin.default then
+            tLog.error('Pin "%s" should be in the default state of %d, but it is %d.', tPin.id, tPin.default, ucVal)
+            uiErrorCounter = uiErrorCounter + 1
+          end
         end
       end
     end
