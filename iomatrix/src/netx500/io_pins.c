@@ -1222,7 +1222,7 @@ static PIN_INVALUE_T get_xm3io(unsigned int uiIndex)
 	PIN_INVALUE_T tResult;
 
 
-	if( tResult>=4U )
+	if( uiIndex>=4U )
 	{
 		tResult = PIN_INVALUE_InvalidPinIndex;
 	}
