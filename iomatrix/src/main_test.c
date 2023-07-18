@@ -40,51 +40,116 @@ static unsigned long s_ulVerbosity;
 /*-------------------------------------------------------------------------*/
 
 
-typedef struct PINTYPE_PRINT_STRUCT
+static const char *get_pin_name(PINTYPE_T tType)
 {
-	PINTYPE_T tType;
-	const char *pcPrint;
-} PINTYPE_PRINT_T;
-
-static const PINTYPE_PRINT_T atPintypePrint[] =
-{
-	{ PINTYPE_APPPIO,  "APPPIO" },
-	{ PINTYPE_GPIO,    "GPIO" },
-	{ PINTYPE_PIO,     "PIO" },
-	{ PINTYPE_MMIO,    "MMIO" },
-	{ PINTYPE_HIFPIO,  "HIFPIO" },
-	{ PINTYPE_IOLLEDM, "IOLLEDM" },
-	{ PINTYPE_RDYRUN,  "RDYRUN" },
-	{ PINTYPE_RSTOUT,  "RSTOUT" },
-	{ PINTYPE_XMIO,    "XMIO" }
-};
-
-
-
-static void print_pin(unsigned long ulIndex, const PINDESCRIPTION_T *ptPinDesc)
-{
-	PINTYPE_T tType;
-	const PINTYPE_PRINT_T *ptCnt;
-	const PINTYPE_PRINT_T *ptEnd;
-	const char *pcPrint;
+	const char *pcPinName;
 
 
 	/* Get the print representation of the pin type. */
-	pcPrint = "???";
-	tType = ptPinDesc->tType;
-	ptCnt = atPintypePrint;
-	ptEnd = atPintypePrint + (sizeof(atPintypePrint)/sizeof(atPintypePrint[0]));
-	do
+	pcPinName = "???";
+	switch( tType )
 	{
-		if( ptCnt->tType==tType )
-		{
-			pcPrint = ptCnt->pcPrint;
-			break;
-		}
-		++ptCnt;
-	} while( ptCnt<ptEnd );
+	case PINTYPE_GPIO:
+		pcPinName = "GPIO";
+		break;
+	case PINTYPE_PIO:
+		pcPinName = "PIO";
+		break;
+	case PINTYPE_MLED:
+		pcPinName = "MLED";
+		break;
+	case PINTYPE_MMIO:
+		pcPinName = "MMIO";
+		break;
+	case PINTYPE_HIFPIO:
+		pcPinName = "HIFPIO";
+		break;
+	case PINTYPE_RDYRUN:
+		pcPinName = "RDYRUN";
+		break;
+	case PINTYPE_RSTOUT:
+		pcPinName = "RSTOUT";
+		break;
+	case PINTYPE_XMIO:
+		pcPinName = "XMIO";
+		break;
+	case PINTYPE_RAPGPIO:
+		pcPinName = "RAPGPIO";
+		break;
+	case PINTYPE_APPPIO:
+		pcPinName = "APPPIO";
+		break;
+	case PINTYPE_IOLLEDM:
+		pcPinName = "IOLLEDM";
+		break;
+	case PINTYPE_SQI:
+		pcPinName = "SQI";
+		break;
+	}
 
-	uprintf("%03d: Pin '%s': %s[%d]\n", ulIndex, ptPinDesc->apcName, pcPrint, ptPinDesc->uiIndex);
+	return pcPinName;
+}
+
+
+
+static const char *pin_invalue_tostring(PIN_INVALUE_T tValue)
+{
+	const char *pcInvalue;
+
+
+	pcInvalue = "???";
+	switch(tValue)
+	{
+	case PIN_INVALUE_0:
+		pcInvalue = "value 0";
+		break;
+	case PIN_INVALUE_1:
+		pcInvalue = "value 1";
+		break;
+	case PIN_INVALUE_InvalidPinType:
+		pcInvalue = "the pin type is invalid";
+		break;
+	case PIN_INVALUE_PintypeNotAvailable:
+		pcInvalue = "the pin type is not available on this platform";
+		break;
+	case PIN_INVALUE_PintypeNotSupportedYet:
+		pcInvalue = "the pin type is not supported on this platform yet";
+		break;
+	case PIN_INVALUE_InvalidPinIndex:
+		pcInvalue = "the pin index is invalid";
+		break;
+	case PIN_INVALUE_InputNotAvailable:
+		pcInvalue = "the pin has no input function";
+		break;
+	case PIN_INVALUE_FailedToRead:
+		pcInvalue = "failed to read the pin";
+		break;
+	}
+
+	return pcInvalue;
+}
+
+
+
+static void print_pin(unsigned long ulIndex, const PINDESCRIPTION_T *ptPinDescription)
+{
+	const char *pcPinName;
+
+
+	pcPinName = get_pin_name(ptPinDescription->tType);
+	uprintf("%03d: Pin '%s': %s[%d]\n", ulIndex, ptPinDescription->apcName, pcPinName, ptPinDescription->uiIndex);
+}
+
+
+static void show_invalue_error(const PINDESCRIPTION_T *ptPinDescription, PIN_INVALUE_T tValue)
+{
+	const char *pcPinName;
+	const char *pcError;
+
+
+	pcPinName = get_pin_name(ptPinDescription->tType);
+	pcError = pin_invalue_tostring(tValue);
+	uprintf("Failed to read pin '%s' (%s[%d]): %s", ptPinDescription->apcName, pcPinName, ptPinDescription->uiIndex, pcError);
 }
 
 
@@ -277,8 +342,10 @@ static int get_pin(IOMATRIX_PARAMETER_GET_PIN_T *ptParameter)
 	unsigned long ulPinIndex;
 	int iResult;
 	const PINDESCRIPTION_T *ptPinDescription;
-	unsigned char ucData;
+	PIN_INVALUE_T tValue;
 
+
+	iResult = -1;
 
 	/* Check if the index of the pin is in the allowed range. */
 	ulPinIndex = ptParameter->ulPinIndex;
@@ -286,7 +353,6 @@ static int get_pin(IOMATRIX_PARAMETER_GET_PIN_T *ptParameter)
 	{
 		/* No, the index exceeds the array. */
 		uprintf("Error: the pin index is invalid: %d\n", ulPinIndex);
-		iResult = -1;
 	}
 	else
 	{
@@ -295,10 +361,30 @@ static int get_pin(IOMATRIX_PARAMETER_GET_PIN_T *ptParameter)
 		ptPinDescription += ulPinIndex;
 
 		/* Set the pin to the requested state. */
-		iResult = iopins_get(ptPinDescription, &ucData);
-		if( iResult==0 )
+		tValue = iopins_get(ptPinDescription);
+		switch( tValue )
 		{
-			ptParameter->ucValue = ucData;
+		case PIN_INVALUE_0:
+			ptParameter->ucValue = 0U;
+			iResult = 0;
+			break;
+
+		case PIN_INVALUE_1:
+			ptParameter->ucValue = 1U;
+			iResult = 0;
+			break;
+
+		case PIN_INVALUE_InvalidPinType:
+		case PIN_INVALUE_PintypeNotAvailable:
+		case PIN_INVALUE_PintypeNotSupportedYet:
+		case PIN_INVALUE_InvalidPinIndex:
+		case PIN_INVALUE_InputNotAvailable:
+		case PIN_INVALUE_FailedToRead:
+			break;
+		}
+		if( iResult!=0 )
+		{
+			show_invalue_error(ptPinDescription, tValue);
 		}
 	}
 
@@ -371,9 +457,10 @@ static int get_all_pins(IOMATRIX_PARAMETER_GET_ALL_PINS_T *ptParameter)
 {
 	unsigned long ulPinCnt;
 	unsigned long ulPinMax;
+	int iPinResult;
 	int iResult;
 	const PINDESCRIPTION_T *ptPinDescription;
-	unsigned char *pucValue;
+	PIN_INVALUE_T tValue;
 
 
 	/* Be optimistic. */
@@ -387,15 +474,29 @@ static int get_all_pins(IOMATRIX_PARAMETER_GET_ALL_PINS_T *ptParameter)
 		ptPinDescription  = atPinsUnderTest;
 		ptPinDescription += ulPinCnt;
 
-		pucValue = ptParameter->aucValue + ulPinCnt;
-
-		/* Set the pin to the requested state. */
-		iResult = iopins_get(ptPinDescription, pucValue);
-		if( iResult!=0 )
+		/* Get the pin state. */
+		iPinResult = -1;
+		tValue = iopins_get(ptPinDescription);
+		switch( tValue )
 		{
-			uprintf("Failed to get the pin: ");
-			print_pin(ulPinCnt, ptPinDescription);
+		case PIN_INVALUE_0:
+		case PIN_INVALUE_1:
+		case PIN_INVALUE_InputNotAvailable:
+			ptParameter->aucValue[ulPinCnt] = (unsigned char)tValue;
+			iPinResult = 0;
 			break;
+
+		case PIN_INVALUE_InvalidPinType:
+		case PIN_INVALUE_PintypeNotAvailable:
+		case PIN_INVALUE_PintypeNotSupportedYet:
+		case PIN_INVALUE_InvalidPinIndex:
+		case PIN_INVALUE_FailedToRead:
+			break;
+		}
+		if( iPinResult!=0 )
+		{
+			iResult = -1;
+			show_invalue_error(ptPinDescription, tValue);
 		}
 
 		++ulPinCnt;
@@ -425,6 +526,8 @@ static int get_continuous_status_match(IOMATRIX_PARAMETER_GET_CONTINUOUS_STATUS_
 	unsigned char aucPatternPin[ulPinsUnderTest];
 
 	const PINDESCRIPTION_T *ptPinDescription;
+	PIN_INVALUE_T tValue;
+	int iPinResult;
 	int iResult;
 
 
@@ -478,16 +581,34 @@ static int get_continuous_status_match(IOMATRIX_PARAMETER_GET_CONTINUOUS_STATUS_
 				ptPinDescription += ulPinCnt;
 
 				/* Get the pin value. */
-				iResult = iopins_get(ptPinDescription, &ucValue);
-				if( iResult!=0 )
+				iPinResult = -1;
+				tValue = iopins_get(ptPinDescription);
+				switch( tValue )
 				{
-					uprintf("Failed to get the pin: ");
-					print_pin(ulPinCnt, ptPinDescription);
+				case PIN_INVALUE_0:
+				case PIN_INVALUE_1:
+					ucValue = (unsigned char)tValue;
+					iPinResult = 0;
+					break;
+
+				case PIN_INVALUE_InputNotAvailable:
+				case PIN_INVALUE_InvalidPinType:
+				case PIN_INVALUE_PintypeNotAvailable:
+				case PIN_INVALUE_PintypeNotSupportedYet:
+				case PIN_INVALUE_InvalidPinIndex:
+				case PIN_INVALUE_FailedToRead:
+					break;
+				}
+
+				if( iPinResult!=0 )
+				{
+					iResult = -1;
+					show_invalue_error(ptPinDescription, tValue);
 					break;
 				}
 
 				aucPatternList[ulPinCnt] = ucValueExpect;
-				aucPatternPin[ulPinCnt] = (int)ucValue;
+				aucPatternPin[ulPinCnt] = ucValue;
 
 				++ulPinCnt;
 				++ulListCnt;
@@ -531,6 +652,8 @@ static int get_continuous_changes(IOMATRIX_PARAMETER_GET_CONTINUOUS_CHANGES_T *p
 
 	unsigned long ulCombinedPinState;
 	unsigned long ulCurrentPinState;
+	PIN_INVALUE_T tValue;
+	int iPinResult;
 
 
 	/* Be optimistic */
@@ -562,11 +685,29 @@ static int get_continuous_changes(IOMATRIX_PARAMETER_GET_CONTINUOUS_CHANGES_T *p
 			ptPinDescription = atPinsUnderTest + ulPinCnt;
 
 			/* Get the pin value. */
-			iResult = iopins_get(ptPinDescription, &ucPinValue);
-			if( iResult!=0 )
+			iPinResult = -1;
+			tValue = iopins_get(ptPinDescription);
+			switch( tValue )
 			{
-				uprintf("Failed to get the pin: ");
-				print_pin(ulPinCnt, ptPinDescription);
+			case PIN_INVALUE_0:
+			case PIN_INVALUE_1:
+				ucPinValue = (unsigned char)tValue;
+				iPinResult = 0;
+				break;
+
+			case PIN_INVALUE_InputNotAvailable:
+			case PIN_INVALUE_InvalidPinType:
+			case PIN_INVALUE_PintypeNotAvailable:
+			case PIN_INVALUE_PintypeNotSupportedYet:
+			case PIN_INVALUE_InvalidPinIndex:
+			case PIN_INVALUE_FailedToRead:
+				break;
+			}
+
+			if( iPinResult!=0 )
+			{
+				iResult = -1;
+				show_invalue_error(ptPinDescription, tValue);
 				break;
 			}
 

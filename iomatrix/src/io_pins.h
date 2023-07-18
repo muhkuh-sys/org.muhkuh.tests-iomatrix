@@ -53,6 +53,19 @@ typedef enum PINSTATUS_ENUM
 } PINSTATUS_T;
 
 
+typedef enum PIN_INVALUE_ENUM
+{
+	PIN_INVALUE_0 = 0,                       /* This is a 0 value. */
+	PIN_INVALUE_1 = 1,                       /* This is a 1 value. */
+	PIN_INVALUE_InvalidPinType = 2,          /* The pin type is invalid. */
+	PIN_INVALUE_PintypeNotAvailable = 3,     /* The pin type is not available on this platform. */
+	PIN_INVALUE_PintypeNotSupportedYet = 4,  /* The pin type is not supported on this platform yet. */
+	PIN_INVALUE_InvalidPinIndex = 5,         /* The index of the pin is invalid. */
+	PIN_INVALUE_InputNotAvailable = 6,       /* The pin is output-only. */
+	PIN_INVALUE_FailedToRead = 7             /* A recoverable error occured in the read routine. */
+} PIN_INVALUE_T;
+
+
 typedef struct PINDESCRIPTION_STRUCT
 {
 	char apcName[MAX_PINDESCRIPTION_NAME+1];
@@ -63,7 +76,7 @@ typedef struct PINDESCRIPTION_STRUCT
 
 int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDesc);
 int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue);
-int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucValue);
+PIN_INVALUE_T iopins_get(const PINDESCRIPTION_T *ptPinDescription);
 
 #endif  /* __IO_PINS_H__ */
 

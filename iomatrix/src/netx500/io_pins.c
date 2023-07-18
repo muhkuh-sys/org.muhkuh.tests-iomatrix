@@ -1022,272 +1022,256 @@ static int set_xm3io(unsigned int uiIndex, PINSTATUS_T tValue)
 
 
 
-static int get_xm0io(unsigned int uiIndex, unsigned char *pucData)
+static PIN_INVALUE_T get_xm0io(unsigned int uiIndex)
 {
 	HOSTDEF(ptXpec0Area);
 	HOSTDEF(ptXmac0Area);
 	unsigned long ulStatus;
 	unsigned long ulValue;
-	unsigned char ucData;
 	unsigned int uiRetries;
-	int iResult;
+	PIN_INVALUE_T tResult;
 
 
-	/* Be pessimistic. */
-	iResult = -1;
-	if( uiIndex<2U )
+	if( uiIndex>=4U )
 	{
-		ulStatus = ptXpec0Area->aulStatcfg[0];
-		ulValue = ulStatus & HOSTMSK(statcfg0_gpio0_in) << uiIndex;
-		if( ulValue==0 )
-		{
-			ucData = 0;
-		}
-		else
-		{
-			ucData = 1;
-		}
-		*pucData = ucData;
-		iResult = 0;
-	}
-	else if( uiIndex==2U )
-	{
-		uiRetries = 16U;
-		while( uiRetries!=0 )
-		{
-			ulValue = ptXmac0Area->ulXmac_rx;
-			if( ulValue==0x0000U )
-			{
-				*pucData = 0;
-				iResult = 0;
-				break;
-			}
-			else if( ulValue==0xffffU )
-			{
-				*pucData = 1;
-				iResult = 0;
-				break;
-			}
-			else
-			{
-				--uiRetries;
-			}
-		}
-	}
-	else if( uiIndex==3U )
-	{
-		uprintf("ERROR: reading XM0_TX is not possible, it is write-only.\n");
+		tResult = PIN_INVALUE_InvalidPinIndex;
 	}
 	else
 	{
-		/* DEBUG INFORMATION: */
-		uprintf("ERROR: Invalid index of XM0_IO: %d\n", uiIndex);
+		if( uiIndex<2U )
+		{
+			ulStatus = ptXpec0Area->aulStatcfg[0];
+			ulValue = ulStatus & HOSTMSK(statcfg0_gpio0_in) << uiIndex;
+			if( ulValue==0 )
+			{
+				tResult = PIN_INVALUE_0;
+			}
+			else
+			{
+				tResult = PIN_INVALUE_1;
+			}
+		}
+		else if( uiIndex==2U )
+		{
+			uiRetries = 16U;
+			tResult = PIN_INVALUE_FailedToRead;
+			while( uiRetries!=0 )
+			{
+				ulValue = ptXmac0Area->ulXmac_rx;
+				if( ulValue==0x0000U )
+				{
+					tResult = PIN_INVALUE_0;
+					break;
+				}
+				else if( ulValue==0xffffU )
+				{
+					tResult = PIN_INVALUE_1;
+					break;
+				}
+				else
+				{
+					--uiRetries;
+				}
+			}
+		}
+		else if( uiIndex==3U )
+		{
+			tResult = PIN_INVALUE_InputNotAvailable;
+		}
 	}
 
-	return iResult;
+	return tResult;
 }
 
 
 
-static int get_xm1io(unsigned int uiIndex, unsigned char *pucData)
+static PIN_INVALUE_T get_xm1io(unsigned int uiIndex)
 {
 	HOSTDEF(ptXpec0Area);
 	HOSTDEF(ptXmac1Area);
 	unsigned long ulStatus;
 	unsigned long ulValue;
-	unsigned char ucData;
 	unsigned int uiRetries;
-	int iResult;
+	PIN_INVALUE_T tResult;
 
 
-	/* Be pessimistic. */
-	iResult = -1;
-	if( uiIndex<2U )
+	if( uiIndex>=4U )
 	{
-		ulStatus = ptXpec0Area->aulStatcfg[1];
-		ulValue = ulStatus & HOSTMSK(statcfg1_gpio0_in) << uiIndex;
-		if( ulValue==0 )
-		{
-			ucData = 0;
-		}
-		else
-		{
-			ucData = 1;
-		}
-		*pucData = ucData;
-		iResult = 0;
-	}
-	else if( uiIndex==2U )
-	{
-		uiRetries = 16U;
-		while( uiRetries!=0 )
-		{
-			ulValue = ptXmac1Area->ulXmac_rx;
-			if( ulValue==0x0000U )
-			{
-				*pucData = 0;
-				iResult = 0;
-				break;
-			}
-			else if( ulValue==0xffffU )
-			{
-				*pucData = 1;
-				iResult = 0;
-				break;
-			}
-			else
-			{
-				--uiRetries;
-			}
-		}
-	}
-	else if( uiIndex==3U )
-	{
-		uprintf("ERROR: reading XM1_TX is not possible, it is write-only.\n");
+		tResult = PIN_INVALUE_InvalidPinIndex;
 	}
 	else
 	{
-		/* DEBUG INFORMATION: */
-		uprintf("ERROR: Invalid index of XM1_IO: %d\n", uiIndex);
+		if( uiIndex<2U )
+		{
+			ulStatus = ptXpec0Area->aulStatcfg[1];
+			ulValue = ulStatus & HOSTMSK(statcfg1_gpio0_in) << uiIndex;
+			if( ulValue==0 )
+			{
+				tResult = PIN_INVALUE_0;
+			}
+			else
+			{
+				tResult = PIN_INVALUE_1;
+			}
+		}
+		else if( uiIndex==2U )
+		{
+			uiRetries = 16U;
+			tResult = PIN_INVALUE_FailedToRead;
+			while( uiRetries!=0 )
+			{
+				ulValue = ptXmac1Area->ulXmac_rx;
+				if( ulValue==0x0000U )
+				{
+					tResult = PIN_INVALUE_0;
+					break;
+				}
+				else if( ulValue==0xffffU )
+				{
+					tResult = PIN_INVALUE_1;
+					break;
+				}
+				else
+				{
+					--uiRetries;
+				}
+			}
+		}
+		else if( uiIndex==3U )
+		{
+			tResult = PIN_INVALUE_InputNotAvailable;
+		}
 	}
 
-	return iResult;
+	return tResult;
 }
 
 
 
-static int get_xm2io(unsigned int uiIndex, unsigned char *pucData)
+static PIN_INVALUE_T get_xm2io(unsigned int uiIndex)
 {
 	HOSTDEF(ptXpec0Area);
 	HOSTDEF(ptXmac2Area);
 	unsigned long ulStatus;
 	unsigned long ulValue;
-	unsigned char ucData;
 	unsigned int uiRetries;
-	int iResult;
+	PIN_INVALUE_T tResult;
 
 
-	/* Be pessimistic. */
-	iResult = -1;
-	if( uiIndex<2U )
+	if( uiIndex>=4U )
 	{
-		ulStatus = ptXpec0Area->aulStatcfg[2];
-		ulValue = ulStatus & HOSTMSK(statcfg2_gpio0_in) << uiIndex;
-		if( ulValue==0 )
-		{
-			ucData = 0;
-		}
-		else
-		{
-			ucData = 1;
-		}
-		*pucData = ucData;
-		iResult = 0;
-	}
-	else if( uiIndex==2U )
-	{
-		uiRetries = 16U;
-		while( uiRetries!=0 )
-		{
-			ulValue = ptXmac2Area->ulXmac_rx;
-			uprintf("XM2_RX=0x%04x\n", ulValue);
-			if( ulValue==0x0000U )
-			{
-				*pucData = 0;
-				iResult = 0;
-				break;
-			}
-			else if( ulValue==0xffffU )
-			{
-				*pucData = 1;
-				iResult = 0;
-				break;
-			}
-			else
-			{
-				--uiRetries;
-			}
-		}
-	}
-	else if( uiIndex==3U )
-	{
-		uprintf("ERROR: reading XM2_TX is not possible, it is write-only.\n");
+		tResult = PIN_INVALUE_InvalidPinIndex;
 	}
 	else
 	{
-		/* DEBUG INFORMATION: */
-		uprintf("ERROR: Invalid index of XM2_IO: %d\n", uiIndex);
+		if( uiIndex<2U )
+		{
+			ulStatus = ptXpec0Area->aulStatcfg[2];
+			ulValue = ulStatus & HOSTMSK(statcfg2_gpio0_in) << uiIndex;
+			if( ulValue==0 )
+			{
+				tResult = PIN_INVALUE_0;
+			}
+			else
+			{
+				tResult = PIN_INVALUE_1;
+			}
+		}
+		else if( uiIndex==2U )
+		{
+			uiRetries = 16U;
+			tResult = PIN_INVALUE_FailedToRead;
+			while( uiRetries!=0 )
+			{
+				ulValue = ptXmac2Area->ulXmac_rx;
+				uprintf("XM2_RX=0x%04x\n", ulValue);
+				if( ulValue==0x0000U )
+				{
+					tResult = PIN_INVALUE_0;
+					break;
+				}
+				else if( ulValue==0xffffU )
+				{
+					tResult = PIN_INVALUE_1;
+					break;
+				}
+				else
+				{
+					--uiRetries;
+				}
+			}
+		}
+		else if( uiIndex==3U )
+		{
+			tResult = PIN_INVALUE_InputNotAvailable;
+		}
 	}
 
-	return iResult;
+	return tResult;
 }
 
 
 
-static int get_xm3io(unsigned int uiIndex, unsigned char *pucData)
+static PIN_INVALUE_T get_xm3io(unsigned int uiIndex)
 {
 	HOSTDEF(ptXpec0Area);
 	HOSTDEF(ptXmac3Area);
 	unsigned long ulStatus;
 	unsigned long ulValue;
-	unsigned char ucData;
 	unsigned int uiRetries;
-	int iResult;
+	PIN_INVALUE_T tResult;
 
 
-	/* Be pessimistic. */
-	iResult = -1;
-	if( uiIndex<2U )
+	if( tResult>=4U )
 	{
-		ulStatus = ptXpec0Area->aulStatcfg[3];
-		ulValue = ulStatus & HOSTMSK(statcfg3_gpio0_in) << uiIndex;
-		if( ulValue==0 )
-		{
-			ucData = 0;
-		}
-		else
-		{
-			ucData = 1;
-		}
-		*pucData = ucData;
-		iResult = 0;
-	}
-	else if( uiIndex==2U )
-	{
-		uiRetries = 16U;
-		while( uiRetries!=0 )
-		{
-			ulValue = ptXmac3Area->ulXmac_rx;
-			uprintf("XM3_RX=0x%04x\n", ulValue);
-			if( ulValue==0x0000U )
-			{
-				*pucData = 0;
-				iResult = 0;
-				break;
-			}
-			else if( ulValue==0xffffU )
-			{
-				*pucData = 1;
-				iResult = 0;
-				break;
-			}
-			else
-			{
-				--uiRetries;
-			}
-		}
-	}
-	else if( uiIndex==3U )
-	{
-		uprintf("ERROR: reading XM3_TX is not possible, it is write-only.\n");
+		tResult = PIN_INVALUE_InvalidPinIndex;
 	}
 	else
 	{
-		/* DEBUG INFORMATION: */
-		uprintf("ERROR: Invalid index of XM3_IO: %d\n", uiIndex);
+		if( uiIndex<2U )
+		{
+			ulStatus = ptXpec0Area->aulStatcfg[3];
+			ulValue = ulStatus & HOSTMSK(statcfg3_gpio0_in) << uiIndex;
+			if( ulValue==0 )
+			{
+				tResult = PIN_INVALUE_0;
+			}
+			else
+			{
+				tResult = PIN_INVALUE_1;
+			}
+		}
+		else if( uiIndex==2U )
+		{
+			uiRetries = 16U;
+			tResult = PIN_INVALUE_FailedToRead;
+			while( uiRetries!=0 )
+			{
+				ulValue = ptXmac3Area->ulXmac_rx;
+				uprintf("XM3_RX=0x%04x\n", ulValue);
+				if( ulValue==0x0000U )
+				{
+					tResult = PIN_INVALUE_0;
+					break;
+				}
+				else if( ulValue==0xffffU )
+				{
+					tResult = PIN_INVALUE_1;
+					break;
+				}
+				else
+				{
+					--uiRetries;
+				}
+			}
+		}
+		else if( uiIndex==3U )
+		{
+			tResult = PIN_INVALUE_InputNotAvailable;
+		}
 	}
 
-	return iResult;
+	return tResult;
 }
 
 
@@ -1330,35 +1314,34 @@ static int set_gpio(unsigned int uiIndex, PINSTATUS_T tValue)
 
 
 
-static int get_gpio(unsigned int uiIndex, unsigned char *pucData)
+static PIN_INVALUE_T get_gpio(unsigned int uiIndex)
 {
-	int iResult;
+	PIN_INVALUE_T tResult;
 	HOSTDEF(ptGpioArea);
 	unsigned long ulValue;
-	unsigned char ucData;
 
-	/* Be pessimistic... */
-	iResult = -1;
 
 	/* Check the index. */
-	if( uiIndex<32 )
+	if( uiIndex>=32U )
+	{
+		tResult = PIN_INVALUE_InvalidPinIndex;
+	}
+	else
 	{
 		/* Get the input value. */
 		ulValue  = ptGpioArea->ulGpio_in;
 		ulValue &= 1U << uiIndex;
 		if( ulValue==0 )
 		{
-			ucData = 0;
+			tResult = PIN_INVALUE_0;
 		}
 		else
 		{
-			ucData = 1;
+			tResult = PIN_INVALUE_1;
 		}
-		*pucData = ucData;
-		iResult = 0;
 	}
 
-	return iResult;
+	return tResult;
 }
 
 
@@ -1419,33 +1402,32 @@ static int set_pio(unsigned int uiIndex, PINSTATUS_T tValue)
 
 
 
-static int get_pio(unsigned int uiIndex, unsigned char *pucData)
+static PIN_INVALUE_T get_pio(unsigned int uiIndex)
 {
-	int iResult;
+	PIN_INVALUE_T tResult;
 	HOSTDEF(ptPioArea);
 	unsigned long ulValue;
-	unsigned char ucData;
-
-	/* Be pessimistic... */
-	iResult = -1;
 
 	/* Check the index. */
-	if( uiIndex<32 )
+	if( uiIndex>=32U )
+	{
+		tResult = PIN_INVALUE_InvalidPinIndex;
+	}
+	else
 	{
 		ulValue  = ptPioArea->ulPio_in;
 		ulValue &= 1U << uiIndex;
 		if (ulValue == 0)
 		{
-			ucData = 0;
+			tResult = PIN_INVALUE_0;
 		}
 		else
 		{
-			ucData = 1;
+			tResult = PIN_INVALUE_1;
 		}
-		*pucData = ucData;
 	}
 
-	return iResult;
+	return tResult;
 }
 
 
@@ -1511,19 +1493,19 @@ static int set_rdyrun(unsigned int uiIndex, PINSTATUS_T tValue)
 
 
 
-static int get_rdyrun(unsigned int uiIndex, unsigned char *pucData)
+static PIN_INVALUE_T get_rdyrun(unsigned int uiIndex)
 {
-	int iResult;
+	PIN_INVALUE_T tResult;
 	HOSTDEF(ptNetxControlledGlobalRegisterBlock1Area);
 	unsigned long ulMaskIn;
 	unsigned long ulValue;
-	unsigned char ucData;
-
-	/* Be pessimistic... */
-	iResult = -1;
 
 	/* Check the index. */
-	if( uiIndex<2 )
+	if( uiIndex>=2U )
+	{
+		tResult = PIN_INVALUE_InvalidPinIndex;
+	}
+	else
 	{
 		if( uiIndex==0 )
 		{
@@ -1539,16 +1521,15 @@ static int get_rdyrun(unsigned int uiIndex, unsigned char *pucData)
 		ulValue &= ulMaskIn;
 		if( ulValue==0 )
 		{
-			ucData = 0;
+			tResult = PIN_INVALUE_0;
 		}
 		else
 		{
-			ucData = 1;
+			tResult = PIN_INVALUE_1;
 		}
-		*pucData = ucData;
 	}
 
-	return iResult;
+	return tResult;
 }
 
 
@@ -1604,15 +1585,22 @@ static int set_rstout(unsigned int uiIndex, PINSTATUS_T tValue)
 
 
 
-static int get_rstout(unsigned int uiIndex __attribute__((unused)), unsigned char *pucData __attribute__((unused)))
+static PIN_INVALUE_T get_rstout(unsigned int uiIndex)
 {
-	int iResult;
+	PIN_INVALUE_T tResult;
 
 
-	/* RSTOUT has not input function. */
-	iResult = -1;
+	if( uiIndex>=1U )
+	{
+		tResult = PIN_INVALUE_InvalidPinIndex;
+	}
+	else
+	{
+		/* The RST_OUT pin is output only. */
+		tResult = PIN_INVALUE_InputNotAvailable;
+	}
 
-	return iResult;
+	return tResult;
 }
 
 
@@ -1701,83 +1689,84 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 }
 
 
-int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
+PIN_INVALUE_T iopins_get(const PINDESCRIPTION_T *ptPinDescription)
 {
-	int iResult;
+	PIN_INVALUE_T tResult;
 	unsigned int uiIndex;
 
 
-	iResult = -1;
+	uiIndex = ptPinDescription->uiIndex;
+
+	tResult = PIN_INVALUE_InvalidPinType;
 	switch( ptPinDescription->tType )
 	{
 	case PINTYPE_GPIO:
-		uiIndex = ptPinDescription->uiIndex;
-		iResult = get_gpio(uiIndex, pucData);
+		tResult = get_gpio(uiIndex);
 		break;
 
 	case PINTYPE_HIFPIO:
-		/* Not yet... */
+		tResult = PIN_INVALUE_PintypeNotSupportedYet;
 		break;
 
 	case PINTYPE_MLED:
-		/* The netX500 has no MLED pins. */
+		tResult = PIN_INVALUE_PintypeNotAvailable;
 		break;
 
 	case PINTYPE_MMIO:
-		/* Not available! */
+		tResult = PIN_INVALUE_PintypeNotAvailable;
 		break;
 
 	case PINTYPE_PIO:
-		uiIndex = ptPinDescription->uiIndex;
-		iResult = get_pio(uiIndex, pucData);
+		tResult = get_pio(uiIndex);
 		break;
 
 	case PINTYPE_RDYRUN:
-		uiIndex = ptPinDescription->uiIndex;
-		iResult = get_rdyrun(uiIndex, pucData);
+		tResult = get_rdyrun(uiIndex);
 		break;
 
 	case PINTYPE_RSTOUT:
-		uiIndex = ptPinDescription->uiIndex;
-		iResult = get_rstout(uiIndex, pucData);
+		tResult = get_rstout(uiIndex);
 		break;
 
 	case PINTYPE_XMIO:
-		uiIndex = ptPinDescription->uiIndex;
 		if( uiIndex<4 )
 		{
-			iResult = get_xm0io(uiIndex, pucData);
+			tResult = get_xm0io(uiIndex);
 		}
 		else if( uiIndex<8 )
 		{
-			iResult = get_xm1io(uiIndex-4U, pucData);
+			tResult = get_xm1io(uiIndex-4U);
 		}
 		else if( uiIndex<12 )
 		{
-			iResult = get_xm2io(uiIndex-8U, pucData);
+			tResult = get_xm2io(uiIndex-8U);
 		}
 		else if( uiIndex<16 )
 		{
-			iResult = get_xm3io(uiIndex-12U, pucData);
+			tResult = get_xm3io(uiIndex-12U);
+		}
+		else
+		{
+			tResult = PIN_INVALUE_InvalidPinIndex;
 		}
 		break;
 
 	case PINTYPE_RAPGPIO:
-		uprintf("The pin type RAPGPIO is not supported on this platform!\n");
+		tResult = PIN_INVALUE_PintypeNotAvailable;
 		break;
 
 	case PINTYPE_APPPIO:
-		/* The netX500 has no APP PIOs. */
+		tResult = PIN_INVALUE_PintypeNotAvailable;
 		break;
 
 	case PINTYPE_IOLLEDM:
-		/* The netX500 has no IOL bridge yet. */
+		tResult = PIN_INVALUE_PintypeNotSupportedYet;
 		break;
 
 	case PINTYPE_SQI:
-		/* Not yet... */
+		tResult = PIN_INVALUE_PintypeNotAvailable;
 		break;
 	}
 
-	return iResult;
+	return tResult;
 }

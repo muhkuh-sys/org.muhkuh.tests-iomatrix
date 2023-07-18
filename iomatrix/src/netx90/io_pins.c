@@ -1528,16 +1528,12 @@ static int set_gpio(unsigned int uiIndex, PINSTATUS_T tValue)
 
 
 
-static int get_gpio(unsigned int uiIndex, unsigned char *pucData)
+static PIN_INVALUE_T get_gpio(unsigned int uiIndex)
 {
 	HOSTDEF(ptGpioComArea);
-	int iResult;
+	PIN_INVALUE_T tResult;
 	unsigned long ulValue;
-	unsigned char ucData;
 
-
-	/* assume failure */
-	iResult = -1;
 
 	/* check the index */
 	if( uiIndex>7U && uiIndex<12U )
@@ -1546,17 +1542,19 @@ static int get_gpio(unsigned int uiIndex, unsigned char *pucData)
 		ulValue &= 1U << (uiIndex-8U);
 		if( ulValue==0 )
 		{
-			ucData = 0;
+			tResult = PIN_INVALUE_0;
 		}
 		else
 		{
-			ucData = 1;
+			tResult = PIN_INVALUE_1;
 		}
-		*pucData = ucData;
-		iResult = 0;
+	}
+	else
+	{
+		tResult = PIN_INVALUE_InvalidPinIndex;
 	}
 
-	return iResult;
+	return tResult;
 }
 
 
@@ -1649,39 +1647,37 @@ static int set_hifpio(unsigned int uiIndex, PINSTATUS_T tValue)
 }
 
 
-static int get_hifpio(unsigned int uiIndex, unsigned char *pucData)
+static PIN_INVALUE_T get_hifpio(unsigned int uiIndex)
 {
 	HOSTDEF(ptHifIoCtrlArea);
 	unsigned long aulMsk[2];
 	unsigned long aulValue[2];
-	unsigned char ucData;
-	int iResult;
+	PIN_INVALUE_T tResult;
 
 
-	/* Get the mask bits for the index. */
-	iResult = -1;
-	if( uiIndex<16U )
+	if( uiIndex>=41U )
 	{
-		aulMsk[0] = 1U << uiIndex;
+		tResult = PIN_INVALUE_InvalidPinIndex;
+	}
+	else
+	{
+		aulMsk[0] = 0U;
 		aulMsk[1] = 0U;
-		iResult = 0;
-	}
-	else if( uiIndex<34U )
-	{
-		aulMsk[0] = 0U;
-		aulMsk[1] = 1U << (uiIndex-16U);
-		iResult = 0;
-	}
-	else if( uiIndex<41U )
-	{
-		aulMsk[0] = 0U;
-		aulMsk[1] = 1U << (uiIndex-(34U-25U));
-		iResult = 0;
-	}
 
+		/* Get the mask bits for the index. */
+		if( uiIndex<16U )
+		{
+			aulMsk[0] = 1U << uiIndex;
+		}
+		else if( uiIndex<34U )
+		{
+			aulMsk[1] = 1U << (uiIndex-16U);
+		}
+		else if( uiIndex<41U )
+		{
+			aulMsk[1] = 1U << (uiIndex-(34U-25U));
+		}
 
-	if( iResult==0 )
-	{
 		aulValue[0]  = ptHifIoCtrlArea->aulHif_pio_in[0];
 		aulValue[0] &= aulMsk[0];
 		aulValue[1]  = ptHifIoCtrlArea->aulHif_pio_in[1];
@@ -1689,17 +1685,15 @@ static int get_hifpio(unsigned int uiIndex, unsigned char *pucData)
 
 		if( (aulValue[0]|aulValue[1])==0 )
 		{
-			ucData = 0;
+			tResult = PIN_INVALUE_0;
 		}
 		else
 		{
-			ucData = 1;
+			tResult = PIN_INVALUE_1;
 		}
-
-		*pucData = ucData;
 	}
 
-	return iResult;
+	return tResult;
 }
 
 
@@ -1753,19 +1747,22 @@ static int set_mled(unsigned int uiIndex, PINSTATUS_T tValue)
 
 
 
-static int get_mled(unsigned int uiIndex, unsigned char *pucData __attribute__((unused)))
+static PIN_INVALUE_T get_mled(unsigned int uiIndex)
 {
+	PIN_INVALUE_T tResult;
+
+
 	if( uiIndex<8 )
 	{
 		/* MLED pins are output only. */
-		uprintf("Trying to get an MLED pin, which is read-only.\n");
+		tResult = PIN_INVALUE_InputNotAvailable;
 	}
 	else
 	{
-		uprintf("Invalid index for MLED pins: %d, but only 0-7 possible. And a 'get' would not work with MLED pins anyway.\n");
+		tResult = PIN_INVALUE_InvalidPinIndex;
 	}
 
-	return -1;
+	return tResult;
 }
 
 
@@ -1826,15 +1823,11 @@ static int set_mmiopio(unsigned int uiIndex, PINSTATUS_T tValue)
 }
 
 
-static int get_mmiopio(unsigned int uiIndex, unsigned char *pucData)
+static PIN_INVALUE_T get_mmiopio(unsigned int uiIndex)
 {
-	int iResult;
+	PIN_INVALUE_T tResult;
 	HOSTDEF(ptMmioCtrlArea);
 	unsigned long ulValue;
-	unsigned char ucData;
-
-	/* assume failure */
-	iResult = -1;
 
 	/* check the index */
 	if( uiIndex<8 )
@@ -1843,21 +1836,19 @@ static int get_mmiopio(unsigned int uiIndex, unsigned char *pucData)
 		ulValue &= 1U << uiIndex;
 		if (ulValue == 0)
 		{
-			ucData = 0;
+			tResult = PIN_INVALUE_0;
 		}
 		else
 		{
-			ucData = 1;
+			tResult = PIN_INVALUE_1;
 		}
-		*pucData = ucData;
-		iResult = 0;
 	}
 	else
 	{
-		uprintf("Invalid MMIO index: %d\n", uiIndex);
+		tResult = PIN_INVALUE_InvalidPinIndex;
 	}
 
-	return iResult;
+	return tResult;
 }
 
 
@@ -1922,16 +1913,12 @@ static int set_rdyrun(unsigned int uiIndex, PINSTATUS_T tValue)
 }
 
 
-static int get_rdyrun(unsigned int uiIndex, unsigned char *pucData)
+static PIN_INVALUE_T get_rdyrun(unsigned int uiIndex)
 {
-	int iResult;
+	PIN_INVALUE_T tResult;
 	HOSTDEF(ptAsicCtrlComArea);
 	unsigned long ulValue;
-	unsigned char ucData;
 
-
-	/* assume failure */
-	iResult = -1;
 
 	/* check the index */
 	if( uiIndex<2 )
@@ -1948,18 +1935,19 @@ static int get_rdyrun(unsigned int uiIndex, unsigned char *pucData)
 
 		if (ulValue == 0)
 		{
-			ucData = 0;
+			tResult = PIN_INVALUE_0;
 		}
 		else
 		{
-			ucData = 1;
+			tResult = PIN_INVALUE_1;
 		}
-		*pucData = ucData;
-
-		iResult = 0;
+	}
+	else
+	{
+		tResult = PIN_INVALUE_InvalidPinIndex;
 	}
 
-	return iResult;
+	return tResult;
 }
 
 
@@ -2020,11 +2008,22 @@ static int set_rstout(unsigned int uiIndex, PINSTATUS_T tValue)
 
 
 
-static int get_rstout(unsigned int uiIndex __attribute__ ((unused)), unsigned char *pucData __attribute__ ((unused)))
+static PIN_INVALUE_T get_rstout(unsigned int uiIndex)
 {
-	/* The RstOut pin is output only. */
-	uprintf("The RSTOUT pin can not be used as an input!\n");
-	return -1;
+	PIN_INVALUE_T tResult;
+
+
+	if( uiIndex==0U )
+	{
+		/* The RST_OUT pin is output only. */
+		tResult = PIN_INVALUE_InputNotAvailable;
+	}
+	else
+	{
+		tResult = PIN_INVALUE_InvalidPinIndex;
+	}
+
+	return tResult;
 }
 
 
@@ -2187,48 +2186,42 @@ static int set_xm1io(unsigned int uiIndex, PINSTATUS_T tValue)
 
 
 
-static int get_xm0io(unsigned int uiIndex, unsigned char *pucData)
+static PIN_INVALUE_T get_xm0io(unsigned int uiIndex)
 {
 	HOSTDEF(ptXc0Xmac0RegsArea);
 	unsigned long ulValue;
 	unsigned int uiRetries;
-	unsigned char ucData;
-	int iResult;
+	PIN_INVALUE_T tResult;
 
 
-	/* Be pessimistic. */
-	iResult = -1;
 	if( uiIndex<6U )
 	{
 		ulValue  = ptXc0Xmac0RegsArea->ulXmac_status_shared0;
 		ulValue &= HOSTMSK(xmac_status_shared0_gpio0_in) << uiIndex;
 		if( ulValue==0 )
 		{
-			ucData = 0;
+			tResult = PIN_INVALUE_0;
 		}
 		else
 		{
-			ucData = 1;
+			tResult = PIN_INVALUE_1;
 		}
-		*pucData = ucData;
-		iResult = 0;
 	}
 	else if( uiIndex==6U )
 	{
 		uiRetries = 16U;
+		tResult = PIN_INVALUE_FailedToRead;
 		while( uiRetries!=0 )
 		{
 			ulValue = ptXc0Xmac0RegsArea->ulXmac_rx;
 			if( ulValue==0x0000U )
 			{
-				*pucData = 0;
-				iResult = 0;
+				tResult = PIN_INVALUE_0;
 				break;
 			}
 			else if( ulValue==0xffffU )
 			{
-				*pucData = 1;
-				iResult = 0;
+				tResult = PIN_INVALUE_1;
 				break;
 			}
 			else
@@ -2237,54 +2230,53 @@ static int get_xm0io(unsigned int uiIndex, unsigned char *pucData)
 			}
 		}
 	}
+	else
+	{
+		tResult = PIN_INVALUE_InvalidPinIndex;
+	}
 
-	return iResult;
+	return tResult;
 }
 
 
 
-static int get_xm1io(unsigned int uiIndex, unsigned char *pucData)
+static PIN_INVALUE_T get_xm1io(unsigned int uiIndex)
 {
 	HOSTDEF(ptXc0Xmac1RegsArea);
 	unsigned long ulValue;
 	unsigned int uiRetries;
-	unsigned char ucData;
-	int iResult;
+	PIN_INVALUE_T tResult;
 
 
 	/* Be pessimistic. */
-	iResult = -1;
 	if( uiIndex<6U )
 	{
 		ulValue  = ptXc0Xmac1RegsArea->ulXmac_status_shared1;
 		ulValue &= HOSTMSK(xmac_status_shared0_gpio0_in) << uiIndex;
 		if( ulValue==0 )
 		{
-			ucData = 0;
+			tResult = PIN_INVALUE_0;
 		}
 		else
 		{
-			ucData = 1;
+			tResult = PIN_INVALUE_1;
 		}
-		*pucData = ucData;
-		iResult = 0;
 	}
 	else if( uiIndex==6U )
 	{
 		uiRetries = 16U;
+		tResult = PIN_INVALUE_FailedToRead;
 		while( uiRetries!=0 )
 		{
 			ulValue = ptXc0Xmac1RegsArea->ulXmac_rx;
 			if( ulValue==0x0000U )
 			{
-				*pucData = 0;
-				iResult = 0;
+				tResult = PIN_INVALUE_0;
 				break;
 			}
 			else if( ulValue==0xffffU )
 			{
-				*pucData = 1;
-				iResult = 0;
+				tResult = PIN_INVALUE_1;
 				break;
 			}
 			else
@@ -2293,8 +2285,12 @@ static int get_xm1io(unsigned int uiIndex, unsigned char *pucData)
 			}
 		}
 	}
+	else
+	{
+		tResult = PIN_INVALUE_InvalidPinIndex;
+	}
 
-	return iResult;
+	return tResult;
 }
 
 
@@ -2353,39 +2349,40 @@ static int set_apppio(unsigned int uiIndex, PINSTATUS_T tValue)
 
 
 
-static int get_apppio(unsigned int uiIndex, unsigned char *pucData)
+static PIN_INVALUE_T get_apppio(unsigned int uiIndex)
 {
-	int iResult;
+	PIN_INVALUE_T tResult;
 	unsigned long ulValue;
-	unsigned char ucData;
+	int iResult;
 
 
-	/* Be pessimistic... */
-	iResult = -1;
-
-	if( uiIndex<32 )
+	if( uiIndex<32U )
 	{
 		iResult = app_bridge_read_register(Adr_NX90_pio_app_pio_in, &ulValue);
 		if( iResult!=0 )
 		{
 			uprintf("Failed to read from the APP bridge: %d\n", iResult);
+			tResult = PIN_INVALUE_FailedToRead;
 		}
 		else
 		{
 			ulValue &= 1U << uiIndex;
 			if( ulValue==0 )
 			{
-				ucData = 0;
+				tResult = PIN_INVALUE_0;
 			}
 			else
 			{
-				ucData = 1;
+				tResult = PIN_INVALUE_1;
 			}
-			*pucData = ucData;
 		}
 	}
+	else
+	{
+		tResult = PIN_INVALUE_InvalidPinIndex;
+	}
 
-	return iResult;
+	return tResult;
 }
 
 
@@ -2441,11 +2438,22 @@ static int set_iolledm(unsigned int uiIndex, PINSTATUS_T tValue)
 
 
 
-static int get_iolledm(unsigned int uiIndex __attribute__((unused)), unsigned char *pucData __attribute__((unused)))
+static PIN_INVALUE_T get_iolledm(unsigned int uiIndex)
 {
-	/* The LEDM pins can not be read. */
-	uprintf("The LEDM pins can not be read.\n");
-	return -1;
+	PIN_INVALUE_T tResult;
+
+
+	if( uiIndex<24*MAX_NETIOL_NODES )
+	{
+		/* The IOLLEDM pins are output only. */
+		tResult = PIN_INVALUE_InputNotAvailable;
+	}
+	else
+	{
+		tResult = PIN_INVALUE_InvalidPinIndex;
+	}
+
+	return tResult;
 }
 
 
@@ -2508,15 +2516,11 @@ static int set_sqi(unsigned int uiIndex, PINSTATUS_T tValue)
 }
 
 
-static int get_sqi(unsigned int uiIndex, unsigned char *pucData)
+static PIN_INVALUE_T get_sqi(unsigned int uiIndex)
 {
-	int iResult;
+	PIN_INVALUE_T tResult;
 	HOSTDEF(ptSqiArea);
 	unsigned long ulValue;
-	unsigned char ucData;
-
-	/* assume failure */
-	iResult = -1;
 
 	/* check the index */
 	if( uiIndex<8 )
@@ -2525,21 +2529,19 @@ static int get_sqi(unsigned int uiIndex, unsigned char *pucData)
 		ulValue &= 1U << uiIndex;
 		if (ulValue == 0)
 		{
-			ucData = 0;
+			tResult = PIN_INVALUE_0;
 		}
 		else
 		{
-			ucData = 1;
+			tResult = PIN_INVALUE_1;
 		}
-		*pucData = ucData;
-		iResult = 0;
 	}
 	else
 	{
-		uprintf("Invalid SQI index: %d\n", uiIndex);
+		tResult = PIN_INVALUE_InvalidPinIndex;
 	}
 
-	return iResult;
+	return tResult;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -2616,72 +2618,76 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 }
 
 
-int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
+PIN_INVALUE_T iopins_get(const PINDESCRIPTION_T *ptPinDescription)
 {
-	int iResult;
+	PIN_INVALUE_T tResult;
 	unsigned int uiIndex;
 
 
 	uiIndex = ptPinDescription->uiIndex;
 
-	iResult = -1;
+	tResult = PIN_INVALUE_InvalidPinType;
 	switch( ptPinDescription->tType )
 	{
 	case PINTYPE_GPIO:
-		iResult = get_gpio(uiIndex, pucData);
+		tResult = get_gpio(uiIndex);
 		break;
 
 	case PINTYPE_HIFPIO:
-		iResult = get_hifpio(uiIndex, pucData);
+		tResult = get_hifpio(uiIndex);
 		break;
 
 	case PINTYPE_MLED:
-		iResult = get_mled(uiIndex, pucData);
+		tResult = get_mled(uiIndex);
 		break;
 
 	case PINTYPE_MMIO:
-		iResult = get_mmiopio(uiIndex, pucData);
+		tResult = get_mmiopio(uiIndex);
 		break;
 
 	case PINTYPE_PIO:
-		/* Not yet... */
+		tResult = PIN_INVALUE_PintypeNotSupportedYet;
 		break;
 
 	case PINTYPE_RDYRUN:
-		iResult = get_rdyrun(uiIndex, pucData);
+		tResult = get_rdyrun(uiIndex);
 		break;
 
 	case PINTYPE_RSTOUT:
-		iResult = get_rstout(uiIndex, pucData);
+		tResult = get_rstout(uiIndex);
 		break;
 
 	case PINTYPE_XMIO:
 		if( uiIndex<7 )
 		{
-			iResult = get_xm0io(uiIndex, pucData);
+			tResult = get_xm0io(uiIndex);
 		}
 		else if( uiIndex<14 )
 		{
-			iResult = get_xm1io(uiIndex-7U, pucData);
+			tResult = get_xm1io(uiIndex-7U);
+		}
+		else
+		{
+			tResult = PIN_INVALUE_InvalidPinIndex;
 		}
 		break;
 
 	case PINTYPE_RAPGPIO:
-		uprintf("The pin type RAPGPIO is not supported on this platform!\n");
+		tResult = PIN_INVALUE_PintypeNotAvailable;
 		break;
 
 	case PINTYPE_APPPIO:
-		iResult = get_apppio(uiIndex, pucData);
+		tResult = get_apppio(uiIndex);
 		break;
 
 	case PINTYPE_IOLLEDM:
-		iResult = get_iolledm(uiIndex, pucData);
+		tResult = get_iolledm(uiIndex);
 		break;
 
 	case PINTYPE_SQI:
-		iResult = get_sqi(uiIndex, pucData);
+		tResult = get_sqi(uiIndex);
 		break;
 	}
 
-	return iResult;
+	return tResult;
 }

@@ -478,39 +478,37 @@ static int set_hifpio(unsigned int uiIndex, PINSTATUS_T tValue)
 
 
 
-static int get_hifpio(unsigned int uiIndex, unsigned char *pucData)
+static PIN_INVALUE_T get_hifpio(unsigned int uiIndex)
 {
 	HOSTDEF(ptHifIoCtrlArea);
 	unsigned long aulMsk[2];
 	unsigned long aulValue[2];
-	unsigned char ucData;
-	int iResult;
+	PIN_INVALUE_T tResult;
 
 
-	/* Get the mask bits for the index. */
-	iResult = -1;
-	if( uiIndex<32U )
+	if( uiIndex>=58U )
 	{
-		aulMsk[0] = 1U << uiIndex;
-		aulMsk[1] = 0U;
-		iResult = 0;
+		tResult = PIN_INVALUE_InvalidPinIndex;
 	}
-	else if( uiIndex<50U )
+	else
 	{
-		aulMsk[0] = 0U;
-		aulMsk[1] = 1U << (uiIndex-32U);
-		iResult = 0;
-	}
-	else if( uiIndex<58U )
-	{
-		aulMsk[0] = 0U;
-		aulMsk[1] = 1U << (uiIndex-26U);
-		iResult = 0;
-	}
+		/* Get the mask bits for the index. */
+		if( uiIndex<32U )
+		{
+			aulMsk[0] = 1U << uiIndex;
+			aulMsk[1] = 0U;
+		}
+		else if( uiIndex<50U )
+		{
+			aulMsk[0] = 0U;
+			aulMsk[1] = 1U << (uiIndex-32U);
+		}
+		else if( uiIndex<58U )
+		{
+			aulMsk[0] = 0U;
+			aulMsk[1] = 1U << (uiIndex-26U);
+		}
 
-
-	if( iResult==0 )
-	{
 		aulValue[0]  = ptHifIoCtrlArea->aulHif_pio_in[0];
 		aulValue[0] &= aulMsk[0];
 		aulValue[1]  = ptHifIoCtrlArea->aulHif_pio_in[1];
@@ -518,17 +516,15 @@ static int get_hifpio(unsigned int uiIndex, unsigned char *pucData)
 
 		if( (aulValue[0]|aulValue[1])==0 )
 		{
-			ucData = 0;
+			tResult = PIN_INVALUE_0;
 		}
 		else
 		{
-			ucData = 1;
+			tResult = PIN_INVALUE_1;
 		}
-
-		*pucData = ucData;
 	}
 
-	return iResult;
+	return tResult;
 }
 
 
@@ -587,30 +583,33 @@ static int set_mmio(unsigned int uiIndex, PINSTATUS_T tValue)
 }
 
 
-static int get_mmio(unsigned int uiIndex, unsigned char *pucData)
+static PIN_INVALUE_T get_mmio(unsigned int uiIndex)
 {
 	HOSTDEF(ptMmioCtrlArea);
-	int iResult;
+	PIN_INVALUE_T tResult;
 	unsigned long ulValue;
-	unsigned char ucData;
 
 
-	iResult = 0;
-
-	/* Read GPIO pin. */
-	ulValue  = ptMmioCtrlArea->ulMmio_in_line_status;
-	ulValue &= 1U << uiIndex;
-	if( ulValue==0 )
+	if( uiIndex>=32U )
 	{
-		ucData = 0;
+		tResult = PIN_INVALUE_InvalidPinIndex;
 	}
 	else
 	{
-		ucData = 1;
+		/* Read GPIO pin. */
+		ulValue  = ptMmioCtrlArea->ulMmio_in_line_status;
+		ulValue &= 1U << uiIndex;
+		if( ulValue==0 )
+		{
+			tResult = PIN_INVALUE_0;
+		}
+		else
+		{
+			tResult = PIN_INVALUE_1;
+		}
 	}
-	*pucData = ucData;
 
-	return iResult;
+	return tResult;
 }
 
 
@@ -670,16 +669,18 @@ static int set_rdyrun(unsigned int uiIndex, PINSTATUS_T tValue)
 }
 
 
-static int get_rdyrun(unsigned int uiIndex, unsigned char *pucData)
+static int get_rdyrun(unsigned int uiIndex)
 {
 	HOSTDEF(ptAsicCtrlArea);
-	int iResult;
+	PIN_INVALUE_T tResult;
 	unsigned long ulValue;
-	unsigned char ucData;
 
 
-	iResult = -1;
-	if( uiIndex<2 )
+	if( uiIndex>=2 )
+	{
+		tResult = PIN_INVALUE_InvalidPinIndex;
+	}
+	else
 	{
 		ulValue = ptAsicCtrlArea->ulRdy_run_cfg;
 		if( uiIndex==0 )
@@ -693,18 +694,15 @@ static int get_rdyrun(unsigned int uiIndex, unsigned char *pucData)
 
 		if( ulValue==0 )
 		{
-			ucData = 0;
+			tResult = PIN_INVALUE_0;
 		}
 		else
 		{
-			ucData = 1;
+			tResult = PIN_INVALUE_1;
 		}
-		*pucData = ucData;
-
-		iResult = 0;
 	}
 
-	return iResult;
+	return tResult;
 }
 
 
@@ -763,36 +761,42 @@ static int set_xmio(unsigned int uiIndex, PINSTATUS_T tValue)
 }
 
 
-static int get_xmio(unsigned int uiIndex, unsigned char *pucData)
+static PIN_INVALUE_T get_xmio(unsigned int uiIndex)
 {
 	HOSTDEF(ptXmac0Area);
 	unsigned long ulValue;
 	unsigned long ulMask;
-	unsigned char ucData;
+	PIN_INVALUE_T tResult;
 
 
-	if( uiIndex==0 )
+	if( uiIndex>=2U )
 	{
-		ulMask = HOSTMSK(xmac_status_shared0_gpio0_in);
+		tResult = PIN_INVALUE_InvalidPinIndex;
 	}
 	else
 	{
-		ulMask = HOSTMSK(xmac_status_shared0_gpio1_in);
+		if( uiIndex==0 )
+		{
+			ulMask = HOSTMSK(xmac_status_shared0_gpio0_in);
+		}
+		else
+		{
+			ulMask = HOSTMSK(xmac_status_shared0_gpio1_in);
+		}
+
+		ulValue  = ptXmac0Area->ulXmac_config_shared0;
+		ulValue &= ulMask;
+		if( ulValue==0 )
+		{
+			tResult = PIN_INVALUE_0;
+		}
+		else
+		{
+			tResult = PIN_INVALUE_1;
+		}
 	}
 
-	ulValue  = ptXmac0Area->ulXmac_config_shared0;
-	ulValue &= ulMask;
-	if( ulValue==0 )
-	{
-		ucData = 0;
-	}
-	else
-	{
-		ucData = 1;
-	}
-	*pucData = ucData;
-
-	return 0;
+	return tResult;
 }
 
 
@@ -868,71 +872,66 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 }
 
 
-int iopins_get(const PINDESCRIPTION_T *ptPinDescription, unsigned char *pucData)
+PIN_INVALUE_T iopins_get(const PINDESCRIPTION_T *ptPinDescription)
 {
-	int iResult;
+	PIN_INVALUE_T tResult;
 	unsigned int uiIndex;
 
 
-	iResult = -1;
+	uiIndex = ptPinDescription->uiIndex;
+
+	tResult = PIN_INVALUE_InvalidPinType;
 	switch( ptPinDescription->tType )
 	{
 	case PINTYPE_GPIO:
-		uprintf("The pin type GPIO is not supported on this platform!\n");
-		iResult = -1;
+		tResult = PIN_INVALUE_PintypeNotSupportedYet;
 		break;
 
 	case PINTYPE_PIO:
-		uprintf("The pin type PIO is not supported on this platform!\n");
-		iResult = -1;
+		tResult = PIN_INVALUE_PintypeNotSupportedYet;
 		break;
 
 	case PINTYPE_MLED:
-		/* The netX10 has no MLED pins. */
+		tResult = PIN_INVALUE_PintypeNotAvailable;
 		break;
 
 	case PINTYPE_MMIO:
-		uiIndex = ptPinDescription->uiIndex;
-		iResult = get_mmio(uiIndex, pucData);
+		tResult = get_mmio(uiIndex);
 		break;
 
 	case PINTYPE_HIFPIO:
-		uiIndex = ptPinDescription->uiIndex;
-		iResult = get_hifpio(uiIndex, pucData);
+		tResult = get_hifpio(uiIndex);
 		break;
 
 	case PINTYPE_RDYRUN:
-		uiIndex = ptPinDescription->uiIndex;
-		iResult = get_rdyrun(uiIndex, pucData);
+		tResult = get_rdyrun(uiIndex);
 		break;
 
 	case PINTYPE_RSTOUT:
-		uprintf("The pin type RSTOUT is not supported on this platform!\n");
-		iResult = -1;
+		tResult = PIN_INVALUE_PintypeNotSupportedYet;
 		break;
 
 	case PINTYPE_XMIO:
-		uiIndex = ptPinDescription->uiIndex;
-		iResult = get_xmio(uiIndex, pucData);
+		tResult = get_xmio(uiIndex);
 		break;
 
 	case PINTYPE_RAPGPIO:
-		uprintf("The pin type RAPGPIO is not supported on this platform!\n");
+		tResult = PIN_INVALUE_PintypeNotAvailable;
 		break;
 
 	case PINTYPE_APPPIO:
-		/* The netX10 has no APPPIO pins. */
+		tResult = PIN_INVALUE_PintypeNotAvailable;
 		break;
 
 	case PINTYPE_IOLLEDM:
-		/* The netX10 has no IOL bridge yet. */
+		tResult = PIN_INVALUE_PintypeNotSupportedYet;
 		break;
 
 	case PINTYPE_SQI:
-		/* Not yet... */
+		tResult = PIN_INVALUE_PintypeNotSupportedYet;
 		break;
 	}
 
-	return iResult;
+	return tResult;
 }
 
