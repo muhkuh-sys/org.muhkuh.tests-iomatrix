@@ -963,46 +963,6 @@ static PIN_INVALUE_T get_rstout(unsigned int uiIndex)
 
 
 
-static int set_xm0io(unsigned int uiIndex, PINSTATUS_T tValue)
-{
-	int iResult;
-
-
-	/* Be pessimistic. */
-	iResult = -1;
-
-	return iResult;
-}
-
-
-
-static int set_xm1io(unsigned int uiIndex, PINSTATUS_T tValue)
-{
-	int iResult;
-
-
-	/* Be pessimistic. */
-	iResult = -1;
-
-	return iResult;
-}
-
-
-
-static PIN_INVALUE_T get_xm0io(unsigned int uiIndex)
-{
-	return PIN_INVALUE_PintypeNotSupportedYet;
-}
-
-
-
-static int get_xm1io(unsigned int uiIndex)
-{
-	return PIN_INVALUE_PintypeNotSupportedYet;
-}
-
-
-
 static int set_rapgpio(unsigned int uiIndex, PINSTATUS_T tValue)
 {
 	int iResult;
@@ -1138,14 +1098,7 @@ int iopins_set(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T tValue)
 		break;
 
 	case PINTYPE_XMIO:
-		if( uiIndex<6 )
-		{
-			iResult = set_xm0io(uiIndex, tValue);
-		}
-		else if( uiIndex<12 )
-		{
-			iResult = set_xm1io(uiIndex-6U, tValue);
-		}
+		/* Not yet... */
 		break;
 
 	case PINTYPE_RAPGPIO:
@@ -1209,18 +1162,7 @@ PIN_INVALUE_T iopins_get(const PINDESCRIPTION_T *ptPinDescription)
 		break;
 
 	case PINTYPE_XMIO:
-		if( uiIndex<6 )
-		{
-			tResult = get_xm0io(uiIndex);
-		}
-		else if( uiIndex<12 )
-		{
-			tResult = get_xm1io(uiIndex-6U);
-		}
-		else
-		{
-			tResult = PIN_INVALUE_InvalidPinIndex;
-		}
+		tResult = PIN_INVALUE_PintypeNotSupportedYet;
 		break;
 
 	case PINTYPE_RAPGPIO:
