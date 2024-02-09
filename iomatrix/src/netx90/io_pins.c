@@ -2691,3 +2691,80 @@ PIN_INVALUE_T iopins_get(const PINDESCRIPTION_T *ptPinDescription)
 
 	return tResult;
 }
+
+
+int iopins_get_initial(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T *ptValue)
+{
+	int iResult;
+	PINSTATUS_T tValue;
+
+
+	iResult = -1;
+	switch( ptPinDescription->tType )
+	{
+	case PINTYPE_GPIO:
+		tValue = PINSTATUS_HIGHZ;
+		iResult = 0;
+		break;
+
+	case PINTYPE_HIFPIO:
+		tValue = PINSTATUS_HIGHZ;
+		iResult = 0;
+		break;
+
+	case PINTYPE_MLED:
+		tValue = PINSTATUS_OUTPUT0;
+		iResult = 0;
+		break;
+
+	case PINTYPE_MMIO:
+		tValue = PINSTATUS_HIGHZ;
+		iResult = 0;
+		break;
+
+	case PINTYPE_PIO:
+		/* Not supported yet. */
+		break;
+
+	case PINTYPE_RDYRUN:
+		tValue = PINSTATUS_HIGHZ;
+		iResult = 0;
+		break;
+
+	case PINTYPE_RSTOUT:
+		tValue = PINSTATUS_HIGHZ;
+		iResult = 0;
+		break;
+
+	case PINTYPE_XMIO:
+		tValue = PINSTATUS_HIGHZ;
+		iResult = 0;
+		break;
+
+	case PINTYPE_RAPGPIO:
+		/* Not available. */
+		break;
+
+	case PINTYPE_APPPIO:
+		tValue = PINSTATUS_HIGHZ;
+		iResult = 0;
+		break;
+
+	case PINTYPE_IOLLEDM:
+		tValue = PINSTATUS_OUTPUT0;
+		iResult = 0;
+		break;
+
+	case PINTYPE_SQI:
+		tValue = PINSTATUS_HIGHZ;
+		iResult = 0;
+		break;
+	}
+
+	if( iResult==0 )
+	{
+		*ptValue = tValue;
+	}
+
+	return iResult;
+}

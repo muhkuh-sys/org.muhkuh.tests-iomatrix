@@ -1770,3 +1770,83 @@ PIN_INVALUE_T iopins_get(const PINDESCRIPTION_T *ptPinDescription)
 
 	return tResult;
 }
+
+
+int iopins_get_initial(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T *ptValue)
+{
+	int iResult;
+	PINSTATUS_T tValue;
+
+
+	iResult = -1;
+	switch( ptPinDescription->tType )
+	{
+	case PINTYPE_GPIO:
+		/* GPIO pins are initially switched to input. */
+		tValue = PINSTATUS_HIGHZ;
+		iResult = 0;
+		break;
+
+	case PINTYPE_HIFPIO:
+		/* Not supported yet. */
+		break;
+
+	case PINTYPE_MLED:
+		/* Not available. */
+		break;
+
+	case PINTYPE_MMIO:
+		/* Not available. */
+		break;
+
+	case PINTYPE_PIO:
+		/* PIO pins are initially switched to input. */
+		tValue = PINSTATUS_HIGHZ;
+		iResult = 0;
+		break;
+
+	case PINTYPE_RDYRUN:
+		/* RDY/RUN pins are initially switched to input. */
+		tValue = PINSTATUS_HIGHZ;
+		iResult = 0;
+		break;
+
+	case PINTYPE_RSTOUT:
+		/* The RSTOUT pin is initially switched to input. */
+		tValue = PINSTATUS_HIGHZ;
+		iResult = 0;
+		break;
+
+	case PINTYPE_XMIO:
+		/* The netX500 has 4 units with 4 pins each.
+		 * All pins of each unit are initially input.
+		 */
+		/* The RSTOUT pin is initially switched to input. */
+		tValue = PINSTATUS_HIGHZ;
+		iResult = 0;
+		break;
+
+	case PINTYPE_RAPGPIO:
+		/* Not available. */
+		break;
+
+	case PINTYPE_APPPIO:
+		/* Not available. */
+		break;
+
+	case PINTYPE_IOLLEDM:
+		/* Not supported yet. */
+		break;
+
+	case PINTYPE_SQI:
+		/* Not available. */
+		break;
+	}
+
+	if( iResult==0 )
+	{
+		*ptValue = tValue;
+	}
+
+	return iResult;
+}

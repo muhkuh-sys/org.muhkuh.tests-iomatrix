@@ -55,6 +55,7 @@ function IoMatrix_netx_base:_init(tLog, fnInit, fnDeinit, ulVerbose, fnCallbackP
   self.IOMATRIX_COMMAND_Get_All_Pins                = ${IOMATRIX_COMMAND_Get_All_Pins}
   self.IOMATRIX_COMMAND_Get_Continuous_Status_Match = ${IOMATRIX_COMMAND_Get_Continuous_Status_Match}
   self.IOMATRIX_COMMAND_Get_Continuous_Changes      = ${IOMATRIX_COMMAND_Get_Continuous_Changes}
+  self.IOMATRIX_COMMAND_Get_All_Initial_Pin_States  = ${IOMATRIX_COMMAND_Get_All_Initial_Pin_States}
 
   self.strPinStatusZ = string.char(self.PINSTATUS_HIGHZ)
   self.strPinStatus0 = string.char(self.PINSTATUS_OUTPUT0)
@@ -423,6 +424,15 @@ function IoMatrix_netx_base:parse_pins()
   -- Get the pin description handle.
   self.hPinDescription = self.tPlugin:read_data32(self.ulParameterStartAddress+0x1c)
   self.tLog.debug('pin desc handle: %08x', self.hPinDescription)
+
+  -- Get the initial state of the pins.
+  local strInitialStatesRaw = self:get_all_initial_pin_states_raw()
+  if strInitialStatesRaw==nil then
+    error('Failed to get the initial pin states.')
+  end
+  for iCnt = 1, self.uiCurrentPinIndex do
+    self.atOutBuffer[iCnt] = string.sub(strInitialStatesRaw, iCnt, iCnt)
+  end
 end
 
 
@@ -529,6 +539,34 @@ function IoMatrix_netx_base:get_all_pins_raw()
     self.ulVerbose,                      -- Verbose mode.
     self.IOMATRIX_COMMAND_Get_All_Pins,  -- The command code.
     self.hPinDescription                 -- Pin description handle.
+  }
+
+  -- Call the netX program.
+  self.tLog.debug('__/Output/____________________________________________________________________')
+  self.tPlugin:call(self.ulExecutionAddress, self.ulParameterStartAddress, self.fnCallbackMessage, 0)
+  self.tLog.debug('______________________________________________________________________________')
+
+  -- Get the result.
+  local strRawStates
+  local sizDataBlock = 0x18 + self.uiCurrentPinIndex
+  local strResult = self.tPlugin:read_image(self.ulParameterStartAddress, sizDataBlock, self.fnCallbackProgress, sizDataBlock)
+  local ulResult = self.__get_dword(strResult, 1)
+  if ulResult==0 then
+    -- Extract all pin states.
+    strRawStates = string.sub(strResult, 0x18+1)
+  end
+
+  return strRawStates
+end
+
+
+
+function IoMatrix_netx_base:get_all_initial_pin_states_raw()
+  -- Collect the parameter.
+  self:__write_header{
+    self.ulVerbose,                                    -- Verbose mode.
+    self.IOMATRIX_COMMAND_Get_All_Initial_Pin_States,  -- The command code.
+    self.hPinDescription                               -- Pin description handle.
   }
 
   -- Call the netX program.

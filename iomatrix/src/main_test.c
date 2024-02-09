@@ -793,6 +793,55 @@ static int get_continuous_changes(IOMATRIX_PARAMETER_GET_CONTINUOUS_CHANGES_T *p
 }
 
 
+static int get_all_initial_pin_states(IOMATRIX_PARAMETER_GET_ALL_INITIAL_PIN_STATES_T *ptParameter)
+{
+	unsigned long ulPinCnt;
+	unsigned long ulPinMax;
+	int iPinResult;
+	int iResult;
+	const PINDESCRIPTION_T *ptPinDescription;
+	PINSTATUS_T tValue;
+
+
+	/* Be optimistic. */
+	iResult = 0;
+
+	ulPinCnt = 0;
+	ulPinMax = ulPinsUnderTest;
+	while( ulPinCnt<ulPinMax )
+	{
+		/* Get the pointer to the pin description. */
+		ptPinDescription  = atPinsUnderTest;
+		ptPinDescription += ulPinCnt;
+
+		/* Get the pin state. */
+		iPinResult = iopins_get_initial(ptPinDescription, &tValue);
+		if( iPinResult==0 )
+		{
+			switch( tValue )
+			{
+			case PINSTATUS_HIGHZ:
+			case PINSTATUS_OUTPUT0:
+			case PINSTATUS_OUTPUT1:
+				ptParameter->aucValue[ulPinCnt] = (unsigned char)tValue;
+				iPinResult = 0;
+				break;
+			}
+		}
+
+		if( iPinResult!=0 )
+		{
+			iResult = -1;
+			print_pin(ulPinCnt, ptPinDescription);
+		}
+
+		++ulPinCnt;
+	}
+
+	return iResult;
+}
+
+
 /*-------------------------------------------------------------------------*/
 
 TEST_RESULT_T test(IOMATRIX_PARAMETER_T *ptTestParams)
@@ -935,6 +984,22 @@ TEST_RESULT_T test(IOMATRIX_PARAMETER_T *ptTestParams)
 		else
 		{
 			iResult = get_continuous_changes(&(ptTestParams->uParameter.tGetContinuousChanges));
+		}
+		break;
+
+	case IOMATRIX_COMMAND_Get_All_Initial_Pin_States:
+		if( s_ulVerbosity!=0 )
+		{
+			uprintf("Mode: Get All Initial Pin States\n");
+		}
+
+		if( ptTestParams->uParameter.tGetAllInitialPinStates.pvPinDescription != (void*)atPinsUnderTest )
+		{
+			uprintf("Error: the pin description handle is invalid!\n");
+		}
+		else
+		{
+			iResult = get_all_initial_pin_states(&(ptTestParams->uParameter.tGetAllInitialPinStates));
 		}
 		break;
 	}

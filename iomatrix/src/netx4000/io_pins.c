@@ -1184,3 +1184,74 @@ PIN_INVALUE_T iopins_get(const PINDESCRIPTION_T *ptPinDescription)
 
 	return tResult;
 }
+
+
+int iopins_get_initial(const PINDESCRIPTION_T *ptPinDescription, PINSTATUS_T *ptValue)
+{
+	int iResult;
+	PINSTATUS_T tValue;
+
+
+	iResult = -1;
+	switch( ptPinDescription->tType )
+	{
+	case PINTYPE_GPIO:
+		/* Not supported yet. */
+		break;
+
+	case PINTYPE_HIFPIO:
+		tValue = PINSTATUS_HIGHZ;
+		iResult = 0;
+		break;
+
+	case PINTYPE_MLED:
+		/* Not supported yet. */
+		break;
+
+	case PINTYPE_MMIO:
+		tValue = PINSTATUS_HIGHZ;
+		iResult = 0;
+		break;
+
+	case PINTYPE_PIO:
+		/* Not supported yet. */
+		break;
+
+	case PINTYPE_RDYRUN:
+		tValue = PINSTATUS_HIGHZ;
+		iResult = 0;
+		break;
+
+	case PINTYPE_RSTOUT:
+		/* Not supported yet. */
+		break;
+
+	case PINTYPE_XMIO:
+		/* Not supported yet. */
+		break;
+
+	case PINTYPE_RAPGPIO:
+		tValue = PINSTATUS_HIGHZ;
+		iResult = 0;
+		break;
+
+	case PINTYPE_APPPIO:
+		/* Not available. */
+		break;
+
+	case PINTYPE_IOLLEDM:
+		/* Not supported yet. */
+		break;
+
+	case PINTYPE_SQI:
+		/* Not supported yet. */
+		break;
+	}
+
+	if( iResult==0 )
+	{
+		*ptValue = tValue;
+	}
+
+	return iResult;
+}

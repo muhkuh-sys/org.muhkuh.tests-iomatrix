@@ -37,7 +37,8 @@ typedef enum IOMATRIX_COMMAND_ENUM
 	IOMATRIX_COMMAND_Set_All_Pins                 = 3,
 	IOMATRIX_COMMAND_Get_All_Pins                 = 4,
 	IOMATRIX_COMMAND_Get_Continuous_Status_Match  = 5,
-	IOMATRIX_COMMAND_Get_Continuous_Changes       = 6
+	IOMATRIX_COMMAND_Get_Continuous_Changes       = 6,
+	IOMATRIX_COMMAND_Get_All_Initial_Pin_States   = 7
 } IOMATRIX_COMMAND_T;
 
 
@@ -97,6 +98,12 @@ typedef struct IOMATRIX_PARAMETER_GET_CONTINUOUS_CHANGES_STRUCT
 	unsigned long aulStates[MAX_PINS_UNDER_TEST/4];
 } IOMATRIX_PARAMETER_GET_CONTINUOUS_CHANGES_T;
 
+typedef struct IOMATRIX_PARAMETER_GET_ALL_INITIAL_PIN_STATES_STRUCT
+{
+	void *pvPinDescription;                          /* A handle of the pin description. */
+	unsigned char aucValue[MAX_PINS_UNDER_TEST];     /* The status of all pins. */
+} IOMATRIX_PARAMETER_GET_ALL_INITIAL_PIN_STATES_T;
+
 typedef struct IOMATRIX_PARAMETER_STRUCT
 {
 	unsigned long ulVerbose;
@@ -110,6 +117,7 @@ typedef struct IOMATRIX_PARAMETER_STRUCT
 		IOMATRIX_PARAMETER_GET_ALL_PINS_T tGetAllPins;
 		IOMATRIX_PARAMETER_GET_CONTINUOUS_STATUS_MATCH_T tGetContinuousStatusMatch;
 		IOMATRIX_PARAMETER_GET_CONTINUOUS_CHANGES_T tGetContinuousChanges;
+		IOMATRIX_PARAMETER_GET_ALL_INITIAL_PIN_STATES_T tGetAllInitialPinStates;
 	} uParameter;
 } IOMATRIX_PARAMETER_T;
 
