@@ -4,7 +4,7 @@ local tResult
 local pl = t.pl
 local tLog = t.tLog
 
-local strID = 'org.muhkuh.tests.iomatrix.lua5.1-iomatrix'
+local strID = 'org.muhkuh.tests.iomatrix.iomatrix'
 tLog.debug('Installing test case %s with ID %02d and name "%s".', strID, uiId, strName)
 
 -- Load the "test.lua" script.
