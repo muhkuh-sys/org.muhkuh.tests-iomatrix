@@ -187,6 +187,7 @@ function IoMatrix_FTDI:__find_ftdi_devices(atAllDevices, atDeviceAttr)
         )
       end
     else
+      local atMatchingDevices = {}
       for _, tDevice in pairs(atAllDevices) do
         -- Is the device already part of the identified devices?
         for _, tIdentDev in pairs(self.atDeviceAttrs) do
@@ -211,10 +212,19 @@ function IoMatrix_FTDI:__find_ftdi_devices(atAllDevices, atDeviceAttr)
             self.tLog.debug('The module index of device [%s] does not match.', tDevice.strPrettyPortNumbers)
           else
             self.tLog.debug('Device [%s] matches.', tDevice.strPrettyPortNumbers)
-            tFoundDevice = tDevice
+            table.insert(atMatchingDevices, tDevice)
             break
           end
         end
+      end
+      local sizMatchingDevices = #atMatchingDevices
+      if sizMatchingDevices==1 then
+        -- There is exactly one matching device.
+        tFoundDevice = atMatchingDevices[1]
+      elseif sizMatchingDevices==0 then
+        self.tLog.error('No device matches the search criteria.')
+      else
+        self.tLog.error('%d devices matches the search criteria. There should be exactly one.', sizMatchingDevices)
       end
     end
 
