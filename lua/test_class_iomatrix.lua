@@ -209,6 +209,8 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
       end
     end
 
+    local strManufacturer = atAttributes['manufacturer']
+    local strDescription = atAttributes['description']
     local strSerial = atAttributes['serial']
 
     local uiModuleIndex
@@ -366,16 +368,25 @@ function TestClassIoMatrix.parseCfg_StartElement(tParser, strName, atAttributes)
 
     if fOk~=true then
       aLxpAttr.tResult = nil
-    elseif auiPort==nil and strSerial==nil and uiModuleIndex==nil and fSingle==nil then
+    elseif(
+      auiPort==nil and
+      strManufacturer==nil and
+      strDescription==nil and
+      strSerial==nil and
+      uiModuleIndex==nil and
+      fSingle==nil
+    ) then
       aLxpAttr.tResult = nil
       aLxpAttr.tLog.error(
-        'Error in line %d, col %d: No way to identify device as no port, serial or moduleIndex specified.',
+        'Error in line %d, col %d: No way to identify device as no port, strings or moduleIndex specified.',
         iPosLine,
         iPosColumn
       )
     else
       local atDevice = {
         port = auiPort,
+        manufacturer = strManufacturer,
+        description = strDescription,
         serial = strSerial,
         moduleidx = uiModuleIndex,
         pinmask = aucPinMask,

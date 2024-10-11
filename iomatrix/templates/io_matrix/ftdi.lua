@@ -83,11 +83,13 @@ end
 
 function IoMatrix_FTDI:__build_ftdi_index(tList, ulModuleIndexMask, ulModuleIndexShift)
   -- Loop over all devices and...
-  --  1) Get the FTDI serial.
+  --  1) Get the FTDI manufacturer, description and serial.
   --  2) Get the location for all devices as strings.
   --  3) Read the index pins if available.
   local atDevices = {}
   for tListEntry in tList:iter() do
+    local strFtdiManufacturer = tListEntry:get_manufacturer()
+    local strFtdiDescription = tListEntry:get_description()
     local strFtdiSerial = tListEntry:get_serial()
     self.tLog.debug('Found serial %s.', strFtdiSerial)
 
@@ -126,6 +128,8 @@ function IoMatrix_FTDI:__build_ftdi_index(tList, ulModuleIndexMask, ulModuleInde
 
       local tAttr = {}
       tAttr.tListEntry = tListEntry
+      tAttr.strFtdiManufacturer = strFtdiManufacturer
+      tAttr.strFtdiDescription = strFtdiDescription
       tAttr.strFtdiSerial = strFtdiSerial
       tAttr.strPortNumbers = strPN
       tAttr.strPrettyPortNumbers = strPrettyPN
@@ -149,7 +153,9 @@ function IoMatrix_FTDI:__find_ftdi_devices(atAllDevices, atDeviceAttr)
     if tDeviceAttr.port~=nil then
       strPN = self.__usb_port_numbers_to_string(tDeviceAttr.port)
     end
-    -- Get the required serial or nil.
+    -- Get the required manufacturer, description and serial or nil.
+    local strManufacturer = tDeviceAttr.manufacturer
+    local strDescription = tDeviceAttr.description
     local strSerial = tDeviceAttr.serial
     local ulModuleIndex = tDeviceAttr.moduleidx
     local aucPinMask = tDeviceAttr.pinmask
@@ -195,6 +201,10 @@ function IoMatrix_FTDI:__find_ftdi_devices(atAllDevices, atDeviceAttr)
           if strPN~=nil and tDevice.strPortNumbers~=strPN then
             -- Do not use this device.
             self.tLog.debug('The port of device [%s] does not match.', tDevice.strPrettyPortNumbers)
+          elseif strManufacturer~=nil and tDevice.strFtdiManufacturer~=strManufacturer then
+            self.tLog.debug('The manufacturer of device [%s] does not match.', tDevice.strPrettyPortNumbers)
+          elseif strDescription~=nil and tDevice.strFtdiDescription~=strDescription then
+            self.tLog.debug('The description of device [%s] does not match.', tDevice.strPrettyPortNumbers)
           elseif strSerial~=nil and tDevice.strFtdiSerial~=strSerial then
             self.tLog.debug('The serial of device [%s] does not match.', tDevice.strPrettyPortNumbers)
           elseif ulModuleIndex~=nil and tDevice.ulModuleIndex~=ulModuleIndex then
