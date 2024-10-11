@@ -533,7 +533,7 @@ end
 -- It is called when an element is closed.
 -- @param tParser The parser object.
 -- @param strName The name of the closed element.
-function TestClassIoMatrix.parseCfg_EndElement(tParser, strName)
+function TestClassIoMatrix.parseCfg_EndElement(tParser)
   local aLxpAttr = tParser:getcallbacks().userdata
 
   local _loadstring = loadstring or load
