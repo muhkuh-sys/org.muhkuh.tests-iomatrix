@@ -31,6 +31,23 @@
 #define MAX_NETIOL_NODES 4
 
 
+static void app_bridge_print_version(void)
+{
+	APP_BRIDGE_VERSION_T tAppBridgeVersion;
+
+
+	app_bridge_get_version(&tAppBridgeVersion);
+	uprintf(
+		"Initializing APP bridge V%d.%d.%d %s\n",
+		tAppBridgeVersion.ulVersionMajor,
+		tAppBridgeVersion.ulVersionMinor,
+		tAppBridgeVersion.ulVersionMicro,
+		tAppBridgeVersion.acVersionVcs
+	);
+}
+
+
+
 typedef struct UNITCONFIGURATION_STRUCT
 {
 	unsigned long ulGpio;
@@ -1396,6 +1413,7 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDe
 		{
 			if( iAppBridgeIsInitialized==0 )
 			{
+				app_bridge_print_version();
 				iResult = app_bridge_init();
 				if( iResult!=0 )
 				{
@@ -1423,6 +1441,7 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDe
 		{
 			if( iAppBridgeIsInitialized==0 )
 			{
+				app_bridge_print_version();
 				iResult = app_bridge_init();
 				if( iResult!=0 )
 				{
