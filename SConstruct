@@ -82,6 +82,7 @@ Import(
     'LUA_NETX4000',
     'LUA_NETX90',
     'LUA_NETX500',
+    'LUA_NETX56',
     'LUA_NETX90_MPW'
 )
 
@@ -153,6 +154,7 @@ tArcList0.AddFiles('lua/io_matrix',
     LUA_NETX4000,
     LUA_NETX90,
     LUA_NETX500,
+    LUA_NETX56,
     LUA_NETX90_MPW,
     'iomatrix/templates/io_matrix/netx.lua')
 tArcList0.AddFiles('templates',
