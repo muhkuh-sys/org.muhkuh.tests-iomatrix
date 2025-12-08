@@ -215,6 +215,8 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDe
 	UNITCONFIGURATION_T tUnitCfg;
 	unsigned long ulValue;
 	unsigned long ulClockEnable;
+	unsigned long ulMask0;
+	unsigned long ulMask1;
 
 
 	initialize_unit_configuration(&tUnitCfg);
@@ -264,8 +266,22 @@ int iopins_configure(const PINDESCRIPTION_T *ptPinDesc, unsigned int sizMaxPinDe
 			int i;
 			for (i=0; i<=48; i++)
 			{
-				ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
-				ptMmioCtrlArea->aulMmio_cfg[i] = MSK_NX56_mmio0_cfg_mmio_sel;
+				ulMask0 = 0;
+				ulMask1 = 0;
+				if (i < 32)
+				{
+					ulMask0 = 1U << i;
+				}
+				else
+				{
+					ulMask1 = 1U << (i -32);
+				}
+
+				if (((tUnitCfg.aulMmio[0] & ulMask0) != 0) || ((tUnitCfg.aulMmio[1] & ulMask1) != 0))
+				{
+					ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;  /* @suppress("Assignment to itself") */
+					ptMmioCtrlArea->aulMmio_cfg[i] = MSK_NX56_mmio0_cfg_mmio_sel;
+				}
 			}
 		}
 
